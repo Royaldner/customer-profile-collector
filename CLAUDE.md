@@ -38,12 +38,14 @@ A customer profile collection system for a small business client. Phase 1 of a f
 - [x] Git repository initialized with main/develop/feature branches
 - [x] Pushed to GitHub: https://github.com/Royaldner/customer-profile-collector
 
-**Current Branch:** `feature/project-setup-infrastructure`
+**Status:** Merged to `main` and `develop`, tagged `epic-1-complete`
 
-### Phase 2: Database Setup (EPIC 2) ⏳ PENDING
-- [ ] CP-4: Design database schema
-- [ ] CP-5: Create tables in Supabase
-- [ ] CP-6: Setup Row Level Security (RLS)
+### Phase 2: Database Setup (EPIC 2) ✅ COMPLETE
+- [x] CP-4: Design database schema + TypeScript types
+- [x] CP-5: Create tables in Supabase (SQL migrations)
+- [x] CP-6: Setup Row Level Security (RLS)
+
+**Status:** Merged to `main` and `develop`, tagged `epic-2-complete`
 
 ### Phase 3: Customer Registration Form (EPIC 3) ⏳ PENDING
 - [ ] CP-7: Build customer form UI with Zod validation
@@ -116,9 +118,16 @@ src/
 │   │   ├── client.ts            # Browser client
 │   │   ├── server.ts            # Server client
 │   │   └── middleware.ts        # Session middleware
+│   ├── types/
+│   │   └── index.ts             # Customer, Address types
 │   ├── validations/             # (Phase 3)
-│   └── types/                   # (Phase 2)
+│   └── utils.ts
 ├── middleware.ts                # Next.js middleware
+supabase/
+├── schema.sql                   # Complete schema (run in SQL Editor)
+└── migrations/
+    ├── 001_create_tables.sql    # Tables, indexes, triggers
+    └── 002_enable_rls.sql       # RLS policies
 test/
 └── setup.ts                     # Vitest setup
 ```
