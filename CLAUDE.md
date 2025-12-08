@@ -61,12 +61,14 @@ Never make changes directly on `main` or `develop` branches.
 - [x] CP-9: Implement form submission API
 - [x] CP-10: Build success page
 
-**Status:** Ready for merge and tagging
+**Status:** Merged to `main` and `develop`, tagged `epic-3-complete`
 
-### Phase 4: Admin Dashboard (EPIC 4) ⏳ PENDING
-- [ ] CP-11: Build customer list page
-- [ ] CP-12: Add search & filter
-- [ ] CP-13: Build customer detail view
+### Phase 4: Admin Dashboard (EPIC 4) ✅ COMPLETE
+- [x] CP-11: Build customer list page
+- [x] CP-12: Add search & filter
+- [x] CP-13: Build customer detail view
+
+**Status:** Merged to `develop`, tagged `epic-4-complete`
 
 ### Phase 5: Edit & Delete (EPIC 5) ⏳ PENDING
 - [ ] CP-14: Edit customer info
