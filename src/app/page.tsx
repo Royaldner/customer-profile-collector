@@ -26,9 +26,12 @@ export default function Home() {
             delivery addresses.
           </p>
 
-          <div className="pt-4">
+          <div className="flex flex-col gap-3 pt-4">
             <Button asChild size="lg">
               <Link href="/register">Register Now</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/admin">Admin Dashboard</Link>
             </Button>
           </div>
         </CardContent>
