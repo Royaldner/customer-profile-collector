@@ -198,6 +198,97 @@ CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
 | Phase 6 | `documentation-engineer` | README and docs |
 | All phases | `git-workflow-manager` | Branch/merge assistance |
 
+## TypeScript Types (for Phase 2)
+```typescript
+// src/lib/types/index.ts
+export type ContactPreference = 'email' | 'phone' | 'sms'
+
+export interface Customer {
+  id: string
+  name: string
+  email: string
+  phone: string
+  contact_preference: ContactPreference
+  created_at: string
+  updated_at: string
+  addresses?: Address[]
+}
+
+export interface Address {
+  id: string
+  customer_id: string
+  label: string
+  street_address: string
+  city: string
+  state: string
+  postal_code: string
+  country: string
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+```
+
+## Zod Validation Schema (for Phase 3)
+```typescript
+// src/lib/validations/customer.ts
+import { z } from 'zod'
+
+export const addressSchema = z.object({
+  label: z.string().min(1, 'Label is required'),
+  street_address: z.string().min(1, 'Street address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  postal_code: z.string().min(1, 'Postal code is required'),
+  country: z.string().default('USA'),
+  is_default: z.boolean().default(false),
+})
+
+export const customerSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone must be at least 10 digits'),
+  contact_preference: z.enum(['email', 'phone', 'sms']),
+  addresses: z.array(addressSchema)
+    .min(1, 'At least one address is required')
+    .max(3, 'Maximum 3 addresses allowed')
+    .refine(
+      (addresses) => addresses.filter(a => a.is_default).length === 1,
+      'Exactly one address must be set as default'
+    ),
+})
+```
+
+## Testing Strategy
+
+| Phase | Tests to Add | Coverage Target |
+|-------|-------------|-----------------|
+| Phase 2 | Zod schema tests (10-15) | 100% on schemas |
+| Phase 3 | API POST tests (8-12) | 80% on routes |
+| Phase 5 | API PUT/DELETE tests (10-12) | 80% on routes |
+| Phase 6 | Final coverage check | 65% overall |
+
+## Quick Reference: Git Commands
+
+```bash
+# Start any phase (example: Phase 2)
+git checkout develop
+git checkout -b feature/database-setup
+
+# Commit a story
+git add .
+git commit -m "CP-{n}: Description"
+
+# Complete a phase
+git checkout develop
+git merge --no-ff feature/database-setup -m "Merge feature/database-setup: Database setup complete"
+git tag -a epic-2-complete -m "EPIC 2 completed"
+
+# View progress
+git log --oneline --grep="^CP-"
+git tag -l "epic-*"
+```
+
 ## Notes
 - Using shadcn/ui with sonner (toast is deprecated)
 - Next.js 16 shows middleware deprecation warning (still functional)
