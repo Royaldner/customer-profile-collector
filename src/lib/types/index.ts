@@ -21,10 +21,11 @@ export interface Address {
   customer_id: string
   label: string
   street_address: string
+  barangay: string
   city: string
-  state: string
+  province: string
+  region?: string
   postal_code: string
-  country: string
   is_default: boolean
   created_at: string
   updated_at: string
@@ -42,10 +43,11 @@ export interface AddressInput {
   customer_id?: string
   label: string
   street_address: string
+  barangay: string
   city: string
-  state: string
+  province: string
+  region?: string
   postal_code: string
-  country?: string
   is_default?: boolean
 }
 
