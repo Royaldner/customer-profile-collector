@@ -16,17 +16,18 @@ CREATE TABLE customers (
 );
 
 -- =============================================
--- ADDRESSES TABLE
+-- ADDRESSES TABLE (Philippine Address Format)
 -- =============================================
 CREATE TABLE addresses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   label VARCHAR(100) NOT NULL,
   street_address VARCHAR(500) NOT NULL,
+  barangay VARCHAR(255) NOT NULL,
   city VARCHAR(255) NOT NULL,
-  state VARCHAR(100) NOT NULL,
-  postal_code VARCHAR(20) NOT NULL,
-  country VARCHAR(100) NOT NULL DEFAULT 'USA',
+  province VARCHAR(255) NOT NULL,
+  region VARCHAR(100),
+  postal_code VARCHAR(4) NOT NULL,
   is_default BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
