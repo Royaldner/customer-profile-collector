@@ -81,16 +81,17 @@ A customer profile collection system for a small business client. Phase 1 of a f
 - updated_at (timestamp)
 ```
 
-### Address
+### Address (Philippine Format)
 ```
 - id (UUID, primary key)
 - customer_id (UUID, foreign key → Customer)
 - label (string, e.g., "Home", "Work", "Other")
 - street_address (string, required)
+- barangay (string, required)
 - city (string, required)
-- state (string, required)
-- postal_code (string, required)
-- country (string, required, default: 'USA')
+- province (string, required)
+- region (string, optional)
+- postal_code (string, 4 digits, required)
 - is_default (boolean, default: false)
 - created_at (timestamp)
 - updated_at (timestamp)
@@ -154,16 +155,17 @@ CREATE TABLE customers (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Addresses table
+-- Addresses table (Philippine Format)
 CREATE TABLE addresses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   label VARCHAR(100) NOT NULL,
   street_address VARCHAR(500) NOT NULL,
+  barangay VARCHAR(255) NOT NULL,
   city VARCHAR(255) NOT NULL,
-  state VARCHAR(100) NOT NULL,
-  postal_code VARCHAR(20) NOT NULL,
-  country VARCHAR(100) NOT NULL DEFAULT 'USA',
+  province VARCHAR(255) NOT NULL,
+  region VARCHAR(100),
+  postal_code VARCHAR(4) NOT NULL,
   is_default BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
