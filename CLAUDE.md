@@ -217,6 +217,8 @@ CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
 
 ## Agents to Use During Implementation
 
+**IMPORTANT: ALWAYS use the agents listed below for each phase. This is mandatory, not optional.**
+
 | Phase | Agent | Purpose |
 |-------|-------|---------|
 | All phases | `code-reviewer` | Review code after each epic completion |
@@ -225,6 +227,34 @@ CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
 | Phase 3-5 | `qa-expert` | Test writing guidance |
 | Phase 6 | `documentation-engineer` | README and docs |
 | All phases | `git-workflow-manager` | Branch/merge assistance |
+
+### Agent Execution Strategy
+**Run these agents in parallel (in background) to improve time efficiency:**
+
+1. **At the START of each phase:**
+   - Launch `documentation-engineer` in background to update README as you implement
+
+2. **At the END of each phase (before merging):**
+   - Launch `qa-expert` in background to write tests
+   - Continue with other work while tests are being written
+   - Review test results before merging
+
+3. **After merging to main:**
+   - Run `code-reviewer` for final review
+
+**Example parallel execution:**
+```
+# Start phase - launch documentation-engineer in background
+Task(subagent_type="documentation-engineer", run_in_background=true)
+
+# Implement features...
+
+# End phase - launch qa-expert in background
+Task(subagent_type="qa-expert", run_in_background=true)
+
+# Continue with git operations while qa-expert runs
+# Check AgentOutputTool for results before final merge
+```
 
 ## TypeScript Types (for Phase 2)
 ```typescript
