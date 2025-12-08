@@ -38,7 +38,7 @@ A customer profile collection system for a small business client. Phase 1 of a f
 - [x] Git repository initialized with main/develop/feature branches
 - [x] Pushed to GitHub: https://github.com/Royaldner/customer-profile-collector
 
-**Current Branch:** `feature/project-setup-infrastructure`
+**Status:** Merged to `main` and `develop`, tagged `epic-1-complete`
 
 ### Phase 2: Database Setup (EPIC 2) ⏳ PENDING
 - [ ] CP-4: Design database schema
@@ -186,6 +186,17 @@ CREATE POLICY "Allow public update" ON addresses FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete" ON customers FOR DELETE USING (true);
 CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
 ```
+
+## Agents to Use During Implementation
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| All phases | `code-reviewer` | Review code after each epic completion |
+| Phase 1 | `build-engineer` | Project setup validation |
+| Phase 2 | `build-engineer` | Database/Supabase setup |
+| Phase 3-5 | `qa-expert` | Test writing guidance |
+| Phase 6 | `documentation-engineer` | README and docs |
+| All phases | `git-workflow-manager` | Branch/merge assistance |
 
 ## Notes
 - Using shadcn/ui with sonner (toast is deprecated)
