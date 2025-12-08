@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# project planning docs (optional - remove if you want to track)
+customer-profile-collector-plan.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
