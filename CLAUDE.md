@@ -18,6 +18,14 @@ A customer profile collection system for a small business client. Phase 1 of a f
 - **Merges:** Always use `--no-ff`
 - **Tags:** `epic-{n}-complete`, `phase-{n}`, `v{major}.{minor}.{patch}`
 
+### IMPORTANT: Before Starting Any New Phase/Epic
+**ALWAYS create the feature branch FIRST before writing any code:**
+```bash
+git checkout develop
+git checkout -b feature/{branch-name-from-table-below}
+```
+Never make changes directly on `main` or `develop` branches.
+
 ### Branch Names by Epic
 | Epic | Branch Name |
 |------|-------------|
@@ -47,11 +55,13 @@ A customer profile collection system for a small business client. Phase 1 of a f
 
 **Status:** Merged to `main` and `develop`, tagged `epic-2-complete`
 
-### Phase 3: Customer Registration Form (EPIC 3) ⏳ PENDING
-- [ ] CP-7: Build customer form UI with Zod validation
-- [ ] CP-8: Build address sub-form component
-- [ ] CP-9: Implement form submission API
-- [ ] CP-10: Build success page
+### Phase 3: Customer Registration Form (EPIC 3) ✅ COMPLETE
+- [x] CP-7: Build customer form UI with Zod validation
+- [x] CP-8: Build address sub-form component
+- [x] CP-9: Implement form submission API
+- [x] CP-10: Build success page
+
+**Status:** Ready for merge and tagging
 
 ### Phase 4: Admin Dashboard (EPIC 4) ⏳ PENDING
 - [ ] CP-11: Build customer list page
@@ -107,13 +117,19 @@ src/
 ├── app/
 │   ├── globals.css              # Red/white theme CSS variables
 │   ├── layout.tsx
-│   ├── page.tsx
-│   ├── register/                # (Phase 3)
+│   ├── page.tsx                 # Landing page with registration link
+│   ├── register/
+│   │   ├── page.tsx             # Customer registration form
+│   │   └── success/
+│   │       └── page.tsx         # Registration success page
 │   ├── admin/                   # (Phase 4-5)
-│   └── api/customers/           # (Phase 3-5)
+│   └── api/customers/
+│       └── route.ts             # POST endpoint for customer creation
 ├── components/
 │   ├── ui/                      # shadcn/ui components
-│   └── forms/                   # (Phase 3)
+│   └── forms/
+│       ├── customer-form.tsx    # Main customer registration form
+│       └── address-form.tsx     # Address sub-form with add/remove
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts            # Browser client
@@ -121,7 +137,8 @@ src/
 │   │   └── middleware.ts        # Session middleware
 │   ├── types/
 │   │   └── index.ts             # Customer, Address types
-│   ├── validations/             # (Phase 3)
+│   ├── validations/
+│   │   └── customer.ts          # Zod schemas for form validation
 │   └── utils.ts
 ├── middleware.ts                # Next.js middleware
 supabase/
