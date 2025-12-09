@@ -14,10 +14,10 @@ export default function Home() {
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle className="text-2xl text-primary">
-            Customer Profile Collector
+            Customer Profile Registration
           </CardTitle>
           <CardDescription>
-            Customer profile collection system for small businesses
+            Canada Goodies Inc.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -26,12 +26,9 @@ export default function Home() {
             delivery addresses.
           </p>
 
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="pt-4">
             <Button asChild size="lg">
               <Link href="/register">Register Now</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/admin">Admin Dashboard</Link>
             </Button>
           </div>
         </CardContent>

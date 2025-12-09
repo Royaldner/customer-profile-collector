@@ -169,7 +169,6 @@ export function CustomerForm() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="phone">Phone Call</SelectItem>
                       <SelectItem value="sms">SMS</SelectItem>
                     </SelectContent>
                   </Select>

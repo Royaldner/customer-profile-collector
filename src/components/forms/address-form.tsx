@@ -71,7 +71,7 @@ export function AddressForm() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Addresses</h3>
+        <h3 className="text-lg font-medium">Delivery Address</h3>
         <Button
           type="button"
           variant="outline"
