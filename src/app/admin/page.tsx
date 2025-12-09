@@ -34,7 +34,7 @@ export default async function AdminPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage customer profiles</p>
+              <p className="text-sm text-muted-foreground">Canada Goodies Inc.</p>
             </div>
             <LogoutButton />
           </div>
