@@ -408,15 +408,16 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
           </div>
         )}
 
-        <div className="flex justify-end gap-4">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-4">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.push(`/admin/customers/${customer.id}`)}
+            className="w-full sm:w-auto"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

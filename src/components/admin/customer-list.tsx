@@ -87,7 +87,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
               placeholder="Search by name, email, or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
+              className="w-full sm:max-w-md"
             />
           </div>
           <Select
@@ -128,51 +128,99 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Contact Pref.</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Registered</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCustomers.map((customer) => {
-                  const defaultAddress = getDefaultAddress(customer)
-                  return (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>{customer.phone}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {contactPreferenceLabels[customer.contact_preference]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {defaultAddress
-                          ? `${defaultAddress.city}, ${defaultAddress.province}`
-                          : '-'}
-                      </TableCell>
-                      <TableCell>{formatDate(customer.created_at)}</TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/admin/customers/${customer.id}`}>
-                          <Button variant="outline" size="sm">
-                            View
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <>
+            {/* Mobile Card View */}
+            <div className="space-y-4 md:hidden">
+              {filteredCustomers.map((customer) => {
+                const defaultAddress = getDefaultAddress(customer)
+                return (
+                  <div
+                    key={customer.id}
+                    className="rounded-lg border p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium truncate">{customer.name}</h3>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {customer.email}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0">
+                        {contactPreferenceLabels[customer.contact_preference]}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Phone:</span>
+                        <p className="font-medium">{customer.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Registered:</span>
+                        <p className="font-medium">{formatDate(customer.created_at)}</p>
+                      </div>
+                    </div>
+                    {defaultAddress && (
+                      <p className="text-sm text-muted-foreground">
+                        {defaultAddress.city}, {defaultAddress.province}
+                      </p>
+                    )}
+                    <Link href={`/admin/customers/${customer.id}`} className="block">
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Contact Pref.</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Registered</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.map((customer) => {
+                    const defaultAddress = getDefaultAddress(customer)
+                    return (
+                      <TableRow key={customer.id}>
+                        <TableCell className="font-medium">{customer.name}</TableCell>
+                        <TableCell>{customer.email}</TableCell>
+                        <TableCell>{customer.phone}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {contactPreferenceLabels[customer.contact_preference]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {defaultAddress
+                            ? `${defaultAddress.city}, ${defaultAddress.province}`
+                            : '-'}
+                        </TableCell>
+                        <TableCell>{formatDate(customer.created_at)}</TableCell>
+                        <TableCell className="text-right">
+                          <Link href={`/admin/customers/${customer.id}`}>
+                            <Button variant="outline" size="sm">
+                              View
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

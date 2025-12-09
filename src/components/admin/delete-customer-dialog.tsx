@@ -58,7 +58,7 @@ export function DeleteCustomerDialog({ customerId, customerName }: DeleteCustome
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
+        <Button variant="destructive" size="sm" className="sm:size-default">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </Button>

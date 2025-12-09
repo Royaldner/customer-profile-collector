@@ -189,8 +189,8 @@ export function CustomerForm() {
           </div>
         )}
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting} size="lg">
+        <div className="flex justify-center sm:justify-end">
+          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
             {isSubmitting ? 'Submitting...' : 'Submit Registration'}
           </Button>
         </div>
