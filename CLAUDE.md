@@ -67,8 +67,9 @@ Never make changes directly on `main` or `develop` branches.
 - [x] CP-11: Build customer list page
 - [x] CP-12: Add search & filter
 - [x] CP-13: Build customer detail view
+- [x] Add admin login authentication
 
-**Status:** Merged to `develop`, tagged `epic-4-complete`
+**Status:** Merged to `main` and `develop`, tagged `epic-4-complete`
 
 ### Phase 5: Edit & Delete (EPIC 5) ⏳ PENDING
 - [ ] CP-14: Edit customer info
@@ -124,19 +125,34 @@ src/
 │   │   ├── page.tsx             # Customer registration form
 │   │   └── success/
 │   │       └── page.tsx         # Registration success page
-│   ├── admin/                   # (Phase 4-5)
-│   └── api/customers/
-│       └── route.ts             # POST endpoint for customer creation
+│   ├── admin/
+│   │   ├── page.tsx             # Admin dashboard (customer list)
+│   │   ├── login/
+│   │   │   └── page.tsx         # Admin login page
+│   │   └── customers/
+│   │       └── [id]/
+│   │           └── page.tsx     # Customer detail view
+│   └── api/
+│       ├── customers/
+│       │   └── route.ts         # POST endpoint for customer creation
+│       └── admin/
+│           ├── login/
+│           │   └── route.ts     # Admin login API
+│           └── logout/
+│               └── route.ts     # Admin logout API
 ├── components/
 │   ├── ui/                      # shadcn/ui components
-│   └── forms/
-│       ├── customer-form.tsx    # Main customer registration form
-│       └── address-form.tsx     # Address sub-form with add/remove
+│   ├── forms/
+│   │   ├── customer-form.tsx    # Main customer registration form
+│   │   └── address-form.tsx     # Address sub-form with add/remove
+│   └── admin/
+│       ├── customer-list.tsx    # Customer list with search/filter
+│       └── logout-button.tsx    # Logout button component
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts            # Browser client
 │   │   ├── server.ts            # Server client
-│   │   └── middleware.ts        # Session middleware
+│   │   └── middleware.ts        # Session + admin auth middleware
 │   ├── types/
 │   │   └── index.ts             # Customer, Address types
 │   ├── validations/
@@ -149,7 +165,9 @@ supabase/
     ├── 001_create_tables.sql    # Tables, indexes, triggers
     └── 002_enable_rls.sql       # RLS policies
 test/
-└── setup.ts                     # Vitest setup
+├── setup.ts                     # Vitest setup
+├── customer-validation.test.ts  # Zod schema tests (52 tests)
+└── admin-components.test.tsx    # Admin component tests (36 tests)
 ```
 
 ## Commands
@@ -349,8 +367,23 @@ git log --oneline --grep="^CP-"
 git tag -l "epic-*"
 ```
 
+## Admin Authentication
+- Login page: `/admin/login`
+- Protected routes: All `/admin/*` routes (except login)
+- Session: 24-hour httpOnly cookie
+- Configure credentials via environment variables:
+  - `ADMIN_USERNAME` (default: admin)
+  - `ADMIN_PASSWORD` (default: admin123)
+
+## UI Customizations
+- Home page title: "Customer Profile Registration"
+- Company name: "Canada Goodies Inc."
+- Contact preference options: Email, SMS (Phone removed)
+- Address section title: "Delivery Address"
+
 ## Notes
 - Using shadcn/ui with sonner (toast is deprecated)
 - Next.js 16 shows middleware deprecation warning (still functional)
 - Supabase credentials in `.env.local` (gitignored)
+- Admin credentials in `.env.local` (gitignored)
 - Full project plan available in `customer-profile-collector-plan.md` (gitignored)
