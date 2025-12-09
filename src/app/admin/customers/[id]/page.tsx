@@ -69,17 +69,15 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <p className="text-sm text-muted-foreground">{customer.name}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link href="/admin">
-                <Button variant="outline" size="sm" className="sm:size-default">
-                  Back to List
-                </Button>
-              </Link>
-              <Link href={`/admin/customers/${id}/edit`}>
-                <Button variant="outline" size="sm" className="sm:size-default">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin">Back to List</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/customers/${id}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <DeleteCustomerDialog customerId={id} customerName={customer.name} />
               <LogoutButton />
             </div>

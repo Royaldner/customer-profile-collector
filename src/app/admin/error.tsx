@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, RefreshCw } from 'lucide-react'
@@ -12,8 +13,13 @@ export default function AdminError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const router = useRouter()
+
   useEffect(() => {
-    console.error('Admin page error:', error)
+    // Only log errors in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Admin page error:', error)
+    }
   }, [error])
 
   return (
@@ -44,7 +50,7 @@ export default function AdminError({
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
-              <Button onClick={() => window.location.href = '/admin/login'} variant="outline">
+              <Button onClick={() => router.push('/admin/login')} variant="outline">
                 Back to Login
               </Button>
             </div>

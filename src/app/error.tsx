@@ -14,7 +14,9 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Application error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Application error:', error)
+    }
   }, [error])
 
   return (
@@ -35,12 +37,12 @@ export default function GlobalError({
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
             </Button>
-            <Link href="/">
-              <Button variant="outline" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto" asChild>
+              <Link href="/">
                 <Home className="mr-2 h-4 w-4" />
                 Go Home
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

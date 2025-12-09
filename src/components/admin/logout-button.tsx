@@ -27,10 +27,9 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="outline" onClick={handleLogout} disabled={isLoading} size="sm" className="sm:size-default">
-      <LogOut className="mr-2 h-4 w-4" />
-      <span className="hidden sm:inline">{isLoading ? 'Logging out...' : 'Logout'}</span>
-      <span className="sm:hidden">{isLoading ? '...' : ''}</span>
+    <Button variant="outline" onClick={handleLogout} disabled={isLoading} size="sm">
+      <LogOut className="h-4 w-4 sm:mr-2" />
+      <span className="sr-only sm:not-sr-only">{isLoading ? 'Logging out...' : 'Logout'}</span>
     </Button>
   )
 }

@@ -14,7 +14,9 @@ export default function EditCustomerError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Edit customer error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Edit customer error:', error)
+    }
   }, [error])
 
   return (
@@ -45,12 +47,12 @@ export default function EditCustomerError({
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
-              <Link href="/admin">
-                <Button variant="outline" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto" asChild>
+                <Link href="/admin">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to List
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
