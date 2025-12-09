@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Star } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 
 interface SetDefaultAddressButtonProps {
@@ -31,9 +32,11 @@ export function SetDefaultAddressButton({ addressId, isDefault }: SetDefaultAddr
         throw new Error(data.message || 'Failed to set default address')
       }
 
+      toast.success('Default address updated')
       router.refresh()
     } catch (error) {
-      console.error('Error setting default address:', error)
+      const message = error instanceof Error ? error.message : 'Failed to set default address'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }

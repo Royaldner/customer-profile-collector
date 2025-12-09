@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -85,11 +86,12 @@ export function CustomerForm() {
       }
 
       const result = await response.json()
+      toast.success('Registration submitted successfully!')
       router.push(`/register/success?id=${result.customer.id}`)
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      )
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+      setSubmitError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -187,8 +189,8 @@ export function CustomerForm() {
           </div>
         )}
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting} size="lg">
+        <div className="flex justify-center sm:justify-end">
+          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
             {isSubmitting ? 'Submitting...' : 'Submit Registration'}
           </Button>
         </div>
