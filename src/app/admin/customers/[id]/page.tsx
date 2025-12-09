@@ -2,10 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { Customer } from '@/lib/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LogoutButton } from '@/components/admin/logout-button'
+import { DeleteCustomerDialog } from '@/components/admin/delete-customer-dialog'
+import { SetDefaultAddressButton } from '@/components/admin/set-default-address-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +72,13 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Link href="/admin">
                 <Button variant="outline">Back to List</Button>
               </Link>
+              <Link href={`/admin/customers/${id}/edit`}>
+                <Button variant="outline">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+              </Link>
+              <DeleteCustomerDialog customerId={id} customerName={customer.name} />
               <LogoutButton />
             </div>
           </div>
@@ -145,11 +155,17 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                           address.is_default ? 'border-primary bg-primary/5' : ''
                         }`}
                       >
-                        <div className="mb-2 flex items-center gap-2">
-                          <span className="font-medium">{address.label}</span>
-                          {address.is_default && (
-                            <Badge variant="default">Default</Badge>
-                          )}
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{address.label}</span>
+                            {address.is_default && (
+                              <Badge variant="default">Default</Badge>
+                            )}
+                          </div>
+                          <SetDefaultAddressButton
+                            addressId={address.id}
+                            isDefault={address.is_default}
+                          />
                         </div>
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <p>{address.street_address}</p>

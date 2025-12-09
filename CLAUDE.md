@@ -71,10 +71,12 @@ Never make changes directly on `main` or `develop` branches.
 
 **Status:** Merged to `main` and `develop`, tagged `epic-4-complete`
 
-### Phase 5: Edit & Delete (EPIC 5) ⏳ PENDING
-- [ ] CP-14: Edit customer info
-- [ ] CP-15: Delete customer with confirmation
-- [ ] CP-16: Change default address
+### Phase 5: Edit & Delete (EPIC 5) ✅ COMPLETE
+- [x] CP-14: Edit customer info
+- [x] CP-15: Delete customer with confirmation
+- [x] CP-16: Change default address
+
+**Status:** Merged to `main` and `develop`, tagged `epic-5-complete`
 
 ### Phase 6: Polish & Deployment (EPIC 6) ⏳ PENDING
 - [ ] CP-17: Add loading & error states
@@ -131,10 +133,18 @@ src/
 │   │   │   └── page.tsx         # Admin login page
 │   │   └── customers/
 │   │       └── [id]/
-│   │           └── page.tsx     # Customer detail view
+│   │           ├── page.tsx     # Customer detail view
+│   │           └── edit/
+│   │               └── page.tsx # Customer edit page
 │   └── api/
 │       ├── customers/
-│       │   └── route.ts         # POST endpoint for customer creation
+│       │   ├── route.ts         # POST endpoint for customer creation
+│       │   └── [id]/
+│       │       └── route.ts     # GET/PUT/DELETE customer endpoints
+│       ├── addresses/
+│       │   └── [id]/
+│       │       └── set-default/
+│       │           └── route.ts # POST set default address
 │       └── admin/
 │           ├── login/
 │           │   └── route.ts     # Admin login API
@@ -147,7 +157,10 @@ src/
 │   │   └── address-form.tsx     # Address sub-form with add/remove
 │   └── admin/
 │       ├── customer-list.tsx    # Customer list with search/filter
-│       └── logout-button.tsx    # Logout button component
+│       ├── logout-button.tsx    # Logout button component
+│       ├── edit-customer-form.tsx        # Edit customer form
+│       ├── delete-customer-dialog.tsx    # Delete confirmation dialog
+│       └── set-default-address-button.tsx # Set default address button
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts            # Browser client
