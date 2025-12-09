@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Customer } from '@/lib/types'
 import { CustomerList } from '@/components/admin/customer-list'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { LogoutButton } from '@/components/admin/logout-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,9 +36,7 @@ export default async function AdminPage() {
               <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
               <p className="text-sm text-muted-foreground">Manage customer profiles</p>
             </div>
-            <Link href="/">
-              <Button variant="outline">Back to Home</Button>
-            </Link>
+            <LogoutButton />
           </div>
         </div>
       </header>

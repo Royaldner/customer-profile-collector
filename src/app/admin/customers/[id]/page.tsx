@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { LogoutButton } from '@/components/admin/logout-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,9 +65,12 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
               <p className="text-sm text-muted-foreground">{customer.name}</p>
             </div>
-            <Link href="/admin">
-              <Button variant="outline">Back to List</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/admin">
+                <Button variant="outline">Back to List</Button>
+              </Link>
+              <LogoutButton />
+            </div>
           </div>
         </div>
       </header>

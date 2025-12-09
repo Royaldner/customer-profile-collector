@@ -2,6 +2,30 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Check if accessing protected admin routes (not login page)
+  const isAdminRoute = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')
+
+  if (isAdminRoute) {
+    const adminSession = request.cookies.get('admin_session')
+
+    if (!adminSession?.value) {
+      // Redirect to login if no session
+      const loginUrl = new URL('/admin/login', request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // If logged in and trying to access login page, redirect to admin
+  if (pathname === '/admin/login') {
+    const adminSession = request.cookies.get('admin_session')
+    if (adminSession?.value) {
+      const adminUrl = new URL('/admin', request.url)
+      return NextResponse.redirect(adminUrl)
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
