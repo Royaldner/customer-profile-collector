@@ -63,21 +63,21 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
               <p className="text-sm text-muted-foreground">{customer.name}</p>
             </div>
-            <div className="flex gap-2">
-              <Link href="/admin">
-                <Button variant="outline">Back to List</Button>
-              </Link>
-              <Link href={`/admin/customers/${id}/edit`}>
-                <Button variant="outline">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin">Back to List</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/customers/${id}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <DeleteCustomerDialog customerId={id} customerName={customer.name} />
               <LogoutButton />
             </div>
@@ -86,7 +86,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Customer Information Card */}
           <Card>
             <CardHeader>

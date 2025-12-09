@@ -44,9 +44,10 @@ describe('CustomerList Component', () => {
       const customers = [createMockCustomer()]
       render(<CustomerList initialCustomers={customers} />)
 
-      expect(screen.getByText('Juan Dela Cruz')).toBeInTheDocument()
-      expect(screen.getByText('juan@example.com')).toBeInTheDocument()
-      expect(screen.getByText('09171234567')).toBeInTheDocument()
+      // Content appears in both mobile and desktop views
+      expect(screen.getAllByText('Juan Dela Cruz').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('juan@example.com').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('09171234567').length).toBeGreaterThan(0)
     })
 
     it('should display customer count', () => {
@@ -92,7 +93,7 @@ describe('CustomerList Component', () => {
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
       await user.type(searchInput, 'Maria')
 
-      expect(screen.getByText('Maria Santos')).toBeInTheDocument()
+      expect(screen.getAllByText('Maria Santos').length).toBeGreaterThan(0)
       expect(screen.queryByText('Juan Dela Cruz')).not.toBeInTheDocument()
       expect(screen.queryByText('Pedro Reyes')).not.toBeInTheDocument()
     })
@@ -108,7 +109,7 @@ describe('CustomerList Component', () => {
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
       await user.type(searchInput, 'test.com')
 
-      expect(screen.getByText('maria@test.com')).toBeInTheDocument()
+      expect(screen.getAllByText('maria@test.com').length).toBeGreaterThan(0)
       expect(screen.queryByText('juan@example.com')).not.toBeInTheDocument()
     })
 
@@ -123,7 +124,7 @@ describe('CustomerList Component', () => {
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
       await user.type(searchInput, '0928')
 
-      expect(screen.getByText('09281234567')).toBeInTheDocument()
+      expect(screen.getAllByText('09281234567').length).toBeGreaterThan(0)
       expect(screen.queryByText('09171234567')).not.toBeInTheDocument()
     })
 
@@ -135,7 +136,7 @@ describe('CustomerList Component', () => {
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
       await user.type(searchInput, 'JUAN')
 
-      expect(screen.getByText('Juan Dela Cruz')).toBeInTheDocument()
+      expect(screen.getAllByText('Juan Dela Cruz').length).toBeGreaterThan(0)
     })
 
     it('should be case-insensitive for email search', async () => {
@@ -146,7 +147,7 @@ describe('CustomerList Component', () => {
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
       await user.type(searchInput, 'JUAN@EXAMPLE')
 
-      expect(screen.getByText('juan@example.com')).toBeInTheDocument()
+      expect(screen.getAllByText('juan@example.com').length).toBeGreaterThan(0)
     })
 
     it('should show "no match" message when search returns no results', async () => {
@@ -239,7 +240,7 @@ describe('CustomerList Component', () => {
       ]
       render(<CustomerList initialCustomers={customers} />)
 
-      expect(screen.getByText('Quezon City, Metro Manila')).toBeInTheDocument()
+      expect(screen.getAllByText('Quezon City, Metro Manila').length).toBeGreaterThan(0)
     })
 
     it('should display first address when no default is set', () => {
@@ -256,13 +257,14 @@ describe('CustomerList Component', () => {
       ]
       render(<CustomerList initialCustomers={customers} />)
 
-      expect(screen.getByText('Makati, Metro Manila')).toBeInTheDocument()
+      expect(screen.getAllByText('Makati, Metro Manila').length).toBeGreaterThan(0)
     })
 
     it('should display dash when customer has no addresses', () => {
       const customers = [createMockCustomer({ addresses: [] })]
       render(<CustomerList initialCustomers={customers} />)
 
+      // Only desktop table shows dash, mobile shows nothing
       expect(screen.getByText('-')).toBeInTheDocument()
     })
 
@@ -287,7 +289,7 @@ describe('CustomerList Component', () => {
       ]
       render(<CustomerList initialCustomers={customers} />)
 
-      expect(screen.getByText('Quezon City, Metro Manila')).toBeInTheDocument()
+      expect(screen.getAllByText('Quezon City, Metro Manila').length).toBeGreaterThan(0)
     })
   })
 
@@ -299,17 +301,19 @@ describe('CustomerList Component', () => {
       ]
       render(<CustomerList initialCustomers={customers} />)
 
-      const viewButtons = screen.getAllByText('View')
-      expect(viewButtons).toHaveLength(2)
+      // Mobile shows "View Details", desktop shows "View"
+      const viewButtons = screen.getAllByRole('button', { name: /View/i })
+      expect(viewButtons.length).toBeGreaterThanOrEqual(2)
     })
 
     it('should have correct link to customer detail page', () => {
       const customers = [createMockCustomer({ id: 'cust-123' })]
       render(<CustomerList initialCustomers={customers} />)
 
-      const viewButton = screen.getByText('View')
-      const link = viewButton.closest('a')
-      expect(link).toHaveAttribute('href', '/admin/customers/cust-123')
+      // Get links to the customer page
+      const links = screen.getAllByRole('link', { name: /View/i })
+      expect(links.length).toBeGreaterThan(0)
+      expect(links[0]).toHaveAttribute('href', '/admin/customers/cust-123')
     })
   })
 })
@@ -322,7 +326,7 @@ describe('Helper Functions', () => {
       })
       render(<CustomerList initialCustomers={[customer]} />)
 
-      expect(screen.getByText(/Jan 15, 2024/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Jan 15, 2024/).length).toBeGreaterThan(0)
     })
   })
 
@@ -351,7 +355,7 @@ describe('Helper Functions', () => {
       const customer = createMockCustomer({ addresses: [defaultAddr] })
       render(<CustomerList initialCustomers={[customer]} />)
 
-      expect(screen.getByText('Makati, Metro Manila')).toBeInTheDocument()
+      expect(screen.getAllByText('Makati, Metro Manila').length).toBeGreaterThan(0)
     })
 
     it('should return first address when no default is set', () => {
@@ -364,7 +368,7 @@ describe('Helper Functions', () => {
       const customer = createMockCustomer({ addresses: [firstAddr] })
       render(<CustomerList initialCustomers={[customer]} />)
 
-      expect(screen.getByText('Pasig, Metro Manila')).toBeInTheDocument()
+      expect(screen.getAllByText('Pasig, Metro Manila').length).toBeGreaterThan(0)
     })
 
     it('should return default address from multiple addresses', () => {
@@ -388,7 +392,7 @@ describe('Helper Functions', () => {
       const customer = createMockCustomer({ addresses })
       render(<CustomerList initialCustomers={[customer]} />)
 
-      expect(screen.getByText(/Quezon City/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Quezon City/).length).toBeGreaterThan(0)
     })
   })
 })
@@ -399,7 +403,7 @@ describe('Edge Cases and Boundary Conditions', () => {
     const customer = createMockCustomer({ name: longName })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getByText(longName)).toBeInTheDocument()
+    expect(screen.getAllByText(longName).length).toBeGreaterThan(0)
   })
 
   it('should handle customer with very long email', () => {
@@ -407,7 +411,7 @@ describe('Edge Cases and Boundary Conditions', () => {
     const customer = createMockCustomer({ email: longEmail })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getByText(longEmail)).toBeInTheDocument()
+    expect(screen.getAllByText(longEmail).length).toBeGreaterThan(0)
   })
 
   it('should handle special characters in search', async () => {
@@ -418,7 +422,7 @@ describe('Edge Cases and Boundary Conditions', () => {
     const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
     await user.type(searchInput, "O'Brien")
 
-    expect(screen.getByText("O'Brien-Smith")).toBeInTheDocument()
+    expect(screen.getAllByText("O'Brien-Smith").length).toBeGreaterThan(0)
   })
 
   it('should handle empty search query', async () => {
@@ -433,8 +437,8 @@ describe('Edge Cases and Boundary Conditions', () => {
     await user.type(searchInput, 'test')
     await user.clear(searchInput)
 
-    expect(screen.getByText('Customer 1')).toBeInTheDocument()
-    expect(screen.getByText('Customer 2')).toBeInTheDocument()
+    expect(screen.getAllByText('Customer 1').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Customer 2').length).toBeGreaterThan(0)
   })
 
   it('should handle large dataset', () => {
@@ -464,9 +468,9 @@ describe('Search Performance', () => {
     const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
     await user.type(searchInput, 'juan')
 
-    expect(screen.getByText('Juan Dela Cruz')).toBeInTheDocument()
-    expect(screen.getByText('Juana Santos')).toBeInTheDocument()
-    expect(screen.getByText('Maria Juan')).toBeInTheDocument()
+    expect(screen.getAllByText('Juan Dela Cruz').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Juana Santos').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Maria Juan').length).toBeGreaterThan(0)
   })
 })
 
@@ -480,7 +484,7 @@ describe('Multiple Addresses Scenarios', () => {
     const customer = createMockCustomer({ addresses })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getByText('Juan Dela Cruz')).toBeInTheDocument()
+    expect(screen.getAllByText('Juan Dela Cruz').length).toBeGreaterThan(0)
   })
 
   it('should select middle address if it is default', () => {
@@ -492,7 +496,7 @@ describe('Multiple Addresses Scenarios', () => {
     const customer = createMockCustomer({ addresses })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getByText(/Quezon City/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Quezon City/).length).toBeGreaterThan(0)
   })
 
   it('should select last address if it is default', () => {
@@ -504,6 +508,6 @@ describe('Multiple Addresses Scenarios', () => {
     const customer = createMockCustomer({ addresses })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getByText(/Pasig/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Pasig/).length).toBeGreaterThan(0)
   })
 })

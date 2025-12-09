@@ -43,7 +43,7 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Edit Customer</h1>
               <p className="text-sm text-muted-foreground">{customer.name}</p>
