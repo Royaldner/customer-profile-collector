@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -130,12 +131,13 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
         throw new Error(error.message || 'Failed to update customer')
       }
 
+      toast.success('Customer updated successfully')
       router.push(`/admin/customers/${customer.id}`)
       router.refresh()
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      )
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+      setSubmitError(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -41,11 +42,14 @@ export function DeleteCustomerDialog({ customerId, customerName }: DeleteCustome
         throw new Error(data.message || 'Failed to delete customer')
       }
 
+      toast.success('Customer deleted successfully')
       setIsOpen(false)
       router.push('/admin')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(message)
+      toast.error(message)
     } finally {
       setIsDeleting(false)
     }
