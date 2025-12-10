@@ -165,6 +165,24 @@ git merge --no-ff feature/feature-name
 | 6 | ✅ Complete | Polish & deployment |
 | 7 | 📋 Planned | Customer UX Enhancement |
 
+### Phase 7: Customer UX Enhancement (Planned)
+
+#### 7.1 Google OAuth + Account System
+- Google sign-in for customers
+- Customer dashboard (view/edit own profile)
+- Supabase Auth integration
+
+#### 7.2 Multi-Step Registration Form
+- 3-step wizard: Personal Info → Delivery Method → Address/Review
+- Delivery method options: Pick-up, Delivery, Cash on Delivery (COD)
+- Skip address section for pick-up orders
+
+#### 7.3 Philippine Address Autocomplete
+- Searchable combobox for cities/municipalities (~1,500)
+- Searchable combobox for barangays (~42,000)
+- Auto-populate province and region from city selection
+- PSGC (Philippine Standard Geographic Code) data integration
+
 ## License
 
 Private - All rights reserved
