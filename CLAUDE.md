@@ -94,31 +94,38 @@ Never make changes directly on `main` or `develop` branches.
 ### EPIC 7: Customer UX Enhancement (Planned)
 Branch: `feature/customer-ux-enhancement`
 
-#### 7.1 Google OAuth + Account System
+#### 7.1 Customer Authentication System
 - [ ] CP-20: Configure Google OAuth in Supabase
-- [ ] CP-21: Create customer login page
-- [ ] CP-22: Create customer dashboard
+- [ ] CP-21: Create customer login page (Google + Email/Password)
+- [ ] CP-22: Create customer signup page with email/password
 - [ ] CP-23: Implement OAuth callback handler
-- [ ] CP-24: Add Google sign-in to registration
+- [ ] CP-24: Create forgot/reset password flow
+- [ ] CP-25: Create customer dashboard
+- [ ] CP-26: Add auth options to registration flow
 
 #### 7.2 Multi-Step Registration Form
-- [ ] CP-25: Create Stepper UI component
-- [ ] CP-26: Create Personal Info step
-- [ ] CP-27: Create Delivery Method step (pickup/delivered/cod)
-- [ ] CP-28: Create Address/Review step
-- [ ] CP-29: Refactor CustomerForm to multi-step
+- [ ] CP-27: Create Stepper UI component
+- [ ] CP-28: Create Personal Info step
+- [ ] CP-29: Create Delivery Method step (pickup/delivered/cod)
+- [ ] CP-30: Create Address/Review step
+- [ ] CP-31: Refactor CustomerForm to multi-step
 
 #### 7.3 Philippine Address Autocomplete
-- [ ] CP-30: Install shadcn command & popover
-- [ ] CP-31: Create LocationCombobox component
-- [ ] CP-32: Prepare PSGC city data
-- [ ] CP-33: Create barangays API route
-- [ ] CP-34: Integrate comboboxes into AddressForm
+- [ ] CP-32: Install shadcn command & popover
+- [ ] CP-33: Create LocationCombobox component
+- [ ] CP-34: Prepare PSGC city data
+- [ ] CP-35: Create barangays API route
+- [ ] CP-36: Integrate comboboxes into AddressForm
+
+#### 7.4 Supabase Keep-Alive (Free Tier)
+- [ ] CP-37: Create health check API endpoint
+- [ ] CP-38: Setup Vercel Cron job for weekly ping
 
 ### Key Decisions (EPIC 7)
 - **Pick-up Orders**: Skip address section completely (not optional)
-- **Customer Dashboard**: Google sign-in only (no magic link)
+- **Customer Auth**: Google OAuth + Email/Password (both options available)
 - **Delivery Methods**: pickup, delivered, cod
+- **Supabase Keep-Alive**: Weekly cron to prevent free tier auto-pause (7 days inactivity)
 
 ### New Data Model Fields (EPIC 7)
 
@@ -130,9 +137,12 @@ Branch: `feature/customer-ux-enhancement`
 
 **New Pages**
 ```
-- /customer/login      # Customer login with Google OAuth
-- /customer/dashboard  # View/edit own profile
-- /auth/callback       # OAuth redirect handler
+- /customer/login           # Customer login (Google + Email/Password)
+- /customer/signup          # Customer signup with email/password
+- /customer/forgot-password # Request password reset
+- /customer/reset-password  # Reset password (from email link)
+- /customer/dashboard       # View/edit own profile
+- /auth/callback            # OAuth redirect handler
 ```
 
 ### Database Migrations Needed (EPIC 7)
@@ -145,6 +155,56 @@ CREATE INDEX idx_customers_user_id ON customers(user_id);
 ALTER TABLE customers ADD COLUMN delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered'
   CHECK (delivery_method IN ('pickup', 'delivered', 'cod'));
 ```
+
+### Supabase Keep-Alive Implementation (EPIC 7)
+
+**Why needed:** Supabase free tier auto-pauses projects after 7 days of inactivity.
+
+**Solution:** Vercel Cron job pings a health check endpoint weekly.
+
+**Files to create:**
+```
+src/app/api/health/route.ts    # Health check endpoint (queries Supabase)
+vercel.json                     # Cron job configuration
+```
+
+**Health Check Endpoint:**
+```typescript
+// src/app/api/health/route.ts
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from('customers')
+    .select('*', { count: 'exact', head: true })
+
+  if (error) {
+    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    customers: count
+  })
+}
+```
+
+**Vercel Cron Configuration:**
+```json
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "0 0 * * 0"
+    }
+  ]
+}
+```
+Note: `0 0 * * 0` = Every Sunday at midnight UTC (weekly)
 
 ---
 
