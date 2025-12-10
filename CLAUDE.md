@@ -35,6 +35,7 @@ Never make changes directly on `main` or `develop` branches.
 | EPIC 4 | `feature/admin-dashboard` |
 | EPIC 5 | `feature/edit-delete-operations` |
 | EPIC 6 | `feature/polish-deployment` |
+| EPIC 7 | `feature/customer-ux-enhancement` |
 
 ## Progress Tracker
 
@@ -86,6 +87,364 @@ Never make changes directly on `main` or `develop` branches.
 **Status:** Merged to `main` and `develop`, tagged `epic-6-complete`
 
 ## ALL PHASES COMPLETE - PROJECT READY FOR PRODUCTION
+
+---
+
+## Future Plans (Phase 2: Customer UX Enhancement)
+
+### EPIC 7: Customer UX Enhancement (Planned)
+Branch: `feature/customer-ux-enhancement`
+
+#### 7.1 Customer Authentication System
+- [ ] CP-20: Configure Google OAuth in Supabase
+- [ ] CP-21: Create customer login page (Google + Email/Password)
+- [ ] CP-22: Create customer signup page with email/password
+- [ ] CP-23: Implement OAuth callback handler
+- [ ] CP-24: Create forgot/reset password flow
+- [ ] CP-25: Create customer dashboard
+- [ ] CP-26: Add auth options to registration flow
+
+#### 7.2 Multi-Step Registration Form
+- [ ] CP-27: Create Stepper UI component
+- [ ] CP-28: Create Personal Info step
+- [ ] CP-29: Create Delivery Method step (pickup/delivered/cod)
+- [ ] CP-30: Create Address/Review step
+- [ ] CP-31: Refactor CustomerForm to multi-step
+
+#### 7.3 Philippine Address Autocomplete
+- [ ] CP-32: Install shadcn command & popover
+- [ ] CP-33: Create LocationCombobox component
+- [ ] CP-34: Prepare PSGC city data
+- [ ] CP-35: Create barangays API route
+- [ ] CP-36: Integrate comboboxes into AddressForm
+
+#### 7.4 Supabase Keep-Alive (Free Tier)
+- [ ] CP-37: Create health check API endpoint
+- [ ] CP-38: Setup Vercel Cron job for weekly ping
+
+### Key Decisions (EPIC 7)
+- **Pick-up Orders**: Skip address section completely (not optional)
+- **Customer Auth**: Google OAuth + Email/Password (both options available)
+- **Delivery Methods**: pickup, delivered, cod
+- **Supabase Keep-Alive**: Weekly cron to prevent free tier auto-pause (7 days inactivity)
+
+### Pickup Order Address Handling (EPIC 7)
+
+**Business Logic:**
+- `delivery_method = 'pickup'`: Customer collects order in-store, **no address needed**
+- `delivery_method = 'delivered'` or `'cod'`: Address is **required** (1-3 addresses, one default)
+
+**Database Behavior:**
+- Pickup customers have **zero addresses** in the `addresses` table
+- The `addresses` FK constraint (`customer_id`) allows this (no `NOT NULL` on child table)
+- Existing RLS policies work unchanged (no addresses = nothing to query)
+
+**Form Behavior:**
+1. User selects delivery method in Step 2 (Delivery Method step)
+2. If `pickup` selected:
+   - Skip Step 3 (Address step) entirely
+   - Go directly to Review step
+   - Submit form with `addresses: []` (empty array)
+3. If `delivered` or `cod` selected:
+   - Show Step 3 (Address step)
+   - Require at least 1 address with `is_default = true`
+
+**Validation Summary:**
+```typescript
+// Pickup: addresses can be empty
+{ delivery_method: 'pickup', addresses: [] }  // ✅ Valid
+
+// Delivered/COD: addresses required
+{ delivery_method: 'delivered', addresses: [] }  // ❌ Invalid
+{ delivery_method: 'delivered', addresses: [{ ..., is_default: true }] }  // ✅ Valid
+{ delivery_method: 'cod', addresses: [{ ..., is_default: true }] }  // ✅ Valid
+```
+
+**Admin Dashboard Display:**
+- Show "Pickup" badge for customers with `delivery_method = 'pickup'`
+- Hide "Addresses" section in customer detail for pickup customers
+- Filter option: "Delivery Method" dropdown (All, Pickup, Delivered, COD)
+
+### New Data Model Fields (EPIC 7)
+
+**Customer (additions)**
+```
+- user_id (UUID, optional, FK to auth.users)
+- delivery_method (enum: 'pickup' | 'delivered' | 'cod')
+```
+
+### TypeScript Type Updates (EPIC 7)
+
+```typescript
+// src/lib/types/index.ts - ADD these
+
+export type DeliveryMethod = 'pickup' | 'delivered' | 'cod'
+
+// Update Customer interface
+export interface Customer {
+  id: string
+  name: string
+  email: string
+  phone: string
+  contact_preference: ContactPreference
+  user_id?: string                    // NEW: Link to Supabase auth.users
+  delivery_method: DeliveryMethod     // NEW: How customer receives orders
+  created_at: string
+  updated_at: string
+  addresses?: Address[]
+}
+
+// Update CustomerInput interface
+export interface CustomerInput {
+  name: string
+  email: string
+  phone: string
+  contact_preference: ContactPreference
+  delivery_method: DeliveryMethod     // NEW
+}
+```
+
+**New Pages**
+```
+- /customer/login           # Customer login (Google + Email/Password)
+- /customer/signup          # Customer signup with email/password
+- /customer/forgot-password # Request password reset
+- /customer/reset-password  # Reset password (from email link)
+- /customer/dashboard       # View/edit own profile
+- /auth/callback            # OAuth redirect handler
+```
+
+### Zod Schema Updates (EPIC 7)
+
+```typescript
+// src/lib/validations/customer.ts - UPDATED for Phase 7
+
+import { z } from 'zod'
+
+// Delivery method enum
+export const deliveryMethodSchema = z.enum(['pickup', 'delivered', 'cod'], {
+  message: 'Please select a delivery method',
+})
+
+export const addressSchema = z.object({
+  label: z.string().min(1, 'Label is required').max(100, 'Label must be 100 characters or less'),
+  street_address: z.string().min(1, 'Street address is required').max(500, 'Street address must be 500 characters or less'),
+  barangay: z.string().min(1, 'Barangay is required').max(255, 'Barangay must be 255 characters or less'),
+  city: z.string().min(1, 'City/Municipality is required').max(255, 'City must be 255 characters or less'),
+  province: z.string().min(1, 'Province is required').max(255, 'Province must be 255 characters or less'),
+  region: z.string().max(100, 'Region must be 100 characters or less').optional(),
+  postal_code: z.string().min(1, 'Postal code is required').regex(/^\d{4}$/, 'Postal code must be exactly 4 digits'),
+  is_default: z.boolean(),
+})
+
+export const customerSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(255, 'Name must be 255 characters or less'),
+  email: z.string().min(1, 'Email is required').email('Invalid email address').max(255, 'Email must be 255 characters or less'),
+  phone: z.string().min(1, 'Phone number is required').min(10, 'Phone must be at least 10 digits').max(50, 'Phone must be 50 characters or less'),
+  contact_preference: z.enum(['email', 'phone', 'sms'], { message: 'Please select a contact preference' }),
+  delivery_method: deliveryMethodSchema,  // NEW
+})
+
+// UPDATED: Conditional address validation based on delivery_method
+export const customerWithAddressesSchema = z.object({
+  customer: customerSchema,
+  addresses: z.array(addressSchema),
+}).refine(
+  (data) => {
+    // Pickup orders: addresses optional (can be empty)
+    if (data.customer.delivery_method === 'pickup') {
+      return true
+    }
+    // Delivered/COD: require 1-3 addresses with exactly one default
+    if (data.addresses.length < 1 || data.addresses.length > 3) {
+      return false
+    }
+    return data.addresses.filter((a) => a.is_default).length === 1
+  },
+  {
+    message: 'Delivery orders require 1-3 addresses with exactly one default',
+    path: ['addresses'],
+  }
+)
+
+// Type exports
+export type DeliveryMethodFormData = z.infer<typeof deliveryMethodSchema>
+export type AddressFormData = z.infer<typeof addressSchema>
+export type CustomerFormData = z.infer<typeof customerSchema>
+export type CustomerWithAddressesFormData = z.infer<typeof customerWithAddressesSchema>
+```
+
+### Database Migrations Needed (EPIC 7)
+```sql
+-- Migration 003: Add auth user link
+ALTER TABLE customers ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+CREATE INDEX idx_customers_user_id ON customers(user_id);
+
+-- Migration 004: Add delivery method
+ALTER TABLE customers ADD COLUMN delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered'
+  CHECK (delivery_method IN ('pickup', 'delivered', 'cod'));
+```
+
+### RLS Policies for Customer Auth (EPIC 7)
+
+```sql
+-- supabase/migrations/003_customer_auth_rls.sql
+
+-- Update customers table RLS for authenticated customers
+-- Keep existing admin/anon policies, add customer self-access
+
+-- Customers can read their own profile (via user_id link)
+CREATE POLICY "Customers can view own profile"
+  ON customers FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+-- Customers can update their own profile
+CREATE POLICY "Customers can update own profile"
+  ON customers FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Public can still create customers (registration without login)
+-- This policy should already exist from Phase 2
+
+-- Addresses: customers can manage their own addresses
+CREATE POLICY "Customers can view own addresses"
+  ON addresses FOR SELECT
+  TO authenticated
+  USING (
+    customer_id IN (
+      SELECT id FROM customers WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Customers can insert own addresses"
+  ON addresses FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    customer_id IN (
+      SELECT id FROM customers WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Customers can update own addresses"
+  ON addresses FOR UPDATE
+  TO authenticated
+  USING (
+    customer_id IN (
+      SELECT id FROM customers WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    customer_id IN (
+      SELECT id FROM customers WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Customers can delete own addresses"
+  ON addresses FOR DELETE
+  TO authenticated
+  USING (
+    customer_id IN (
+      SELECT id FROM customers WHERE user_id = auth.uid()
+    )
+  );
+```
+
+### Google OAuth Configuration Steps (EPIC 7)
+
+**Step 1: Google Cloud Console Setup**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Navigate to **APIs & Services > Credentials**
+4. Click **Create Credentials > OAuth client ID**
+5. Configure consent screen if prompted:
+   - User Type: External
+   - App name: Customer Profile Collector
+   - Support email: your email
+   - Authorized domains: your-app.vercel.app
+6. Create OAuth client:
+   - Application type: Web application
+   - Name: Customer Profile Collector
+   - Authorized redirect URIs:
+     - `https://<your-supabase-project>.supabase.co/auth/v1/callback`
+     - `http://localhost:3000/auth/callback` (for local dev)
+7. Copy **Client ID** and **Client Secret**
+
+**Step 2: Supabase Auth Provider Config**
+1. Go to Supabase Dashboard > Authentication > Providers
+2. Enable **Google** provider
+3. Paste Client ID and Client Secret from Google
+4. Set Redirect URL (should auto-populate)
+5. Save
+
+**Step 3: Environment Variables**
+```bash
+# .env.local - No additional vars needed for Google OAuth
+# Supabase handles it via dashboard config
+
+# For Email/Password auth, ensure these are set:
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+**Step 4: Supabase Email Templates (Optional)**
+1. Go to Supabase Dashboard > Authentication > Email Templates
+2. Customize: Confirm signup, Reset password, Magic link
+3. Update redirect URLs to point to your app
+
+### Supabase Keep-Alive Implementation (EPIC 7)
+
+**Why needed:** Supabase free tier auto-pauses projects after 7 days of inactivity.
+
+**Solution:** Vercel Cron job pings a health check endpoint weekly.
+
+**Files to create:**
+```
+src/app/api/health/route.ts    # Health check endpoint (queries Supabase)
+vercel.json                     # Cron job configuration
+```
+
+**Health Check Endpoint:**
+```typescript
+// src/app/api/health/route.ts
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from('customers')
+    .select('*', { count: 'exact', head: true })
+
+  if (error) {
+    return NextResponse.json({ status: 'error', error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    customers: count
+  })
+}
+```
+
+**Vercel Cron Configuration:**
+```json
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/health",
+      "schedule": "0 0 * * 0"
+    }
+  ]
+}
+```
+Note: `0 0 * * 0` = Every Sunday at midnight UTC (weekly)
+
+---
 
 ## Data Model
 
@@ -236,21 +595,8 @@ ON addresses(customer_id)
 WHERE is_default = TRUE;
 ```
 
-## RLS Policies (for Phase 2)
-```sql
-ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
-
--- Public policies (tighten later with auth)
-CREATE POLICY "Allow public insert" ON customers FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public insert" ON addresses FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public read" ON customers FOR SELECT USING (true);
-CREATE POLICY "Allow public read" ON addresses FOR SELECT USING (true);
-CREATE POLICY "Allow public update" ON customers FOR UPDATE USING (true);
-CREATE POLICY "Allow public update" ON addresses FOR UPDATE USING (true);
-CREATE POLICY "Allow public delete" ON customers FOR DELETE USING (true);
-CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
-```
+## RLS Policies
+Row Level Security is enabled on all tables. See `supabase/migrations/002_enable_rls.sql` for policy details.
 
 ## Agents to Use During Implementation
 
@@ -263,6 +609,8 @@ CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
 | Phase 2 | `build-engineer` | Database/Supabase setup |
 | Phase 3-5 | `qa-expert` | Test writing guidance |
 | Phase 6 | `documentation-engineer` | README and docs |
+| Phase 7 | `qa-expert` | Auth flow tests, multi-step form tests |
+| Phase 7 | `build-engineer` | Supabase auth config validation |
 | All phases | `git-workflow-manager` | Branch/merge assistance |
 
 ### Agent Execution Strategy
@@ -362,6 +710,41 @@ export const customerSchema = z.object({
 | Phase 3 | API POST tests (8-12) | 80% on routes |
 | Phase 5 | API PUT/DELETE tests (10-12) | 80% on routes |
 | Phase 6 | Final coverage check | 65% overall |
+| Phase 7 | Auth + delivery method tests (20-30) | 80% on new features |
+
+### Phase 7 Testing Details
+
+**7.1 Customer Authentication Tests**
+- Google OAuth flow (mock Supabase auth)
+- Email/password signup validation
+- Email/password login validation
+- Password reset flow
+- Session management
+- Protected route middleware
+- OAuth callback handling
+
+**7.2 Multi-Step Form Tests**
+- Stepper navigation (next/prev/skip)
+- Step validation before proceeding
+- Form state persistence across steps
+- Delivery method step interactions
+- Conditional address step (show/hide based on delivery method)
+
+**7.3 Delivery Method Tests**
+- Pickup: no address required, form submits successfully
+- Delivered: address required, validation fails without address
+- COD: address required, validation fails without address
+- Switching delivery method clears/restores address data
+
+**7.4 Address Autocomplete Tests**
+- City combobox search and selection
+- Barangay combobox populates based on city
+- Form values update correctly on selection
+
+**7.5 API Tests**
+- Customer dashboard API (requires auth)
+- Profile update API (requires auth, user_id match)
+- Health check endpoint returns expected format
 
 ## Quick Reference: Git Commands
 
@@ -388,13 +771,10 @@ git tag -l "epic-*"
 - Login page: `/admin/login`
 - Protected routes: All `/admin/*` routes (except login)
 - Session: 24-hour httpOnly cookie
-- Configure credentials via environment variables:
-  - `ADMIN_USERNAME` (default: admin)
-  - `ADMIN_PASSWORD` (default: admin123)
+- Configure credentials via environment variables (see `.env.example`)
 
 ## UI Customizations
 - Home page title: "Customer Profile Registration"
-- Company name: "Canada Goodies Inc."
 - Contact preference options: Email, SMS (Phone removed)
 - Address section title: "Delivery Address"
 

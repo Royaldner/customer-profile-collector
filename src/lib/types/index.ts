@@ -5,12 +5,16 @@
 
 export type ContactPreference = 'email' | 'phone' | 'sms'
 
+export type DeliveryMethod = 'pickup' | 'delivered' | 'cod'
+
 export interface Customer {
   id: string
   name: string
   email: string
   phone: string
   contact_preference: ContactPreference
+  user_id?: string
+  delivery_method: DeliveryMethod
   created_at: string
   updated_at: string
   addresses?: Address[]
@@ -37,6 +41,7 @@ export interface CustomerInput {
   email: string
   phone: string
   contact_preference: ContactPreference
+  delivery_method: DeliveryMethod
 }
 
 export interface AddressInput {

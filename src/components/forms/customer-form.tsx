@@ -1,15 +1,17 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -29,6 +31,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { AddressForm } from './address-form'
 import {
   customerWithAddressesSchema,
@@ -41,6 +44,7 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
     email: '',
     phone: '',
     contact_preference: 'email',
+    delivery_method: 'delivered',
   },
   addresses: [
     {
@@ -67,9 +71,23 @@ export function CustomerForm() {
     mode: 'onBlur',
   })
 
+  // Watch delivery method to conditionally show address section
+  const deliveryMethod = useWatch({
+    control: form.control,
+    name: 'customer.delivery_method',
+  })
+
+  const requiresAddress = deliveryMethod !== 'pickup'
+
   async function onSubmit(data: CustomerWithAddressesFormData) {
     setIsSubmitting(true)
     setSubmitError(null)
+
+    // Clear addresses for pickup orders
+    const submitData = {
+      ...data,
+      addresses: data.customer.delivery_method === 'pickup' ? [] : data.addresses,
+    }
 
     try {
       const response = await fetch('/api/customers', {
@@ -77,7 +95,7 @@ export function CustomerForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(submitData),
       })
 
       if (!response.ok) {
@@ -181,7 +199,70 @@ export function CustomerForm() {
           </CardContent>
         </Card>
 
-        <AddressForm />
+        {/* Delivery Method Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Delivery Preference</CardTitle>
+            <CardDescription>
+              How would you like to receive your orders?
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="customer.delivery_method"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-2"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="pickup" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          <span className="font-medium">Pick-up</span>
+                          <span className="text-muted-foreground ml-2">
+                            - I&apos;ll collect my order in-store
+                          </span>
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="delivered" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          <span className="font-medium">Delivery</span>
+                          <span className="text-muted-foreground ml-2">
+                            - Deliver to my address
+                          </span>
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="cod" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          <span className="font-medium">Cash on Delivery (COD)</span>
+                          <span className="text-muted-foreground ml-2">
+                            - Pay when delivered
+                          </span>
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Address Section - Only show for delivery/COD */}
+        {requiresAddress && <AddressForm />}
 
         {submitError && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
@@ -189,10 +270,17 @@ export function CustomerForm() {
           </div>
         )}
 
-        <div className="flex justify-center sm:justify-end">
-          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
+        <div className="flex flex-col gap-4">
+          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full">
             {isSubmitting ? 'Submitting...' : 'Submit Registration'}
           </Button>
+
+          <div className="text-center text-sm text-muted-foreground">
+            Already registered?{' '}
+            <Link href="/customer/login" className="text-primary hover:underline">
+              Sign in to your account
+            </Link>
+          </div>
         </div>
       </form>
     </Form>

@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
+        delivery_method: customer.delivery_method,
       })
       .select()
       .single()
@@ -49,26 +50,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert addresses with customer_id
-    const addressesWithCustomerId = addresses.map((address) => ({
-      ...address,
-      customer_id: customerData.id,
-      region: address.region || null,
-    }))
+    // Insert addresses with customer_id (only if addresses provided)
+    let addressesData: typeof addresses = []
 
-    const { data: addressesData, error: addressesError } = await supabase
-      .from('addresses')
-      .insert(addressesWithCustomerId)
-      .select()
+    if (addresses.length > 0) {
+      const addressesWithCustomerId = addresses.map((address) => ({
+        ...address,
+        customer_id: customerData.id,
+        region: address.region || null,
+      }))
 
-    if (addressesError) {
-      // Rollback: delete the customer if addresses fail
-      await supabase.from('customers').delete().eq('id', customerData.id)
-      console.error('Addresses insert error:', addressesError)
-      return NextResponse.json(
-        { message: 'Failed to create addresses' },
-        { status: 500 }
-      )
+      const { data, error: addressesError } = await supabase
+        .from('addresses')
+        .insert(addressesWithCustomerId)
+        .select()
+
+      if (addressesError) {
+        // Rollback: delete the customer if addresses fail
+        await supabase.from('customers').delete().eq('id', customerData.id)
+        console.error('Addresses insert error:', addressesError)
+        return NextResponse.json(
+          { message: 'Failed to create addresses' },
+          { status: 500 }
+        )
+      }
+
+      addressesData = data || []
     }
 
     return NextResponse.json(
