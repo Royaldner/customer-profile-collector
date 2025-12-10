@@ -4,21 +4,28 @@ A customer profile collection system for small businesses. Phase 1 of a future f
 
 ## Features
 
-### Current (Completed)
+### Current (Completed - Phase 1)
 - Customer registration form with validation
 - Philippine address format support (Barangay, Province, Region)
 - Multiple addresses per customer (1-3)
 - Default address management
-- Contact preference selection (Email, Phone, SMS)
-- Success confirmation page
-- Red/white themed UI
-
-### Planned
-- Admin dashboard for customer management
+- Contact preference selection (Email, SMS)
+- Admin dashboard with customer management
 - Search and filter functionality
 - Customer detail view
 - Edit/delete customer operations
 - Mobile-responsive design
+- Admin authentication
+- Success confirmation page
+- Red/white themed UI
+
+### Planned (Phase 2: Customer UX Enhancement)
+- Google OAuth sign-in for customers
+- Customer dashboard (view/edit own profile)
+- 3-step registration wizard
+- Delivery method selection (Pick-up, Delivery, COD)
+- Philippine address autocomplete (PSGC data)
+- Searchable city/barangay dropdowns
 
 ## Tech Stack
 
@@ -150,12 +157,13 @@ git merge --no-ff feature/feature-name
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| 1 | Complete | Project setup & infrastructure |
-| 2 | Complete | Database setup |
-| 3 | Complete | Customer registration form |
-| 4 | Pending | Admin dashboard |
-| 5 | Pending | Edit & delete operations |
-| 6 | Pending | Polish & deployment |
+| 1 | ✅ Complete | Project setup & infrastructure |
+| 2 | ✅ Complete | Database setup |
+| 3 | ✅ Complete | Customer registration form |
+| 4 | ✅ Complete | Admin dashboard |
+| 5 | ✅ Complete | Edit & delete operations |
+| 6 | ✅ Complete | Polish & deployment |
+| 7 | 📋 Planned | Customer UX Enhancement |
 
 ## License
 

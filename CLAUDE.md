@@ -87,6 +87,67 @@ Never make changes directly on `main` or `develop` branches.
 
 ## ALL PHASES COMPLETE - PROJECT READY FOR PRODUCTION
 
+---
+
+## Future Plans (Phase 2: Customer UX Enhancement)
+
+### EPIC 7: Customer UX Enhancement (Planned)
+Branch: `feature/customer-ux-enhancement`
+
+#### 7.1 Google OAuth + Account System
+- [ ] CP-20: Configure Google OAuth in Supabase
+- [ ] CP-21: Create customer login page
+- [ ] CP-22: Create customer dashboard
+- [ ] CP-23: Implement OAuth callback handler
+- [ ] CP-24: Add Google sign-in to registration
+
+#### 7.2 Multi-Step Registration Form
+- [ ] CP-25: Create Stepper UI component
+- [ ] CP-26: Create Personal Info step
+- [ ] CP-27: Create Delivery Method step (pickup/delivered/cod)
+- [ ] CP-28: Create Address/Review step
+- [ ] CP-29: Refactor CustomerForm to multi-step
+
+#### 7.3 Philippine Address Autocomplete
+- [ ] CP-30: Install shadcn command & popover
+- [ ] CP-31: Create LocationCombobox component
+- [ ] CP-32: Prepare PSGC city data
+- [ ] CP-33: Create barangays API route
+- [ ] CP-34: Integrate comboboxes into AddressForm
+
+### Key Decisions (EPIC 7)
+- **Pick-up Orders**: Skip address section completely (not optional)
+- **Customer Dashboard**: Google sign-in only (no magic link)
+- **Delivery Methods**: pickup, delivered, cod
+
+### New Data Model Fields (EPIC 7)
+
+**Customer (additions)**
+```
+- user_id (UUID, optional, FK to auth.users)
+- delivery_method (enum: 'pickup' | 'delivered' | 'cod')
+```
+
+**New Pages**
+```
+- /customer/login      # Customer login with Google OAuth
+- /customer/dashboard  # View/edit own profile
+- /auth/callback       # OAuth redirect handler
+```
+
+### Database Migrations Needed (EPIC 7)
+```sql
+-- Migration 003: Add auth user link
+ALTER TABLE customers ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+CREATE INDEX idx_customers_user_id ON customers(user_id);
+
+-- Migration 004: Add delivery method
+ALTER TABLE customers ADD COLUMN delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered'
+  CHECK (delivery_method IN ('pickup', 'delivered', 'cod'));
+```
+
+---
+
 ## Data Model
 
 ### Customer
@@ -236,21 +297,8 @@ ON addresses(customer_id)
 WHERE is_default = TRUE;
 ```
 
-## RLS Policies (for Phase 2)
-```sql
-ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
-
--- Public policies (tighten later with auth)
-CREATE POLICY "Allow public insert" ON customers FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public insert" ON addresses FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public read" ON customers FOR SELECT USING (true);
-CREATE POLICY "Allow public read" ON addresses FOR SELECT USING (true);
-CREATE POLICY "Allow public update" ON customers FOR UPDATE USING (true);
-CREATE POLICY "Allow public update" ON addresses FOR UPDATE USING (true);
-CREATE POLICY "Allow public delete" ON customers FOR DELETE USING (true);
-CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
-```
+## RLS Policies
+Row Level Security is enabled on all tables. See `supabase/migrations/002_enable_rls.sql` for policy details.
 
 ## Agents to Use During Implementation
 
@@ -388,13 +436,10 @@ git tag -l "epic-*"
 - Login page: `/admin/login`
 - Protected routes: All `/admin/*` routes (except login)
 - Session: 24-hour httpOnly cookie
-- Configure credentials via environment variables:
-  - `ADMIN_USERNAME` (default: admin)
-  - `ADMIN_PASSWORD` (default: admin123)
+- Configure credentials via environment variables (see `.env.example`)
 
 ## UI Customizations
 - Home page title: "Customer Profile Registration"
-- Company name: "Canada Goodies Inc."
 - Contact preference options: Email, SMS (Phone removed)
 - Address section title: "Delivery Address"
 
