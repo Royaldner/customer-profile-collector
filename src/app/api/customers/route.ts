@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { customer, addresses } = validationResult.data
+    // Extract user_id from request body (not part of schema validation)
+    const user_id = body.user_id || null
 
     const supabase = await createClient()
 
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest) {
         phone: customer.phone,
         contact_preference: customer.contact_preference,
         delivery_method: customer.delivery_method,
+        user_id: user_id,
       })
       .select()
       .single()
