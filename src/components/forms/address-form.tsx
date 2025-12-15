@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useFormContext, useFieldArray } from 'react-hook-form'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { LocationCombobox } from '@/components/ui/location-combobox'
+import { cities, type Location, type Barangay } from '@/lib/data/philippines'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
 
 const DEFAULT_ADDRESS = {
@@ -31,12 +34,67 @@ const DEFAULT_ADDRESS = {
   is_default: false,
 }
 
+// Convert cities to combobox options
+const cityOptions = cities.map((city) => ({
+  value: city.code,
+  label: city.name,
+  description: `${city.province}, ${city.region}`,
+}))
+
 export function AddressForm() {
   const form = useFormContext<CustomerWithAddressesFormData>()
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'addresses',
   })
+
+  // Track selected city codes and barangays for each address
+  const [selectedCities, setSelectedCities] = useState<Record<number, string>>({})
+  const [barangayOptions, setBarangayOptions] = useState<Record<number, { value: string; label: string }[]>>({})
+
+  // Load barangays when city changes
+  const loadBarangays = useCallback(async (index: number, cityCode: string) => {
+    if (!cityCode) {
+      setBarangayOptions((prev) => ({ ...prev, [index]: [] }))
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
+      if (response.ok) {
+        const { barangays } = await response.json()
+        setBarangayOptions((prev) => ({
+          ...prev,
+          [index]: barangays.map((b: Barangay) => ({
+            value: b.code,
+            label: b.name,
+          })),
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to load barangays:', error)
+    }
+  }, [])
+
+  const handleCitySelect = (index: number, option: { value: string; label: string; description?: string }) => {
+    // Find the full city data
+    const city = cities.find((c) => c.code === option.value)
+    if (city) {
+      // Update form values
+      form.setValue(`addresses.${index}.city`, city.name)
+      form.setValue(`addresses.${index}.province`, city.province)
+      form.setValue(`addresses.${index}.region`, city.region)
+      form.setValue(`addresses.${index}.barangay`, '') // Clear barangay when city changes
+
+      // Track selected city and load barangays
+      setSelectedCities((prev) => ({ ...prev, [index]: option.value }))
+      loadBarangays(index, option.value)
+    }
+  }
+
+  const handleBarangaySelect = (index: number, option: { value: string; label: string }) => {
+    form.setValue(`addresses.${index}.barangay`, option.label)
+  }
 
   const handleAddAddress = () => {
     if (fields.length < 3) {
@@ -48,6 +106,18 @@ export function AddressForm() {
     if (fields.length > 1) {
       const isRemovingDefault = form.getValues(`addresses.${index}.is_default`)
       remove(index)
+
+      // Clean up state for removed address
+      setSelectedCities((prev) => {
+        const newState = { ...prev }
+        delete newState[index]
+        return newState
+      })
+      setBarangayOptions((prev) => {
+        const newState = { ...prev }
+        delete newState[index]
+        return newState
+      })
 
       // If we removed the default address, set the first remaining one as default
       if (isRemovingDefault && fields.length > 1) {
@@ -139,6 +209,40 @@ export function AddressForm() {
               )}
             />
 
+            {/* City/Municipality with Autocomplete */}
+            <FormField
+              control={form.control}
+              name={`addresses.${index}.city`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City/Municipality</FormLabel>
+                  <FormControl>
+                    <LocationCombobox
+                      options={cityOptions}
+                      value={selectedCities[index] || ''}
+                      onValueChange={(value) => {
+                        const option = cityOptions.find((o) => o.value === value)
+                        if (option) {
+                          handleCitySelect(index, option)
+                        }
+                      }}
+                      onSelect={(option) => handleCitySelect(index, option)}
+                      placeholder="Search city/municipality..."
+                      searchPlaceholder="Type to search cities..."
+                      emptyText="No cities found. Try a different search."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {field.value && !selectedCities[index] && (
+                    <p className="text-xs text-muted-foreground">
+                      Current: {field.value} (select from list to auto-fill province/region)
+                    </p>
+                  )}
+                </FormItem>
+              )}
+            />
+
+            {/* Barangay with Autocomplete */}
             <FormField
               control={form.control}
               name={`addresses.${index}.barangay`}
@@ -146,7 +250,27 @@ export function AddressForm() {
                 <FormItem>
                   <FormLabel>Barangay</FormLabel>
                   <FormControl>
-                    <Input placeholder="Barangay name" {...field} />
+                    {barangayOptions[index] && barangayOptions[index].length > 0 ? (
+                      <LocationCombobox
+                        options={barangayOptions[index]}
+                        value={barangayOptions[index].find((b) => b.label === field.value)?.value || ''}
+                        onValueChange={(value) => {
+                          const option = barangayOptions[index]?.find((o) => o.value === value)
+                          if (option) {
+                            handleBarangaySelect(index, option)
+                          }
+                        }}
+                        onSelect={(option) => handleBarangaySelect(index, option)}
+                        placeholder="Select barangay..."
+                        searchPlaceholder="Search barangays..."
+                        emptyText="No barangays found."
+                      />
+                    ) : (
+                      <Input
+                        placeholder={selectedCities[index] ? "No barangay data available" : "Select city first or type barangay"}
+                        {...field}
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,62 +280,56 @@ export function AddressForm() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
-                name={`addresses.${index}.city`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City/Municipality</FormLabel>
-                    <FormControl>
-                      <Input placeholder="City or Municipality" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name={`addresses.${index}.province`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Province</FormLabel>
                     <FormControl>
-                      <Input placeholder="Province" {...field} />
+                      <Input
+                        placeholder="Province"
+                        {...field}
+                        readOnly={!!selectedCities[index]}
+                        className={selectedCities[index] ? 'bg-muted' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name={`addresses.${index}.region`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Region (Optional)</FormLabel>
+                    <FormLabel>Region</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., NCR, Region IV-A" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name={`addresses.${index}.postal_code`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Postal Code</FormLabel>
-                    <FormControl>
-                      <Input placeholder="4-digit code" maxLength={4} {...field} />
+                      <Input
+                        placeholder="e.g., NCR, Region IV-A"
+                        {...field}
+                        readOnly={!!selectedCities[index]}
+                        className={selectedCities[index] ? 'bg-muted' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name={`addresses.${index}.postal_code`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="4-digit code" maxLength={4} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
