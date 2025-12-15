@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebSearch",
+      "mcp__context7__resolve-library-id"
     ],
     "deny": [],
     "ask": []

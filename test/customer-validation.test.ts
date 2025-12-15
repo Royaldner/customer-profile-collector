@@ -58,6 +58,7 @@ describe('Customer Schema Validation', () => {
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email',
+    delivery_method: 'delivered',
   }
 
   it('should validate valid customer', () => {
@@ -82,6 +83,7 @@ describe('Customer With Addresses Schema', () => {
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email',
+    delivery_method: 'delivered',
   }
 
   const validAddress = {
@@ -186,6 +188,7 @@ describe('Customer Schema - Additional Edge Cases', () => {
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
+    delivery_method: 'delivered' as const,
   }
 
   it('should validate phone contact preference', () => {
@@ -250,6 +253,7 @@ describe('Customer With Addresses - Additional Edge Cases', () => {
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
+    delivery_method: 'delivered' as const,
   }
 
   const validAddress = {
@@ -358,6 +362,7 @@ describe('Boundary Value Tests', () => {
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
+    delivery_method: 'delivered' as const,
   }
 
   it('should validate barangay at 255 chars', () => {
@@ -436,7 +441,8 @@ describe('Philippine-Specific Validation', () => {
         name: 'Test',
         email: 'test@example.com',
         phone,
-        contact_preference: 'sms' as const
+        contact_preference: 'sms' as const,
+        delivery_method: 'delivered' as const,
       })
       expect(r.success).toBe(true)
     })
@@ -458,7 +464,8 @@ describe('Combined Validation Scenarios', () => {
         name: '',
         email: 'not-an-email',
         phone: '123',
-        contact_preference: 'email' as const
+        contact_preference: 'email' as const,
+        delivery_method: 'delivered' as const,
       },
       addresses: [{
         label: '',
@@ -480,7 +487,8 @@ describe('Combined Validation Scenarios', () => {
         name: 'Maria Santos',
         email: 'maria.santos@email.com',
         phone: '09171234567',
-        contact_preference: 'email' as const
+        contact_preference: 'email' as const,
+        delivery_method: 'delivered' as const,
       },
       addresses: [
         {
@@ -515,7 +523,8 @@ describe('Combined Validation Scenarios', () => {
         name: 'Jose Rizal',
         email: 'jose.rizal@national.ph',
         phone: '09991234567',
-        contact_preference: 'phone' as const
+        contact_preference: 'phone' as const,
+        delivery_method: 'cod' as const,
       },
       addresses: [
         {
@@ -552,5 +561,35 @@ describe('Combined Validation Scenarios', () => {
     }
     const r = customerWithAddressesSchema.safeParse(data)
     expect(r.success).toBe(true)
+  })
+
+  it('should validate pickup order without addresses', () => {
+    const data = {
+      customer: {
+        name: 'Pickup Customer',
+        email: 'pickup@example.com',
+        phone: '09171234567',
+        contact_preference: 'email' as const,
+        delivery_method: 'pickup' as const,
+      },
+      addresses: []
+    }
+    const r = customerWithAddressesSchema.safeParse(data)
+    expect(r.success).toBe(true)
+  })
+
+  it('should reject delivery order without addresses', () => {
+    const data = {
+      customer: {
+        name: 'Delivery Customer',
+        email: 'delivery@example.com',
+        phone: '09171234567',
+        contact_preference: 'email' as const,
+        delivery_method: 'delivered' as const,
+      },
+      addresses: []
+    }
+    const r = customerWithAddressesSchema.safeParse(data)
+    expect(r.success).toBe(false)
   })
 })

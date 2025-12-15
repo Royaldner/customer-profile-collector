@@ -5,6 +5,11 @@
 
 import { z } from 'zod'
 
+// Delivery method enum
+export const deliveryMethodSchema = z.enum(['pickup', 'delivered', 'cod'], {
+  message: 'Please select a delivery method',
+})
+
 export const addressSchema = z.object({
   label: z.string().min(1, 'Label is required').max(100, 'Label must be 100 characters or less'),
   street_address: z.string().min(1, 'Street address is required').max(500, 'Street address must be 500 characters or less'),
@@ -30,21 +35,35 @@ export const customerSchema = z.object({
   contact_preference: z.enum(['email', 'phone', 'sms'], {
     message: 'Please select a contact preference',
   }),
+  delivery_method: deliveryMethodSchema,
 })
 
-export const customerWithAddressesSchema = z.object({
-  customer: customerSchema,
-  addresses: z
-    .array(addressSchema)
-    .min(1, 'At least one address is required')
-    .max(3, 'Maximum 3 addresses allowed')
-    .refine(
-      (addresses) => addresses.filter((a) => a.is_default).length === 1,
-      'Exactly one address must be set as default'
-    ),
-})
+// Conditional address validation based on delivery_method
+export const customerWithAddressesSchema = z
+  .object({
+    customer: customerSchema,
+    addresses: z.array(addressSchema),
+  })
+  .refine(
+    (data) => {
+      // Pickup orders: addresses optional (can be empty)
+      if (data.customer.delivery_method === 'pickup') {
+        return true
+      }
+      // Delivered/COD: require 1-3 addresses with exactly one default
+      if (data.addresses.length < 1 || data.addresses.length > 3) {
+        return false
+      }
+      return data.addresses.filter((a) => a.is_default).length === 1
+    },
+    {
+      message: 'Delivery orders require 1-3 addresses with exactly one default',
+      path: ['addresses'],
+    }
+  )
 
 // Type exports inferred from schemas
+export type DeliveryMethodFormData = z.infer<typeof deliveryMethodSchema>
 export type AddressFormData = z.infer<typeof addressSchema>
 export type CustomerFormData = z.infer<typeof customerSchema>
 export type CustomerWithAddressesFormData = z.infer<typeof customerWithAddressesSchema>
