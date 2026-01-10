@@ -11,22 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Form } from '@/components/ui/form'
 import {
   Card,
   CardContent,
@@ -34,8 +19,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { AddressForm } from './address-form'
+import { Stepper, type Step } from '@/components/ui/stepper'
+import {
+  PersonalInfoStep,
+  DeliveryMethodStep,
+  AddressStep,
+  ReviewStep,
+} from './steps'
 import {
   customerWithAddressesSchema,
   type CustomerWithAddressesFormData,
@@ -63,9 +53,25 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
   ],
 }
 
+// Define steps
+const STEPS: Step[] = [
+  { id: 'personal', title: 'Personal Info' },
+  { id: 'delivery', title: 'Delivery' },
+  { id: 'address', title: 'Address' },
+  { id: 'review', title: 'Review' },
+]
+
+// Steps for pickup orders (no address step)
+const PICKUP_STEPS: Step[] = [
+  { id: 'personal', title: 'Personal Info' },
+  { id: 'delivery', title: 'Delivery' },
+  { id: 'review', title: 'Review' },
+]
+
 export function CustomerForm() {
   const router = useRouter()
   const supabase = createClient()
+  const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -99,13 +105,18 @@ export function CustomerForm() {
     checkAuth()
   }, [supabase.auth, form])
 
-  // Watch delivery method to conditionally show address section
+  // Watch delivery method to determine if address step is needed
   const deliveryMethod = useWatch({
     control: form.control,
     name: 'customer.delivery_method',
   })
 
-  const requiresAddress = deliveryMethod !== 'pickup'
+  const isPickup = deliveryMethod === 'pickup'
+  const steps = isPickup ? PICKUP_STEPS : STEPS
+  const isLastStep = currentStep === steps.length - 1
+
+  // Get current step ID
+  const currentStepId = steps[currentStep]?.id
 
   async function handleGoogleSignup() {
     setAuthError('')
@@ -153,18 +164,10 @@ export function CustomerForm() {
       if (error) throw error
 
       if (data.user) {
-        // For email signups, the user needs to verify email first
-        // But we can still proceed with registration if email confirmation is disabled
-        if (data.session) {
-          setAuthUser({ id: data.user.id, email: signupEmail })
-          setShowAuthOptions(false)
-          form.setValue('customer.email', signupEmail)
-          toast.success('Account created! Continue with your registration.')
-        } else {
-          // Email confirmation required
-          toast.info('Please check your email to confirm your account, then return to complete registration.')
-          setAuthError('Please verify your email before continuing. Check your inbox.')
-        }
+        setAuthUser({ id: data.user.id, email: signupEmail })
+        setShowAuthOptions(false)
+        form.setValue('customer.email', signupEmail)
+        toast.success('Account created! Continue with your registration.')
       }
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Signup failed')
@@ -176,6 +179,65 @@ export function CustomerForm() {
   function handleSkipAuth() {
     setShowAuthOptions(false)
   }
+
+  // Validate current step before proceeding
+  async function validateCurrentStep(): Promise<boolean> {
+    let fieldsToValidate: (keyof CustomerWithAddressesFormData | `customer.${string}` | `addresses.${number}.${string}`)[] = []
+
+    switch (currentStepId) {
+      case 'personal':
+        fieldsToValidate = [
+          'customer.name',
+          'customer.email',
+          'customer.phone',
+          'customer.contact_preference',
+        ]
+        break
+      case 'delivery':
+        fieldsToValidate = ['customer.delivery_method']
+        break
+      case 'address':
+        // Validate all address fields
+        const addresses = form.getValues('addresses')
+        addresses.forEach((_, index) => {
+          fieldsToValidate.push(
+            `addresses.${index}.label` as `addresses.${number}.${string}`,
+            `addresses.${index}.street_address` as `addresses.${number}.${string}`,
+            `addresses.${index}.barangay` as `addresses.${number}.${string}`,
+            `addresses.${index}.city` as `addresses.${number}.${string}`,
+            `addresses.${index}.province` as `addresses.${number}.${string}`,
+            `addresses.${index}.postal_code` as `addresses.${number}.${string}`,
+            `addresses.${index}.is_default` as `addresses.${number}.${string}`
+          )
+        })
+        break
+      case 'review':
+        // Full form validation
+        return form.trigger()
+    }
+
+    const result = await form.trigger(fieldsToValidate as Parameters<typeof form.trigger>[0])
+    return result
+  }
+
+  async function handleNext() {
+    const isValid = await validateCurrentStep()
+    if (isValid) {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
+    }
+  }
+
+  function handleBack() {
+    setCurrentStep((prev) => Math.max(prev - 1, 0))
+  }
+
+  // Handle delivery method change - reset step if changing from pickup to delivery
+  useEffect(() => {
+    // If on address step and switch to pickup, go back to delivery step
+    if (isPickup && currentStepId === 'address') {
+      setCurrentStep(steps.findIndex((s) => s.id === 'delivery'))
+    }
+  }, [isPickup, currentStepId, steps])
 
   async function onSubmit(data: CustomerWithAddressesFormData) {
     setIsSubmitting(true)
@@ -205,7 +267,6 @@ export function CustomerForm() {
       const result = await response.json()
       toast.success('Registration submitted successfully!')
 
-      // If user is authenticated, redirect to dashboard, otherwise to success page
       if (authUser) {
         router.push('/customer/dashboard')
       } else {
@@ -365,7 +426,7 @@ export function CustomerForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Show authenticated user info */}
         {authUser && (
           <Card className="border-primary/20 bg-primary/5">
@@ -391,176 +452,59 @@ export function CustomerForm() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Please provide your contact details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="customer.name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Juan Dela Cruz" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Stepper */}
+        <Stepper
+          steps={steps}
+          currentStep={currentStep}
+          onStepClick={setCurrentStep}
+          allowClickNavigation={true}
+        />
 
-            <FormField
-              control={form.control}
-              name="customer.email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="juan@example.com"
-                      readOnly={!!authUser}
-                      className={authUser ? 'bg-muted' : ''}
-                      {...field}
-                    />
-                  </FormControl>
-                  {authUser && (
-                    <p className="text-xs text-muted-foreground">
-                      Email is linked to your account and cannot be changed
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Step Content */}
+        <div className="min-h-[300px]">
+          {currentStepId === 'personal' && (
+            <PersonalInfoStep isEmailReadOnly={!!authUser} />
+          )}
+          {currentStepId === 'delivery' && <DeliveryMethodStep />}
+          {currentStepId === 'address' && <AddressStep />}
+          {currentStepId === 'review' && <ReviewStep />}
+        </div>
 
-            <FormField
-              control={form.control}
-              name="customer.phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="09171234567" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="customer.contact_preference"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preferred Contact Method</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select contact preference" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="sms">SMS</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Delivery Method Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Delivery Preference</CardTitle>
-            <CardDescription>
-              How would you like to receive your orders?
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FormField
-              control={form.control}
-              name="customer.delivery_method"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-2"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="pickup" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          <span className="font-medium">Pick-up</span>
-                          <span className="text-muted-foreground ml-2">
-                            - I&apos;ll collect my order in-store
-                          </span>
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="delivered" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          <span className="font-medium">Delivery</span>
-                          <span className="text-muted-foreground ml-2">
-                            - Deliver to my address
-                          </span>
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="cod" />
-                        </FormControl>
-                        <FormLabel className="font-normal cursor-pointer">
-                          <span className="font-medium">Cash on Delivery (COD)</span>
-                          <span className="text-muted-foreground ml-2">
-                            - Pay when delivered
-                          </span>
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Address Section - Only show for delivery/COD */}
-        {requiresAddress && <AddressForm />}
-
+        {/* Error Display */}
         {submitError && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
             {submitError}
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
-          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full">
-            {isSubmitting ? 'Submitting...' : 'Submit Registration'}
+        {/* Navigation Buttons */}
+        <div className="flex justify-between gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBack}
+            disabled={currentStep === 0}
+          >
+            Back
           </Button>
 
-          <div className="text-center text-sm text-muted-foreground">
-            Already registered?{' '}
-            <Link href="/customer/login" className="text-primary hover:underline">
-              Sign in to your account
-            </Link>
-          </div>
+          {isLastStep ? (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit Registration'}
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleNext}>
+              Next
+            </Button>
+          )}
+        </div>
+
+        {/* Already registered link */}
+        <div className="text-center text-sm text-muted-foreground">
+          Already registered?{' '}
+          <Link href="/customer/login" className="text-primary hover:underline">
+            Sign in to your account
+          </Link>
         </div>
       </form>
     </Form>

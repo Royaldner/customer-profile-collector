@@ -4,11 +4,7 @@
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. Phase 1 complete, Phase 2 (EPIC 7) partially complete.
-
-## Recent Development
-
-Documentation sync session - Updated CLAUDE.md progress tracker to reflect actual EPIC 7 completion status. Multi-step registration form (CP-27 to CP-31) identified as remaining work.
+Customer Profile Collector - A customer profile collection system for a small business. All phases complete including EPIC 7 (Customer UX Enhancement).
 
 ## Completed Features
 
@@ -21,84 +17,64 @@ Documentation sync session - Updated CLAUDE.md progress tracker to reflect actua
 - Mobile responsiveness
 - Deployed to Vercel
 
-### EPIC 7.1: Customer Authentication (100% Complete)
-- [x] CP-20: Google OAuth configured in Supabase
-- [x] CP-21: Customer login page (Google + Email/Password)
-- [x] CP-22: Customer signup page
-- [x] CP-23: OAuth callback handler (`/auth/callback`)
-- [x] CP-24: Forgot/reset password flow
-- [x] CP-25: Customer dashboard with profile editing
-- [x] CP-26: Auth options added to registration flow
+### EPIC 7: Customer UX Enhancement (100% Complete)
 
-### EPIC 7.3: Philippine Address Autocomplete (100% Complete)
-- [x] CP-32: shadcn command & popover installed
-- [x] CP-33: LocationCombobox component created
-- [x] CP-34: PSGC city data prepared
-- [x] CP-35: Barangays API route created
-- [x] CP-36: Comboboxes integrated into AddressForm
+#### 7.1 Customer Authentication ✅
+- Google OAuth configured and working
+- Email/password signup (no email verification)
+- Customer login, signup, forgot/reset password pages
+- OAuth callback handler
+- Customer dashboard with profile editing
 
-### EPIC 7.4: Supabase Keep-Alive (100% Complete)
-- [x] CP-37: Health check API endpoint (`/api/health`)
-- [x] CP-38: Vercel Cron job (weekly ping on Sundays)
-
-## In Progress
-
-### EPIC 7.2: Multi-Step Registration Form (0% Complete)
-Current registration form is single-page. Needs refactoring to multi-step wizard.
-
-**Remaining Tasks:**
-- [ ] CP-27: Create Stepper UI component
-- [ ] CP-28: Create Personal Info step
-- [ ] CP-29: Create Delivery Method step (pickup/delivered/cod)
-- [ ] CP-30: Create Address/Review step
-- [ ] CP-31: Refactor CustomerForm to multi-step
-
-**Design Notes:**
+#### 7.2 Multi-Step Registration Form ✅
+- Stepper UI component with visual progress
 - Step 1: Personal Info (name, email, phone, contact preference)
-- Step 2: Delivery Method (pickup, delivered, cod)
-- Step 3: Address (skip if pickup selected)
+- Step 2: Delivery Method (pickup, delivered, cod) with visual cards
+- Step 3: Address (skipped for pickup orders)
 - Step 4: Review & Submit
+- Step-by-step validation before proceeding
 
-## Next Steps
+#### 7.3 Philippine Address Autocomplete ✅
+- LocationCombobox component for city/barangay search
+- PSGC city data integration
+- Barangays API route
+- Auto-fill province and region on city selection
 
-1. **Implement Multi-Step Form (CP-27 to CP-31)**
-   - Create reusable Stepper component
-   - Split form into step components
-   - Handle conditional address step based on delivery method
-   - Add form state persistence across steps
-
-2. **After EPIC 7 Complete:**
-   - Merge feature branch to main
-   - Tag as `epic-7-complete`
-   - Run full test suite
-   - Deploy to production
-
-## Known Issues
-
-1. **Google OAuth** - Requires Supabase Dashboard configuration (Client ID/Secret from Google Cloud Console)
-2. **Customer Profile Linking** - New signups need to link `auth.users.id` to `customers.user_id`
+#### 7.4 Supabase Keep-Alive ✅
+- Health check API endpoint (`/api/health`)
+- Vercel Cron job (weekly ping on Sundays)
 
 ## Database State
 
 **Migrations Applied:**
 - 001_create_tables.sql - Base schema
 - 002_enable_rls.sql - RLS policies
-- 003_add_customer_fields.sql - Added `user_id` and `delivery_method` to customers
+- 003_add_customer_fields.sql - Added `user_id` and `delivery_method`
 - 004_customer_auth_rls.sql - Customer self-access policies
 
 ## Key Files
 
 | Feature | File |
 |---------|------|
+| Multi-Step Form | `src/components/forms/customer-form.tsx` |
+| Stepper UI | `src/components/ui/stepper.tsx` |
+| Personal Info Step | `src/components/forms/steps/personal-info-step.tsx` |
+| Delivery Method Step | `src/components/forms/steps/delivery-method-step.tsx` |
+| Address Step | `src/components/forms/steps/address-step.tsx` |
+| Review Step | `src/components/forms/steps/review-step.tsx` |
 | Customer Login | `src/app/customer/login/page.tsx` |
 | Customer Dashboard | `src/app/customer/dashboard/page.tsx` |
-| Registration Form | `src/app/register/page.tsx` |
 | Address Autocomplete | `src/components/ui/location-combobox.tsx` |
 | Health Check | `src/app/api/health/route.ts` |
-| Cron Config | `vercel.json` |
 
 ## Git State
 
 - **Current Branch:** `feature/customer-ux-enhancement`
-- **Main Branch:** `93a4a88 fix: Add password visibility toggle to admin login`
-- **Feature Branch HEAD:** Contains docs updates for session continuity
+- **Status:** Ready to merge to main and tag `epic-7-complete`
+
+## Next Steps
+
+1. Merge feature branch to main
+2. Tag as `epic-7-complete`
+3. Deploy to production
+4. Project complete - ready for client handoff
