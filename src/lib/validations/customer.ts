@@ -36,9 +36,10 @@ export const customerSchema = z.object({
     message: 'Please select a contact preference',
   }),
   delivery_method: deliveryMethodSchema,
+  courier: z.string().optional(),
 })
 
-// Conditional address validation based on delivery_method
+// Conditional address and courier validation based on delivery_method
 export const customerWithAddressesSchema = z
   .object({
     customer: customerSchema,
@@ -59,6 +60,20 @@ export const customerWithAddressesSchema = z
     {
       message: 'Delivery orders require 1-3 addresses with exactly one default',
       path: ['addresses'],
+    }
+  )
+  .refine(
+    (data) => {
+      // Pickup orders: courier not required
+      if (data.customer.delivery_method === 'pickup') {
+        return true
+      }
+      // Delivered/COD: require courier selection
+      return !!data.customer.courier && data.customer.courier.length > 0
+    },
+    {
+      message: 'Please select a courier for delivery orders',
+      path: ['customer', 'courier'],
     }
   )
 

@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { User, Mail, Phone, MessageSquare, Truck, MapPin } from 'lucide-react'
+import { User, Mail, Phone, MessageSquare, Truck, MapPin, Package } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
+import type { Courier } from '@/lib/types'
 
 const deliveryMethodLabels = {
   pickup: 'Pick-up',
@@ -28,8 +30,30 @@ export function ReviewStep() {
   const form = useFormContext<CustomerWithAddressesFormData>()
   const values = form.getValues()
   const { customer, addresses } = values
+  const [couriers, setCouriers] = useState<Courier[]>([])
 
   const isPickup = customer.delivery_method === 'pickup'
+
+  // Fetch couriers to display the name
+  useEffect(() => {
+    async function fetchCouriers() {
+      try {
+        const response = await fetch('/api/couriers')
+        if (response.ok) {
+          const data = await response.json()
+          setCouriers(data.couriers || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch couriers:', error)
+      }
+    }
+    fetchCouriers()
+  }, [])
+
+  // Get courier display name
+  const courierName = customer.courier
+    ? couriers.find((c) => c.code === customer.courier)?.name || customer.courier.toUpperCase()
+    : null
 
   return (
     <div className="space-y-4">
@@ -80,12 +104,21 @@ export function ReviewStep() {
             Delivery Method
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Badge variant={isPickup ? 'secondary' : 'default'} className="text-sm">
-            {deliveryMethodLabels[customer.delivery_method]}
-          </Badge>
+        <CardContent className="space-y-3">
+          <div>
+            <Badge variant={isPickup ? 'secondary' : 'default'} className="text-sm">
+              {deliveryMethodLabels[customer.delivery_method]}
+            </Badge>
+          </div>
+          {!isPickup && courierName && (
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Courier:</span>
+              <span className="font-medium">{courierName}</span>
+            </div>
+          )}
           {isPickup && (
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               You will collect your orders in-store. No delivery address needed.
             </p>
           )}

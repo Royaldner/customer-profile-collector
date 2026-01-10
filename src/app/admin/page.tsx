@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Customer } from '@/lib/types'
 import { CustomerList } from '@/components/admin/customer-list'
 import { LogoutButton } from '@/components/admin/logout-button'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { Truck } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +39,15 @@ export default async function AdminPage() {
               <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
               <p className="text-sm text-muted-foreground">Canada Goodies Inc.</p>
             </div>
-            <LogoutButton />
+            <div className="flex items-center gap-2">
+              <Button variant="outline" asChild>
+                <Link href="/admin/couriers">
+                  <Truck className="mr-2 h-4 w-4" />
+                  Couriers
+                </Link>
+              </Button>
+              <LogoutButton />
+            </div>
           </div>
         </div>
       </header>

@@ -82,6 +82,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
+        delivery_method: customer.delivery_method,
+        courier: customer.courier || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
