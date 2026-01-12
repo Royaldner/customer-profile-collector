@@ -29,13 +29,21 @@ INSERT INTO couriers (code, name) VALUES
 -- =============================================
 CREATE TABLE customers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   phone VARCHAR(50) NOT NULL,
   contact_preference VARCHAR(20) NOT NULL CHECK (contact_preference IN ('email', 'phone', 'sms')),
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered' CHECK (delivery_method IN ('pickup', 'delivered', 'cod')),
+  delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered' CHECK (delivery_method IN ('pickup', 'delivered', 'cod', 'cop')),
   courier VARCHAR(50) REFERENCES couriers(code),
+  -- Profile address (optional)
+  profile_street_address VARCHAR(500),
+  profile_barangay VARCHAR(255),
+  profile_city VARCHAR(255),
+  profile_province VARCHAR(255),
+  profile_region VARCHAR(100),
+  profile_postal_code VARCHAR(4),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -46,6 +54,8 @@ CREATE TABLE customers (
 CREATE TABLE addresses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
   label VARCHAR(100) NOT NULL,
   street_address VARCHAR(500) NOT NULL,
   barangay VARCHAR(255) NOT NULL,
@@ -64,7 +74,8 @@ CREATE TABLE addresses (
 
 -- Customer indexes for common queries
 CREATE INDEX idx_customers_email ON customers(email);
-CREATE INDEX idx_customers_name ON customers(name);
+CREATE INDEX idx_customers_first_name ON customers(first_name);
+CREATE INDEX idx_customers_last_name ON customers(last_name);
 CREATE INDEX idx_customers_user_id ON customers(user_id);
 CREATE INDEX idx_customers_delivery_method ON customers(delivery_method);
 CREATE INDEX idx_customers_courier ON customers(courier);

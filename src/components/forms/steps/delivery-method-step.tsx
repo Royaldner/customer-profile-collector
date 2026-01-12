@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { Package, Truck, Banknote } from 'lucide-react'
+import { Package, Truck, Banknote, MapPin } from 'lucide-react'
 import {
   FormControl,
   FormField,
@@ -26,7 +26,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
+import { COURIER_OPTIONS, type CustomerWithAddressesFormData } from '@/lib/validations/customer'
 import type { Courier } from '@/lib/types'
 
 const deliveryOptions = [
@@ -48,6 +48,12 @@ const deliveryOptions = [
     description: 'Pay when delivered',
     icon: Banknote,
   },
+  {
+    value: 'cop',
+    label: 'Cash on Pickup (COP)',
+    description: 'Pick up at courier location, pay on pickup',
+    icon: MapPin,
+  },
 ] as const
 
 export function DeliveryMethodStep() {
@@ -61,7 +67,14 @@ export function DeliveryMethodStep() {
     name: 'customer.delivery_method',
   })
 
-  const showCourierDropdown = deliveryMethod === 'delivered' || deliveryMethod === 'cod'
+  const showCourierDropdown = deliveryMethod !== 'pickup'
+  const isCOP = deliveryMethod === 'cop'
+
+  // Get allowed couriers based on delivery method
+  const allowedCourierCodes: readonly string[] = deliveryMethod ? COURIER_OPTIONS[deliveryMethod] : []
+  const filteredCouriers = couriers.filter((c) =>
+    allowedCourierCodes.includes(c.code)
+  )
 
   // Fetch couriers on mount
   useEffect(() => {
@@ -81,12 +94,17 @@ export function DeliveryMethodStep() {
     fetchCouriers()
   }, [])
 
-  // Clear courier when switching to pickup
+  // Clear courier when switching to pickup, or reset if current courier is not allowed
   useEffect(() => {
     if (deliveryMethod === 'pickup') {
       form.setValue('customer.courier', undefined)
+    } else {
+      const currentCourier = form.getValues('customer.courier')
+      if (currentCourier && !allowedCourierCodes.includes(currentCourier)) {
+        form.setValue('customer.courier', undefined)
+      }
     }
-  }, [deliveryMethod, form])
+  }, [deliveryMethod, form, allowedCourierCodes])
 
   return (
     <Card>
@@ -166,7 +184,7 @@ export function DeliveryMethodStep() {
           )}
         />
 
-        {/* Courier selection for delivery/cod */}
+        {/* Courier selection for delivery/cod/cop */}
         {showCourierDropdown && (
           <div className="mt-6 pt-6 border-t">
             <FormField
@@ -190,13 +208,18 @@ export function DeliveryMethodStep() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {couriers.map((courier) => (
+                      {filteredCouriers.map((courier) => (
                         <SelectItem key={courier.id} value={courier.code}>
                           {courier.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {(deliveryMethod === 'cod' || deliveryMethod === 'cop') && (
+                    <p className="text-xs text-muted-foreground">
+                      Only LBC is available for {deliveryMethod === 'cod' ? 'COD' : 'COP'} orders
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -210,6 +233,16 @@ export function DeliveryMethodStep() {
             <p className="text-sm text-muted-foreground">
               <strong>Pick-up selected:</strong> You won&apos;t need to provide a delivery address.
               You can proceed directly to review your information.
+            </p>
+          </div>
+        )}
+
+        {/* Info message for COP */}
+        {isCOP && (
+          <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-4">
+            <p className="text-sm text-amber-800">
+              <strong>Cash on Pickup (COP):</strong> The address you provide will be the courier&apos;s
+              pickup location where you&apos;ll collect and pay for your package.
             </p>
           </div>
         )}

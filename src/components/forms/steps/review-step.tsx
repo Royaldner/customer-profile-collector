@@ -18,6 +18,7 @@ const deliveryMethodLabels = {
   pickup: 'Pick-up',
   delivered: 'Delivery',
   cod: 'Cash on Delivery',
+  cop: 'Cash on Pickup',
 }
 
 const contactPreferenceLabels = {
@@ -33,6 +34,7 @@ export function ReviewStep() {
   const [couriers, setCouriers] = useState<Courier[]>([])
 
   const isPickup = customer.delivery_method === 'pickup'
+  const isCOP = customer.delivery_method === 'cop'
 
   // Fetch couriers to display the name
   useEffect(() => {
@@ -68,8 +70,12 @@ export function ReviewStep() {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <p className="text-sm text-muted-foreground">Full Name</p>
-              <p className="font-medium">{customer.name || '—'}</p>
+              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="font-medium">
+                {customer.first_name && customer.last_name
+                  ? `${customer.first_name} ${customer.last_name}`
+                  : '—'}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
@@ -122,16 +128,21 @@ export function ReviewStep() {
               You will collect your orders in-store. No delivery address needed.
             </p>
           )}
+          {isCOP && (
+            <p className="text-sm text-amber-600">
+              You will pick up and pay for your package at the courier location below.
+            </p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Addresses - Only show for delivery/COD */}
+      {/* Addresses - Only show for delivery/COD/COP */}
       {!isPickup && addresses.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Delivery Address{addresses.length > 1 ? 'es' : ''}
+              {isCOP ? 'Pickup Location' : `Delivery Address${addresses.length > 1 ? 'es' : ''}`}
             </CardTitle>
             <CardDescription>
               {addresses.length} address{addresses.length > 1 ? 'es' : ''} saved
@@ -151,6 +162,9 @@ export function ReviewStep() {
                     </Badge>
                   )}
                 </div>
+                <p className="text-sm font-medium">
+                  {address.first_name} {address.last_name}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   {address.street_address}
                 </p>

@@ -61,7 +61,8 @@ export default function CustomerDashboardPage() {
   const [isEditingDelivery, setIsEditingDelivery] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [editedProfile, setEditedProfile] = useState({
-    name: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     contact_preference: 'email' as 'email' | 'sms',
   })
@@ -72,6 +73,8 @@ export default function CustomerDashboardPage() {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [addressForm, setAddressForm] = useState({
+    first_name: '',
+    last_name: '',
     label: '',
     street_address: '',
     barangay: '',
@@ -124,7 +127,8 @@ export default function CustomerDashboardPage() {
 
       setCustomer(customerData)
       setEditedProfile({
-        name: customerData.name,
+        first_name: customerData.first_name,
+        last_name: customerData.last_name,
         phone: customerData.phone,
         contact_preference: customerData.contact_preference,
       })
@@ -223,6 +227,8 @@ export default function CustomerDashboardPage() {
     if (address) {
       setEditingAddress(address)
       setAddressForm({
+        first_name: address.first_name,
+        last_name: address.last_name,
         label: address.label,
         street_address: address.street_address,
         barangay: address.barangay,
@@ -235,6 +241,8 @@ export default function CustomerDashboardPage() {
     } else {
       setEditingAddress(null)
       setAddressForm({
+        first_name: customer?.first_name || '',
+        last_name: customer?.last_name || '',
         label: '',
         street_address: '',
         barangay: '',
@@ -361,6 +369,7 @@ export default function CustomerDashboardPage() {
     pickup: 'Pick-up',
     delivered: 'Delivery',
     cod: 'Cash on Delivery',
+    cop: 'Cash on Pickup',
   }
 
   return (
@@ -391,13 +400,23 @@ export default function CustomerDashboardPage() {
           <CardContent className="space-y-4">
             {isEditingProfile ? (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={editedProfile.name}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, name: e.target.value }))}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Input
+                      id="first_name"
+                      value={editedProfile.first_name}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Input
+                      id="last_name"
+                      value={editedProfile.last_name}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, last_name: e.target.value }))}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -442,7 +461,7 @@ export default function CustomerDashboardPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{customer.name}</p>
+                  <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
@@ -503,6 +522,13 @@ export default function CustomerDashboardPage() {
                     <Label htmlFor="cod" className="cursor-pointer">
                       <span className="font-medium">Cash on Delivery</span>
                       <span className="text-muted-foreground ml-2">- Pay when delivered</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <RadioGroupItem value="cop" id="cop" />
+                    <Label htmlFor="cop" className="cursor-pointer">
+                      <span className="font-medium">Cash on Pickup</span>
+                      <span className="text-muted-foreground ml-2">- Pick up at courier location</span>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -646,6 +672,9 @@ export default function CustomerDashboardPage() {
                           </AlertDialog>
                         </div>
                       </div>
+                      <p className="text-sm font-medium">
+                        {address.first_name} {address.last_name}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {address.street_address}
                       </p>
@@ -690,6 +719,26 @@ export default function CustomerDashboardPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="addr-first-name">First Name</Label>
+                <Input
+                  id="addr-first-name"
+                  placeholder="Juan"
+                  value={addressForm.first_name}
+                  onChange={(e) => setAddressForm(prev => ({ ...prev, first_name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="addr-last-name">Last Name</Label>
+                <Input
+                  id="addr-last-name"
+                  placeholder="Dela Cruz"
+                  value={addressForm.last_name}
+                  onChange={(e) => setAddressForm(prev => ({ ...prev, last_name: e.target.value }))}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="addr-label">Label</Label>
               <Input

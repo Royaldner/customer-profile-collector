@@ -1,5 +1,48 @@
 # Change Logs
 
+## [2026-01-12] - EPIC 8 Planning Session
+
+### Changes
+- **Planning**: Designed EPIC 8 (Customer Profile Enhancements)
+- Created comprehensive implementation plan for 6 major changes
+- Defined 7-step phase workflow (Branch → Build → Test → Review → Document → Merge → Tag)
+- Mapped out 7 implementation phases (CP-39 through CP-45)
+
+### Planned Features (EPIC 8)
+1. Split `name` into `first_name` + `last_name` on customers table
+2. Add profile address to customer (optional, single address)
+3. Add `first_name` + `last_name` to delivery addresses (required)
+4. Add `cop` (Cash on Pickup) delivery method
+5. Conditional courier selection based on delivery method
+6. "Use my profile name" and "Copy from profile address" UX features
+
+### Delivery Method & Courier Matrix
+| Method | Address | Couriers |
+|--------|---------|----------|
+| pickup | No | None |
+| delivered | Yes | LBC, JRS |
+| cod | Yes | LBC only |
+| cop | Yes | LBC only |
+
+### Files Modified
+- `CLAUDE.md` - Added EPIC 8 section and branch name
+- `docs/project_status.md` - Added EPIC 8 plan details
+- `docs/change_logs.md` - Added planning session entry
+
+### Plan File
+- `C:\Users\Baroroy\.claude\plans\hidden-singing-harp.md`
+
+### Pre-requisites Before Starting EPIC 8
+- [ ] Merge `feature/courier-selection` to main
+- [ ] Run migration `005_add_courier.sql` in Supabase
+
+### Notes
+- User clarified: Profile address is single address on customer (columns, not separate table)
+- User clarified: COP address is customer's chosen courier pickup location (instruction only)
+- User clarified: Address names are required but can use "Use my profile name" checkbox
+
+---
+
 ## [2026-01-10] - Courier Selection Feature
 
 ### Changes

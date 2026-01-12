@@ -1,10 +1,10 @@
 # Project Status
 
-**Last Updated:** 2026-01-10
+**Last Updated:** 2026-01-12
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. All phases complete including EPIC 7 (Customer UX Enhancement) plus Courier Selection feature.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-7 complete plus Courier Selection feature. EPIC 8 (Customer Profile Enhancements) planned.
 
 ## Completed Features
 
@@ -88,9 +88,79 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **Latest Commit:** `afdd629 CP-38: Add courier selection feature`
 - **Status:** Committed locally, not pushed
 
-## Next Steps
+## Next Steps (Immediate)
 
 1. **Run Migration** - Execute `supabase/migrations/005_add_courier.sql` in Supabase SQL Editor
 2. **Push to Remote** - `git push -u origin feature/courier-selection`
 3. **Create PR** - Merge `feature/courier-selection` into `main`
 4. **Deploy** - Vercel auto-deploys on merge to main
+
+---
+
+## EPIC 8: Customer Profile Enhancements (PLANNED)
+
+**Branch:** `feature/customer-profile-enhancements`
+**Plan File:** `C:\Users\Baroroy\.claude\plans\hidden-singing-harp.md`
+
+### Summary of Changes
+
+1. **Split Customer Name** - Replace `name` with `first_name` + `last_name`
+2. **Add Profile Address** - Single address on customer record (optional)
+3. **Add Names to Delivery Addresses** - `first_name` + `last_name` (required, with "use my name" option)
+4. **Add COP Delivery Method** - Cash on Pickup (address = courier pickup location)
+5. **Conditional Courier Selection**:
+   - pickup: No courier
+   - delivered: LBC or JRS
+   - cod: LBC only
+   - cop: LBC only
+
+### Implementation Phases (CP-39 to CP-45)
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| CP-39 | Database migrations | Pending |
+| CP-40 | Types & validation schemas | Pending |
+| CP-41 | API routes | Pending |
+| CP-42 | Registration form | Pending |
+| CP-43 | Customer dashboard | Pending |
+| CP-44 | Admin dashboard | Pending |
+| CP-45 | Testing | Pending |
+
+### 7-Step Phase Workflow
+
+1. Branch - Create `feature/customer-profile-enhancements` from develop
+2. Build - Implement CP-39 through CP-45
+3. Test - `npm test`, `npm run build`, `npm run lint`
+4. Review - Code review
+5. Document - Update docs/
+6. Merge - Merge to develop → main with `--no-ff`
+7. Tag - Tag `epic-8-complete`
+
+### Files to Modify
+
+**New Migrations:**
+- `supabase/migrations/006_split_name_and_profile_address.sql`
+- `supabase/migrations/007_address_names_and_cop.sql`
+
+**Core Updates:**
+- `src/lib/types/index.ts`
+- `src/lib/validations/customer.ts`
+- `src/app/api/customers/route.ts`
+- `src/app/api/customers/[id]/route.ts`
+- `src/app/api/customer/profile/route.ts`
+- `src/app/api/customer/addresses/route.ts`
+- `src/app/api/customer/addresses/[id]/route.ts`
+
+**Frontend Updates:**
+- `src/components/forms/steps/personal-info-step.tsx`
+- `src/components/forms/steps/delivery-method-step.tsx`
+- `src/components/forms/address-form.tsx`
+- `src/components/forms/steps/review-step.tsx`
+- `src/components/forms/customer-form.tsx`
+- `src/app/customer/dashboard/page.tsx`
+- `src/components/admin/customer-list.tsx`
+- `src/components/admin/edit-customer-form.tsx`
+- `src/app/admin/customers/[id]/page.tsx`
+
+**Tests:**
+- `test/customer-validation.test.ts`

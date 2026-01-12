@@ -78,12 +78,20 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const { data: customerData, error: customerError } = await supabase
       .from('customers')
       .update({
-        name: customer.name,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
         delivery_method: customer.delivery_method,
         courier: customer.courier || null,
+        // Profile address fields (optional)
+        profile_street_address: customer.profile_street_address || null,
+        profile_barangay: customer.profile_barangay || null,
+        profile_city: customer.profile_city || null,
+        profile_province: customer.profile_province || null,
+        profile_region: customer.profile_region || null,
+        profile_postal_code: customer.profile_postal_code || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -164,7 +172,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     // Check if customer exists
     const { data: existingCustomer, error: fetchError } = await supabase
       .from('customers')
-      .select('id, name')
+      .select('id, first_name, last_name')
       .eq('id', id)
       .single()
 

@@ -28,13 +28,21 @@ export async function POST(request: NextRequest) {
     const { data: customerData, error: customerError } = await supabase
       .from('customers')
       .insert({
-        name: customer.name,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
         delivery_method: customer.delivery_method,
         courier: customer.courier || null,
         user_id: user_id,
+        // Profile address fields (optional)
+        profile_street_address: customer.profile_street_address || null,
+        profile_barangay: customer.profile_barangay || null,
+        profile_city: customer.profile_city || null,
+        profile_province: customer.profile_province || null,
+        profile_region: customer.profile_region || null,
+        profile_postal_code: customer.profile_postal_code || null,
       })
       .select()
       .single()
