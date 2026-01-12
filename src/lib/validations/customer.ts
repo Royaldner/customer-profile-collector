@@ -5,12 +5,22 @@
 
 import { z } from 'zod'
 
-// Delivery method enum
-export const deliveryMethodSchema = z.enum(['pickup', 'delivered', 'cod'], {
+// Delivery method enum (includes cop - Cash on Pickup)
+export const deliveryMethodSchema = z.enum(['pickup', 'delivered', 'cod', 'cop'], {
   message: 'Please select a delivery method',
 })
 
+// Couriers allowed per delivery method
+export const COURIER_OPTIONS = {
+  pickup: [], // No courier needed
+  delivered: ['lbc', 'jrs'], // All couriers
+  cod: ['lbc'], // LBC only
+  cop: ['lbc'], // LBC only
+} as const
+
 export const addressSchema = z.object({
+  first_name: z.string().min(1, 'First name is required').max(100, 'First name must be 100 characters or less'),
+  last_name: z.string().min(1, 'Last name is required').max(100, 'Last name must be 100 characters or less'),
   label: z.string().min(1, 'Label is required').max(100, 'Label must be 100 characters or less'),
   street_address: z.string().min(1, 'Street address is required').max(500, 'Street address must be 500 characters or less'),
   barangay: z.string().min(1, 'Barangay is required').max(255, 'Barangay must be 255 characters or less'),
@@ -24,8 +34,19 @@ export const addressSchema = z.object({
   is_default: z.boolean(),
 })
 
+// Profile address schema (all fields optional)
+export const profileAddressSchema = z.object({
+  profile_street_address: z.string().max(500, 'Street address must be 500 characters or less').optional(),
+  profile_barangay: z.string().max(255, 'Barangay must be 255 characters or less').optional(),
+  profile_city: z.string().max(255, 'City must be 255 characters or less').optional(),
+  profile_province: z.string().max(255, 'Province must be 255 characters or less').optional(),
+  profile_region: z.string().max(100, 'Region must be 100 characters or less').optional(),
+  profile_postal_code: z.string().regex(/^\d{4}$/, 'Postal code must be exactly 4 digits').optional().or(z.literal('')),
+})
+
 export const customerSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name must be 255 characters or less'),
+  first_name: z.string().min(1, 'First name is required').max(100, 'First name must be 100 characters or less'),
+  last_name: z.string().min(1, 'Last name is required').max(100, 'Last name must be 100 characters or less'),
   email: z.string().min(1, 'Email is required').email('Invalid email address').max(255, 'Email must be 255 characters or less'),
   phone: z
     .string()
@@ -37,6 +58,8 @@ export const customerSchema = z.object({
   }),
   delivery_method: deliveryMethodSchema,
   courier: z.string().optional(),
+  // Profile address fields (optional)
+  ...profileAddressSchema.shape,
 })
 
 // Conditional address and courier validation based on delivery_method
@@ -51,7 +74,7 @@ export const customerWithAddressesSchema = z
       if (data.customer.delivery_method === 'pickup') {
         return true
       }
-      // Delivered/COD: require 1-3 addresses with exactly one default
+      // Delivered/COD/COP: require 1-3 addresses with exactly one default
       if (data.addresses.length < 1 || data.addresses.length > 3) {
         return false
       }
@@ -68,11 +91,27 @@ export const customerWithAddressesSchema = z
       if (data.customer.delivery_method === 'pickup') {
         return true
       }
-      // Delivered/COD: require courier selection
+      // Delivered/COD/COP: require courier selection
       return !!data.customer.courier && data.customer.courier.length > 0
     },
     {
       message: 'Please select a courier for delivery orders',
+      path: ['customer', 'courier'],
+    }
+  )
+  .refine(
+    (data) => {
+      // Validate courier is allowed for delivery method
+      const method = data.customer.delivery_method
+      const courier = data.customer.courier
+      if (method === 'pickup' || !courier) {
+        return true
+      }
+      const allowedCouriers: readonly string[] = COURIER_OPTIONS[method]
+      return allowedCouriers.includes(courier)
+    },
+    {
+      message: 'Selected courier is not available for this delivery method',
       path: ['customer', 'courier'],
     }
   )
@@ -82,3 +121,4 @@ export type DeliveryMethodFormData = z.infer<typeof deliveryMethodSchema>
 export type AddressFormData = z.infer<typeof addressSchema>
 export type CustomerFormData = z.infer<typeof customerSchema>
 export type CustomerWithAddressesFormData = z.infer<typeof customerWithAddressesSchema>
+export type ProfileAddressFormData = z.infer<typeof profileAddressSchema>

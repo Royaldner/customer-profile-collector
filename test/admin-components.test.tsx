@@ -13,6 +13,8 @@ import { Customer, Address } from '@/lib/types'
 const createMockAddress = (overrides?: Partial<Address>): Address => ({
   id: 'addr-1',
   customer_id: 'cust-1',
+  first_name: 'Juan',
+  last_name: 'Dela Cruz',
   label: 'Home',
   street_address: '123 Main Street',
   barangay: 'San Antonio',
@@ -28,10 +30,12 @@ const createMockAddress = (overrides?: Partial<Address>): Address => ({
 
 const createMockCustomer = (overrides?: Partial<Customer>): Customer => ({
   id: 'cust-1',
-  name: 'Juan Dela Cruz',
+  first_name: 'Juan',
+  last_name: 'Dela Cruz',
   email: 'juan@example.com',
   phone: '09171234567',
   contact_preference: 'email',
+  delivery_method: 'delivered',
   created_at: '2024-01-15T10:00:00Z',
   updated_at: '2024-01-15T10:00:00Z',
   addresses: [createMockAddress()],
@@ -52,9 +56,9 @@ describe('CustomerList Component', () => {
 
     it('should display customer count', () => {
       const customers = [
-        createMockCustomer({ id: '1', name: 'Customer 1' }),
-        createMockCustomer({ id: '2', name: 'Customer 2' }),
-        createMockCustomer({ id: '3', name: 'Customer 3' }),
+        createMockCustomer({ id: '1', first_name: 'Customer', last_name: 'One' }),
+        createMockCustomer({ id: '2', first_name: 'Customer', last_name: 'Two' }),
+        createMockCustomer({ id: '3', first_name: 'Customer', last_name: 'Three' }),
       ]
       render(<CustomerList initialCustomers={customers} />)
 
@@ -84,9 +88,9 @@ describe('CustomerList Component', () => {
     it('should filter customers by name', async () => {
       const user = userEvent.setup()
       const customers = [
-        createMockCustomer({ id: '1', name: 'Juan Dela Cruz' }),
-        createMockCustomer({ id: '2', name: 'Maria Santos' }),
-        createMockCustomer({ id: '3', name: 'Pedro Reyes' }),
+        createMockCustomer({ id: '1', first_name: 'Juan', last_name: 'Dela Cruz' }),
+        createMockCustomer({ id: '2', first_name: 'Maria', last_name: 'Santos' }),
+        createMockCustomer({ id: '3', first_name: 'Pedro', last_name: 'Reyes' }),
       ]
       render(<CustomerList initialCustomers={customers} />)
 
@@ -130,7 +134,7 @@ describe('CustomerList Component', () => {
 
     it('should be case-insensitive for name search', async () => {
       const user = userEvent.setup()
-      const customers = [createMockCustomer({ name: 'Juan Dela Cruz' })]
+      const customers = [createMockCustomer({ first_name: 'Juan', last_name: 'Dela Cruz' })]
       render(<CustomerList initialCustomers={customers} />)
 
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
@@ -152,7 +156,7 @@ describe('CustomerList Component', () => {
 
     it('should show "no match" message when search returns no results', async () => {
       const user = userEvent.setup()
-      const customers = [createMockCustomer({ name: 'Juan Dela Cruz' })]
+      const customers = [createMockCustomer({ first_name: 'Juan', last_name: 'Dela Cruz' })]
       render(<CustomerList initialCustomers={customers} />)
 
       const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
@@ -165,9 +169,9 @@ describe('CustomerList Component', () => {
     it('should update customer count when filtering', async () => {
       const user = userEvent.setup()
       const customers = [
-        createMockCustomer({ id: '1', name: 'Juan Dela Cruz' }),
-        createMockCustomer({ id: '2', name: 'Maria Santos' }),
-        createMockCustomer({ id: '3', name: 'Pedro Reyes' }),
+        createMockCustomer({ id: '1', first_name: 'Juan', last_name: 'Dela Cruz' }),
+        createMockCustomer({ id: '2', first_name: 'Maria', last_name: 'Santos' }),
+        createMockCustomer({ id: '3', first_name: 'Pedro', last_name: 'Reyes' }),
       ]
       render(<CustomerList initialCustomers={customers} />)
 
@@ -399,11 +403,12 @@ describe('Helper Functions', () => {
 
 describe('Edge Cases and Boundary Conditions', () => {
   it('should handle customer with very long name', () => {
-    const longName = 'A'.repeat(255)
-    const customer = createMockCustomer({ name: longName })
+    const longFirstName = 'A'.repeat(100)
+    const longLastName = 'B'.repeat(100)
+    const customer = createMockCustomer({ first_name: longFirstName, last_name: longLastName })
     render(<CustomerList initialCustomers={[customer]} />)
 
-    expect(screen.getAllByText(longName).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(`${longFirstName} ${longLastName}`).length).toBeGreaterThan(0)
   })
 
   it('should handle customer with very long email', () => {
@@ -416,20 +421,20 @@ describe('Edge Cases and Boundary Conditions', () => {
 
   it('should handle special characters in search', async () => {
     const user = userEvent.setup()
-    const customer = createMockCustomer({ name: "O'Brien-Smith" })
+    const customer = createMockCustomer({ first_name: "O'Brien", last_name: 'Smith' })
     render(<CustomerList initialCustomers={[customer]} />)
 
     const searchInput = screen.getByPlaceholderText('Search by name, email, or phone...')
     await user.type(searchInput, "O'Brien")
 
-    expect(screen.getAllByText("O'Brien-Smith").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("O'Brien Smith").length).toBeGreaterThan(0)
   })
 
   it('should handle empty search query', async () => {
     const user = userEvent.setup()
     const customers = [
-      createMockCustomer({ id: '1', name: 'Customer 1' }),
-      createMockCustomer({ id: '2', name: 'Customer 2' }),
+      createMockCustomer({ id: '1', first_name: 'Customer', last_name: 'One' }),
+      createMockCustomer({ id: '2', first_name: 'Customer', last_name: 'Two' }),
     ]
     render(<CustomerList initialCustomers={customers} />)
 
@@ -437,15 +442,16 @@ describe('Edge Cases and Boundary Conditions', () => {
     await user.type(searchInput, 'test')
     await user.clear(searchInput)
 
-    expect(screen.getAllByText('Customer 1').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Customer 2').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Customer One').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Customer Two').length).toBeGreaterThan(0)
   })
 
   it('should handle large dataset', () => {
     const customers = Array.from({ length: 100 }, (_, i) =>
       createMockCustomer({
         id: `cust-${i}`,
-        name: `Customer ${i}`,
+        first_name: 'Customer',
+        last_name: `${i}`,
         email: `customer${i}@example.com`,
       })
     )
@@ -459,9 +465,9 @@ describe('Search Performance', () => {
   it('should filter efficiently with partial matches', async () => {
     const user = userEvent.setup()
     const customers = [
-      createMockCustomer({ id: '1', name: 'Juan Dela Cruz' }),
-      createMockCustomer({ id: '2', name: 'Juana Santos' }),
-      createMockCustomer({ id: '3', name: 'Maria Juan' }),
+      createMockCustomer({ id: '1', first_name: 'Juan', last_name: 'Dela Cruz' }),
+      createMockCustomer({ id: '2', first_name: 'Juana', last_name: 'Santos' }),
+      createMockCustomer({ id: '3', first_name: 'Maria', last_name: 'Juan' }),
     ]
     render(<CustomerList initialCustomers={customers} />)
 

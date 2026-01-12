@@ -24,6 +24,8 @@ import { cities, type Location, type Barangay } from '@/lib/data/philippines'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
 
 const DEFAULT_ADDRESS = {
+  first_name: '',
+  last_name: '',
   label: '',
   street_address: '',
   barangay: '',
@@ -181,6 +183,36 @@ export function AddressForm() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Recipient Name */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name={`addresses.${index}.first_name`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Juan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`addresses.${index}.last_name`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dela Cruz" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name={`addresses.${index}.label`}

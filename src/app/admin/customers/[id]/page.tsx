@@ -45,6 +45,7 @@ const deliveryMethodLabels = {
   pickup: 'Pick-up',
   delivered: 'Delivery',
   cod: 'Cash on Delivery',
+  cop: 'Cash on Pickup',
 }
 
 async function getCouriers(): Promise<Courier[]> {
@@ -86,7 +87,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
-              <p className="text-sm text-muted-foreground">{customer.name}</p>
+              <p className="text-sm text-muted-foreground">{customer.first_name} {customer.last_name}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
@@ -98,7 +99,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                   Edit
                 </Link>
               </Button>
-              <DeleteCustomerDialog customerId={id} customerName={customer.name} />
+              <DeleteCustomerDialog customerId={id} customerName={`${customer.first_name} ${customer.last_name}`} />
               <LogoutButton />
             </div>
           </div>
@@ -115,7 +116,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Name</label>
-                <p className="text-lg">{customer.name}</p>
+                <p className="text-lg">{customer.first_name} {customer.last_name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Email</label>
@@ -207,6 +208,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                             />
                           </div>
                           <div className="space-y-1 text-sm text-muted-foreground">
+                            <p className="font-medium text-foreground">{address.first_name} {address.last_name}</p>
                             <p>{address.street_address}</p>
                             <p>
                               Barangay {address.barangay}, {address.city}

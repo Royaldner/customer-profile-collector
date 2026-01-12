@@ -14,6 +14,8 @@ import {
 
 describe('Address Schema Validation', () => {
   const validAddress: AddressFormData = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: '123 Main Street',
     barangay: 'San Antonio',
@@ -54,7 +56,8 @@ describe('Address Schema Validation', () => {
 
 describe('Customer Schema Validation', () => {
   const validCustomer: CustomerFormData = {
-    name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email',
@@ -79,7 +82,8 @@ describe('Customer Schema Validation', () => {
 
 describe('Customer With Addresses Schema', () => {
   const validCustomer: CustomerFormData = {
-    name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email',
@@ -88,6 +92,8 @@ describe('Customer With Addresses Schema', () => {
   }
 
   const validAddress = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: '123 Main Street',
     barangay: 'San Antonio',
@@ -132,6 +138,8 @@ describe('Customer With Addresses Schema', () => {
 
 describe('Address Schema - Additional Edge Cases', () => {
   const validAddress = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: '123 Main St',
     barangay: 'San Antonio',
@@ -185,7 +193,8 @@ describe('Address Schema - Additional Edge Cases', () => {
 
 describe('Customer Schema - Additional Edge Cases', () => {
   const validCustomer = {
-    name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
@@ -202,18 +211,18 @@ describe('Customer Schema - Additional Edge Cases', () => {
     expect(r.success).toBe(true)
   })
 
-  it('should reject empty name', () => {
-    const r = customerSchema.safeParse({...validCustomer, name: ''})
+  it('should reject empty first_name', () => {
+    const r = customerSchema.safeParse({...validCustomer, first_name: ''})
     expect(r.success).toBe(false)
   })
 
-  it('should reject name exceeding 255 chars', () => {
-    const r = customerSchema.safeParse({...validCustomer, name: 'a'.repeat(256)})
+  it('should reject first_name exceeding 100 chars', () => {
+    const r = customerSchema.safeParse({...validCustomer, first_name: 'a'.repeat(101)})
     expect(r.success).toBe(false)
   })
 
-  it('should validate name at 255 chars', () => {
-    const r = customerSchema.safeParse({...validCustomer, name: 'a'.repeat(255)})
+  it('should validate first_name at 100 chars', () => {
+    const r = customerSchema.safeParse({...validCustomer, first_name: 'a'.repeat(100)})
     expect(r.success).toBe(true)
   })
 
@@ -250,7 +259,8 @@ describe('Customer Schema - Additional Edge Cases', () => {
 
 describe('Customer With Addresses - Additional Edge Cases', () => {
   const validCustomer = {
-    name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
@@ -259,6 +269,8 @@ describe('Customer With Addresses - Additional Edge Cases', () => {
   }
 
   const validAddress = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: '123 Main St',
     barangay: 'San Antonio',
@@ -349,6 +361,8 @@ describe('Customer With Addresses - Additional Edge Cases', () => {
 
 describe('Boundary Value Tests', () => {
   const validAddress = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: '123 Main St',
     barangay: 'San Antonio',
@@ -360,7 +374,8 @@ describe('Boundary Value Tests', () => {
   }
 
   const validCustomer = {
-    name: 'Juan Dela Cruz',
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     email: 'juan@example.com',
     phone: '09171234567',
     contact_preference: 'email' as const,
@@ -416,6 +431,8 @@ describe('Boundary Value Tests', () => {
 
 describe('Philippine-Specific Validation', () => {
   const validAddress = {
+    first_name: 'Juan',
+    last_name: 'Dela Cruz',
     label: 'Home',
     street_address: 'Blk 5 Lot 10 Phase 2',
     barangay: 'Barangay San Antonio',
@@ -440,7 +457,8 @@ describe('Philippine-Specific Validation', () => {
     const phones = ['09171234567', '09281234567', '09991234567']
     phones.forEach(phone => {
       const r = customerSchema.safeParse({
-        name: 'Test',
+        first_name: 'Test',
+        last_name: 'User',
         email: 'test@example.com',
         phone,
         contact_preference: 'sms' as const,
@@ -463,13 +481,16 @@ describe('Combined Validation Scenarios', () => {
   it('should reject customer with invalid data and invalid addresses', () => {
     const data = {
       customer: {
-        name: '',
+        first_name: '',
+        last_name: '',
         email: 'not-an-email',
         phone: '123',
         contact_preference: 'email' as const,
         delivery_method: 'delivered' as const,
       },
       addresses: [{
+        first_name: '',
+        last_name: '',
         label: '',
         street_address: '',
         barangay: '',
@@ -486,7 +507,8 @@ describe('Combined Validation Scenarios', () => {
   it('should validate complete valid registration', () => {
     const data = {
       customer: {
-        name: 'Maria Santos',
+        first_name: 'Maria',
+        last_name: 'Santos',
         email: 'maria.santos@email.com',
         phone: '09171234567',
         contact_preference: 'email' as const,
@@ -495,6 +517,8 @@ describe('Combined Validation Scenarios', () => {
       },
       addresses: [
         {
+          first_name: 'Maria',
+          last_name: 'Santos',
           label: 'Home',
           street_address: '123 Rizal Street',
           barangay: 'Barangay 1',
@@ -505,6 +529,8 @@ describe('Combined Validation Scenarios', () => {
           is_default: true
         },
         {
+          first_name: 'Maria',
+          last_name: 'Santos',
           label: 'Work',
           street_address: '456 Ayala Avenue',
           barangay: 'Bel-Air',
@@ -523,15 +549,18 @@ describe('Combined Validation Scenarios', () => {
   it('should validate complete registration with three addresses', () => {
     const data = {
       customer: {
-        name: 'Jose Rizal',
+        first_name: 'Jose',
+        last_name: 'Rizal',
         email: 'jose.rizal@national.ph',
         phone: '09991234567',
         contact_preference: 'phone' as const,
         delivery_method: 'cod' as const,
-        courier: 'jrs',
+        courier: 'lbc',
       },
       addresses: [
         {
+          first_name: 'Jose',
+          last_name: 'Rizal',
           label: 'Home',
           street_address: 'Calamba',
           barangay: 'Barangay Real',
@@ -542,6 +571,8 @@ describe('Combined Validation Scenarios', () => {
           is_default: true
         },
         {
+          first_name: 'Jose',
+          last_name: 'Rizal',
           label: 'Office',
           street_address: 'Intramuros',
           barangay: 'Barangay 659',
@@ -552,6 +583,8 @@ describe('Combined Validation Scenarios', () => {
           is_default: false
         },
         {
+          first_name: 'Jose',
+          last_name: 'Rizal',
           label: 'Vacation Home',
           street_address: 'Dapitan St',
           barangay: 'Barangay 370',
@@ -570,7 +603,8 @@ describe('Combined Validation Scenarios', () => {
   it('should validate pickup order without addresses', () => {
     const data = {
       customer: {
-        name: 'Pickup Customer',
+        first_name: 'Pickup',
+        last_name: 'Customer',
         email: 'pickup@example.com',
         phone: '09171234567',
         contact_preference: 'email' as const,
@@ -585,7 +619,8 @@ describe('Combined Validation Scenarios', () => {
   it('should reject delivery order without addresses', () => {
     const data = {
       customer: {
-        name: 'Delivery Customer',
+        first_name: 'Delivery',
+        last_name: 'Customer',
         email: 'delivery@example.com',
         phone: '09171234567',
         contact_preference: 'email' as const,

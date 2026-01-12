@@ -5,7 +5,7 @@
 
 export type ContactPreference = 'email' | 'phone' | 'sms'
 
-export type DeliveryMethod = 'pickup' | 'delivered' | 'cod'
+export type DeliveryMethod = 'pickup' | 'delivered' | 'cod' | 'cop'
 
 export interface Courier {
   id: string
@@ -18,13 +18,21 @@ export interface Courier {
 
 export interface Customer {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
   phone: string
   contact_preference: ContactPreference
   user_id?: string
   delivery_method: DeliveryMethod
   courier?: string
+  // Profile address (optional)
+  profile_street_address?: string
+  profile_barangay?: string
+  profile_city?: string
+  profile_province?: string
+  profile_region?: string
+  profile_postal_code?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
@@ -33,6 +41,8 @@ export interface Customer {
 export interface Address {
   id: string
   customer_id: string
+  first_name: string
+  last_name: string
   label: string
   street_address: string
   barangay: string
@@ -47,12 +57,20 @@ export interface Address {
 
 // Input types for creating/updating entities (without auto-generated fields)
 export interface CustomerInput {
-  name: string
+  first_name: string
+  last_name: string
   email: string
   phone: string
   contact_preference: ContactPreference
   delivery_method: DeliveryMethod
   courier?: string
+  // Profile address (optional)
+  profile_street_address?: string
+  profile_barangay?: string
+  profile_city?: string
+  profile_province?: string
+  profile_region?: string
+  profile_postal_code?: string
 }
 
 // Input type for courier management
@@ -64,6 +82,8 @@ export interface CourierInput {
 
 export interface AddressInput {
   customer_id?: string
+  first_name: string
+  last_name: string
   label: string
   street_address: string
   barangay: string

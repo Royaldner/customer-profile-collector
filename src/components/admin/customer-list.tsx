@@ -43,7 +43,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch =
         searchQuery === '' ||
-        customer.name.toLowerCase().includes(searchLower) ||
+        `${customer.first_name} ${customer.last_name}`.toLowerCase().includes(searchLower) ||
         customer.email.toLowerCase().includes(searchLower) ||
         customer.phone.includes(searchQuery)
 
@@ -140,7 +140,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-medium truncate">{customer.name}</h3>
+                        <h3 className="font-medium truncate">{customer.first_name} {customer.last_name}</h3>
                         <p className="text-sm text-muted-foreground truncate">
                           {customer.email}
                         </p>
@@ -193,7 +193,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                     const defaultAddress = getDefaultAddress(customer)
                     return (
                       <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.name}</TableCell>
+                        <TableCell className="font-medium">{customer.first_name} {customer.last_name}</TableCell>
                         <TableCell>{customer.email}</TableCell>
                         <TableCell>{customer.phone}</TableCell>
                         <TableCell>

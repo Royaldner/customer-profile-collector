@@ -43,6 +43,8 @@ interface EditCustomerFormProps {
 }
 
 const DEFAULT_ADDRESS = {
+  first_name: '',
+  last_name: '',
   label: '',
   street_address: '',
   barangay: '',
@@ -64,7 +66,8 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     resolver: zodResolver(customerWithAddressesSchema),
     defaultValues: {
       customer: {
-        name: customer.name,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
@@ -72,6 +75,8 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
         courier: customer.courier || undefined,
       },
       addresses: customer.addresses?.map((addr) => ({
+        first_name: addr.first_name,
+        last_name: addr.last_name,
         label: addr.label,
         street_address: addr.street_address,
         barangay: addr.barangay,
@@ -192,19 +197,34 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="customer.name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Juan Dela Cruz" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="customer.first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Juan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="customer.last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dela Cruz" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -310,6 +330,14 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                           Cash on Delivery
                         </FormLabel>
                       </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="cop" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Cash on Pickup (at courier location)
+                        </FormLabel>
+                      </FormItem>
                     </RadioGroup>
                   </FormControl>
                   <FormMessage />
@@ -398,6 +426,36 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Recipient Name */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name={`addresses.${index}.first_name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Juan" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`addresses.${index}.last_name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Dela Cruz" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
                   name={`addresses.${index}.label`}

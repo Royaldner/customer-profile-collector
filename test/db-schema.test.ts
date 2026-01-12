@@ -16,14 +16,18 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Test data
 const testCustomer = {
-  name: 'Juan Dela Cruz',
+  first_name: 'Juan',
+  last_name: 'Dela Cruz',
   email: `test-${Date.now()}@example.com`, // Unique email for each test run
   phone: '09171234567',
   contact_preference: 'email' as const,
   delivery_method: 'delivered' as const,
+  courier: 'lbc' as const,
 }
 
 const testAddress = {
+  first_name: 'Juan',
+  last_name: 'Dela Cruz',
   label: 'Home',
   street_address: '123 Rizal Street',
   barangay: 'Barangay San Antonio',
@@ -48,7 +52,8 @@ describe('Database Schema Tests', () => {
 
       expect(error).toBeNull()
       expect(data).toBeDefined()
-      expect(data?.name).toBe(testCustomer.name)
+      expect(data?.first_name).toBe(testCustomer.first_name)
+      expect(data?.last_name).toBe(testCustomer.last_name)
       expect(data?.email).toBe(testCustomer.email)
       expect(data?.phone).toBe(testCustomer.phone)
       expect(data?.contact_preference).toBe(testCustomer.contact_preference)
@@ -69,22 +74,23 @@ describe('Database Schema Tests', () => {
         .single()
 
       expect(error).toBeNull()
-      expect(data?.name).toBe(testCustomer.name)
+      expect(data?.first_name).toBe(testCustomer.first_name)
+      expect(data?.last_name).toBe(testCustomer.last_name)
     })
 
     it('should update the customer', async () => {
       expect(createdCustomerId).not.toBeNull()
 
-      const updatedName = 'Juan Dela Cruz Jr.'
+      const updatedLastName = 'Dela Cruz Jr.'
       const { data, error } = await supabase
         .from('customers')
-        .update({ name: updatedName })
+        .update({ last_name: updatedLastName })
         .eq('id', createdCustomerId!)
         .select()
         .single()
 
       expect(error).toBeNull()
-      expect(data?.name).toBe(updatedName)
+      expect(data?.last_name).toBe(updatedLastName)
     })
 
     it('should reject duplicate email', async () => {
@@ -124,6 +130,8 @@ describe('Database Schema Tests', () => {
 
       expect(error).toBeNull()
       expect(data).toBeDefined()
+      expect(data?.first_name).toBe(testAddress.first_name)
+      expect(data?.last_name).toBe(testAddress.last_name)
       expect(data?.label).toBe(testAddress.label)
       expect(data?.street_address).toBe(testAddress.street_address)
       expect(data?.barangay).toBe(testAddress.barangay)

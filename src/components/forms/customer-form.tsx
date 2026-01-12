@@ -33,7 +33,8 @@ import {
 
 const DEFAULT_VALUES: CustomerWithAddressesFormData = {
   customer: {
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     contact_preference: 'email',
@@ -41,6 +42,8 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
   },
   addresses: [
     {
+      first_name: '',
+      last_name: '',
       label: '',
       street_address: '',
       barangay: '',
@@ -187,7 +190,8 @@ export function CustomerForm() {
     switch (currentStepId) {
       case 'personal':
         fieldsToValidate = [
-          'customer.name',
+          'customer.first_name',
+          'customer.last_name',
           'customer.email',
           'customer.phone',
           'customer.contact_preference',
@@ -201,6 +205,8 @@ export function CustomerForm() {
         const addresses = form.getValues('addresses')
         addresses.forEach((_, index) => {
           fieldsToValidate.push(
+            `addresses.${index}.first_name` as `addresses.${number}.${string}`,
+            `addresses.${index}.last_name` as `addresses.${number}.${string}`,
             `addresses.${index}.label` as `addresses.${number}.${string}`,
             `addresses.${index}.street_address` as `addresses.${number}.${string}`,
             `addresses.${index}.barangay` as `addresses.${number}.${string}`,

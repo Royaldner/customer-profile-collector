@@ -46,7 +46,7 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-primary">Edit Customer</h1>
-              <p className="text-sm text-muted-foreground">{customer.name}</p>
+              <p className="text-sm text-muted-foreground">{customer.first_name} {customer.last_name}</p>
             </div>
             <div className="flex gap-2">
               <Link href={`/admin/customers/${id}`}>

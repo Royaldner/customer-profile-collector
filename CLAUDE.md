@@ -36,6 +36,7 @@ Never make changes directly on `main` or `develop` branches.
 | EPIC 5 | `feature/edit-delete-operations` |
 | EPIC 6 | `feature/polish-deployment` |
 | EPIC 7 | `feature/customer-ux-enhancement` |
+| EPIC 8 | `feature/customer-profile-enhancements` |
 
 ## Progress Tracker
 
@@ -451,6 +452,107 @@ export async function GET() {
 }
 ```
 Note: `0 0 * * 0` = Every Sunday at midnight UTC (weekly)
+
+---
+
+## EPIC 8: Customer Profile Enhancements (PLANNED)
+
+Branch: `feature/customer-profile-enhancements`
+
+### Pre-requisites
+- [ ] Merge `feature/courier-selection` to main
+- [ ] Run migration `005_add_courier.sql` in Supabase
+
+### 7-Step Phase Workflow
+1. **Branch** - Create feature branch from develop
+2. **Build** - Implement changes (CP-39 through CP-45)
+3. **Test** - Run tests, build, lint
+4. **Review** - Code review
+5. **Document** - Update change_logs.md and project_status.md
+6. **Merge** - Merge to develop → main with --no-ff
+7. **Tag** - Tag release `epic-8-complete`
+
+### Implementation Phases
+
+#### CP-39: Database Migrations
+- [ ] Migration 006: Split `name` into `first_name` + `last_name`, add profile address columns
+- [ ] Migration 007: Add `first_name` + `last_name` to addresses, add `cop` delivery method
+
+#### CP-40: Types & Validation
+- [ ] Update `DeliveryMethod` type: `'pickup' | 'delivered' | 'cod' | 'cop'`
+- [ ] Split `name` → `first_name`, `last_name` in Customer types
+- [ ] Add profile address fields to Customer
+- [ ] Add `first_name`, `last_name` to Address type
+- [ ] Update Zod schemas with courier filtering logic
+
+#### CP-41: API Routes
+- [ ] Update POST/PUT `/api/customers` for new fields
+- [ ] Update `/api/customer/profile` for profile address
+- [ ] Update `/api/customer/addresses` for name fields
+
+#### CP-42: Registration Form
+- [ ] Split name into First Name + Last Name fields
+- [ ] Add `cop` (Cash on Pickup) delivery option
+- [ ] Update courier filtering (pickup: none, delivered: LBC/JRS, cod/cop: LBC only)
+- [ ] Add "Use my profile name" checkbox to address form
+- [ ] Add "Copy from profile address" button
+
+#### CP-43: Customer Dashboard
+- [ ] Display/edit split name
+- [ ] Add profile address section
+- [ ] Update address management with name fields
+
+#### CP-44: Admin Dashboard
+- [ ] Update customer list for split name
+- [ ] Update detail view for profile address
+- [ ] Update edit form for all new fields
+
+#### CP-45: Testing
+- [ ] Update validation tests for split name
+- [ ] Add tests for `cop` delivery method
+- [ ] Add tests for courier filtering logic
+
+### Delivery Method & Courier Matrix
+
+| Method | Address Required | Courier Options | Notes |
+|--------|-----------------|-----------------|-------|
+| `pickup` | No | None | Pick up at store |
+| `delivered` | Yes | LBC, JRS | Standard delivery |
+| `cod` | Yes | LBC only | Cash on delivery |
+| `cop` | Yes | LBC only | Address = courier pickup location |
+
+### Key UX Features
+
+**"Use my profile name" Checkbox:**
+- Auto-fills first/last name from customer profile
+- Allows manual entry when unchecked (for different recipient)
+
+**"Copy from profile address" Button:**
+- Only visible if profile address exists
+- Copies address fields (not name) to delivery address
+
+**COP Instruction Banner:**
+- Shows: "The address you provide is where you will pick up your package from the courier's location."
+
+### Database Changes Summary
+
+**customers table additions:**
+- `first_name VARCHAR(100) NOT NULL`
+- `last_name VARCHAR(100) NOT NULL`
+- `profile_street_address VARCHAR(500)`
+- `profile_barangay VARCHAR(255)`
+- `profile_city VARCHAR(255)`
+- `profile_province VARCHAR(255)`
+- `profile_region VARCHAR(100)`
+- `profile_postal_code VARCHAR(4)`
+- Remove `name` column
+
+**addresses table additions:**
+- `first_name VARCHAR(100) NOT NULL`
+- `last_name VARCHAR(100) NOT NULL`
+
+**delivery_method constraint update:**
+- Add `'cop'` to allowed values
 
 ---
 
