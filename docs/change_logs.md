@@ -1,5 +1,64 @@
 # Change Logs
 
+## [2026-01-12] - EPIC 8 Implementation Complete
+
+### Changes
+- **CP-39**: Created database migrations 006 and 007
+- **CP-40**: Updated TypeScript types and Zod validation schemas
+- **CP-41**: Updated API routes for new customer/address fields
+- **CP-42**: Updated registration form UI (split name, COP option, courier filtering)
+- **CP-43**: Updated customer dashboard for new fields
+- **CP-44**: Updated admin dashboard for new fields
+- **CP-45**: Updated all tests for new schema
+
+### Features Implemented
+1. **Split Name Fields**: `name` → `first_name` + `last_name` on customers
+2. **Address Names**: Added `first_name` + `last_name` to delivery addresses
+3. **Profile Address**: Added optional profile address columns to customers
+4. **COP Delivery Method**: Added "Cash on Pickup" option
+5. **Courier Filtering**: pickup (none), delivered (LBC/JRS), cod/cop (LBC only)
+
+### Database Migrations
+- `006_split_name_and_profile_address.sql` - Split name, add profile address
+- `007_address_names_and_cop.sql` - Add names to addresses, add COP delivery method
+
+### Files Created
+- `supabase/migrations/006_split_name_and_profile_address.sql`
+- `supabase/migrations/007_address_names_and_cop.sql`
+
+### Files Modified
+- `src/lib/types/index.ts` - Added first_name/last_name, profile address, COP
+- `src/lib/validations/customer.ts` - Updated schemas, added COURIER_OPTIONS
+- `src/app/api/customers/route.ts` - Handle new fields in POST
+- `src/app/api/customers/[id]/route.ts` - Handle new fields in PUT
+- `src/components/forms/steps/personal-info-step.tsx` - Split name inputs
+- `src/components/forms/steps/delivery-method-step.tsx` - COP option, courier filtering
+- `src/components/forms/address-form.tsx` - Added name fields to addresses
+- `src/components/forms/steps/review-step.tsx` - Display new fields
+- `src/components/forms/customer-form.tsx` - Updated defaults
+- `src/app/customer/dashboard/page.tsx` - Full update for new fields
+- `src/components/admin/customer-list.tsx` - Search by first/last name
+- `src/components/admin/edit-customer-form.tsx` - Edit new fields
+- `src/app/admin/customers/[id]/page.tsx` - Display new fields
+- `test/customer-validation.test.ts` - 54 tests updated
+- `test/admin-components.test.tsx` - 36 tests updated
+- `test/db-schema.test.ts` - Updated test data
+
+### Git
+- **Commit:** `e63d90c CP-39-45: EPIC 8 - Customer profile enhancements`
+- **Branch:** `feature/customer-profile-enhancements`
+
+### Test Results
+- 90/90 unit tests passing (customer-validation + admin-components)
+- Build passes
+- Lint passes (pre-existing warnings only)
+
+### Notes
+- Database migrations 006 and 007 have been run in Supabase
+- Ready for push, PR, and merge
+
+---
+
 ## [2026-01-12] - EPIC 8 Planning Session
 
 ### Changes
