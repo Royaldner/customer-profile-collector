@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { Customer } from '@/lib/types'
+import { Customer, Courier } from '@/lib/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Pencil } from 'lucide-react'
@@ -41,13 +41,33 @@ const contactPreferenceLabels = {
   sms: 'SMS',
 }
 
+const deliveryMethodLabels = {
+  pickup: 'Pick-up',
+  delivered: 'Delivery',
+  cod: 'Cash on Delivery',
+}
+
+async function getCouriers(): Promise<Courier[]> {
+  const supabase = await createClient()
+  const { data: couriers } = await supabase
+    .from('couriers')
+    .select('*')
+    .order('name', { ascending: true })
+  return couriers || []
+}
+
 export default async function CustomerDetailPage({ params }: CustomerDetailPageProps) {
   const { id } = await params
-  const customer = await getCustomer(id)
+  const [customer, couriers] = await Promise.all([getCustomer(id), getCouriers()])
 
   if (!customer) {
     notFound()
   }
+
+  const isPickup = customer.delivery_method === 'pickup'
+  const courierName = customer.courier
+    ? couriers.find((c) => c.code === customer.courier)?.name || customer.courier.toUpperCase()
+    : null
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-PH', {
@@ -121,6 +141,24 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                   <Badge>{contactPreferenceLabels[customer.contact_preference]}</Badge>
                 </p>
               </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Delivery Method
+                </label>
+                <p className="mt-1">
+                  <Badge variant={isPickup ? 'secondary' : 'default'}>
+                    {deliveryMethodLabels[customer.delivery_method]}
+                  </Badge>
+                </p>
+              </div>
+              {!isPickup && courierName && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Preferred Courier
+                  </label>
+                  <p className="text-lg">{courierName}</p>
+                </div>
+              )}
               <div className="border-t pt-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -136,56 +174,69 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             </CardContent>
           </Card>
 
-          {/* Addresses Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Addresses ({customer.addresses?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {customer.addresses && customer.addresses.length > 0 ? (
-                <div className="space-y-4">
-                  {customer.addresses
-                    .sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0))
-                    .map((address) => (
-                      <div
-                        key={address.id}
-                        className={`rounded-lg border p-4 ${
-                          address.is_default ? 'border-primary bg-primary/5' : ''
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{address.label}</span>
-                            {address.is_default && (
-                              <Badge variant="default">Default</Badge>
-                            )}
+          {/* Addresses Card - Only show for delivery/COD */}
+          {!isPickup ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Addresses ({customer.addresses?.length || 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {customer.addresses && customer.addresses.length > 0 ? (
+                  <div className="space-y-4">
+                    {customer.addresses
+                      .sort((a, b) => (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0))
+                      .map((address) => (
+                        <div
+                          key={address.id}
+                          className={`rounded-lg border p-4 ${
+                            address.is_default ? 'border-primary bg-primary/5' : ''
+                          }`}
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{address.label}</span>
+                              {address.is_default && (
+                                <Badge variant="default">Default</Badge>
+                              )}
+                            </div>
+                            <SetDefaultAddressButton
+                              addressId={address.id}
+                              isDefault={address.is_default}
+                            />
                           </div>
-                          <SetDefaultAddressButton
-                            addressId={address.id}
-                            isDefault={address.is_default}
-                          />
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <p>{address.street_address}</p>
+                            <p>
+                              Barangay {address.barangay}, {address.city}
+                            </p>
+                            <p>
+                              {address.province}
+                              {address.region && `, ${address.region}`}
+                            </p>
+                            <p>{address.postal_code}</p>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>{address.street_address}</p>
-                          <p>
-                            Barangay {address.barangay}, {address.city}
-                          </p>
-                          <p>
-                            {address.province}
-                            {address.region && `, ${address.region}`}
-                          </p>
-                          <p>{address.postal_code}</p>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No addresses on file.</p>
-              )}
-            </CardContent>
-          </Card>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No addresses on file.</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Delivery Info</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  This customer uses pick-up. No delivery address required.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>

@@ -1,14 +1,15 @@
 'use client'
 
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Form,
   FormControl,
@@ -35,7 +36,7 @@ import {
   customerWithAddressesSchema,
   type CustomerWithAddressesFormData,
 } from '@/lib/validations/customer'
-import type { Customer } from '@/lib/types'
+import type { Customer, Courier } from '@/lib/types'
 
 interface EditCustomerFormProps {
   customer: Customer
@@ -56,6 +57,8 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [couriers, setCouriers] = useState<Courier[]>([])
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(true)
 
   const form = useForm<CustomerWithAddressesFormData>({
     resolver: zodResolver(customerWithAddressesSchema),
@@ -65,6 +68,8 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
         email: customer.email,
         phone: customer.phone,
         contact_preference: customer.contact_preference,
+        delivery_method: customer.delivery_method,
+        courier: customer.courier || undefined,
       },
       addresses: customer.addresses?.map((addr) => ({
         label: addr.label,
@@ -79,6 +84,39 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     },
     mode: 'onBlur',
   })
+
+  // Watch delivery method
+  const deliveryMethod = useWatch({
+    control: form.control,
+    name: 'customer.delivery_method',
+  })
+
+  const isPickup = deliveryMethod === 'pickup'
+
+  // Fetch couriers on mount
+  useEffect(() => {
+    async function fetchCouriers() {
+      try {
+        const response = await fetch('/api/couriers')
+        if (response.ok) {
+          const data = await response.json()
+          setCouriers(data.couriers || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch couriers:', error)
+      } finally {
+        setIsLoadingCouriers(false)
+      }
+    }
+    fetchCouriers()
+  }, [])
+
+  // Clear courier when switching to pickup
+  useEffect(() => {
+    if (isPickup) {
+      form.setValue('customer.courier', undefined)
+    }
+  }, [isPickup, form])
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -227,7 +265,97 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
           </CardContent>
         </Card>
 
-        {/* Addresses Section */}
+        {/* Delivery Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Delivery Preferences</CardTitle>
+            <CardDescription>
+              Update delivery method and courier preference
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="customer.delivery_method"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Delivery Method</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="pickup" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Pick-up (collect in-store)
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="delivered" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Delivery (ship to address)
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="cod" />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          Cash on Delivery
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {!isPickup && (
+              <FormField
+                control={form.control}
+                name="customer.courier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Courier</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || ''}
+                      disabled={isLoadingCouriers}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isLoadingCouriers ? 'Loading couriers...' : 'Select a courier'
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {couriers.map((courier) => (
+                          <SelectItem key={courier.id} value={courier.code}>
+                            {courier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Addresses Section - Only show for delivery/COD */}
+        {!isPickup && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Delivery Addresses</h3>
@@ -401,6 +529,7 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
             You can add up to 3 addresses. One must be set as default.
           </p>
         </div>
+        )}
 
         {submitError && (
           <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">

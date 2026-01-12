@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
         phone: customer.phone,
         contact_preference: customer.contact_preference,
         delivery_method: customer.delivery_method,
+        courier: customer.courier || null,
         user_id: user_id,
       })
       .select()

@@ -20,6 +20,7 @@ const testCustomer = {
   email: `test-${Date.now()}@example.com`, // Unique email for each test run
   phone: '09171234567',
   contact_preference: 'email' as const,
+  delivery_method: 'delivered' as const,
 }
 
 const testAddress = {

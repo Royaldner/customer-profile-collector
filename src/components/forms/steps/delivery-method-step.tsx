@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormContext } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { Package, Truck, Banknote } from 'lucide-react'
 import {
   FormControl,
@@ -11,6 +12,13 @@ import {
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Card,
   CardContent,
   CardDescription,
@@ -19,6 +27,7 @@ import {
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
+import type { Courier } from '@/lib/types'
 
 const deliveryOptions = [
   {
@@ -43,6 +52,41 @@ const deliveryOptions = [
 
 export function DeliveryMethodStep() {
   const form = useFormContext<CustomerWithAddressesFormData>()
+  const [couriers, setCouriers] = useState<Courier[]>([])
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(true)
+
+  // Watch delivery method to show/hide courier dropdown
+  const deliveryMethod = useWatch({
+    control: form.control,
+    name: 'customer.delivery_method',
+  })
+
+  const showCourierDropdown = deliveryMethod === 'delivered' || deliveryMethod === 'cod'
+
+  // Fetch couriers on mount
+  useEffect(() => {
+    async function fetchCouriers() {
+      try {
+        const response = await fetch('/api/couriers')
+        if (response.ok) {
+          const data = await response.json()
+          setCouriers(data.couriers || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch couriers:', error)
+      } finally {
+        setIsLoadingCouriers(false)
+      }
+    }
+    fetchCouriers()
+  }, [])
+
+  // Clear courier when switching to pickup
+  useEffect(() => {
+    if (deliveryMethod === 'pickup') {
+      form.setValue('customer.courier', undefined)
+    }
+  }, [deliveryMethod, form])
 
   return (
     <Card>
@@ -122,8 +166,46 @@ export function DeliveryMethodStep() {
           )}
         />
 
+        {/* Courier selection for delivery/cod */}
+        {showCourierDropdown && (
+          <div className="mt-6 pt-6 border-t">
+            <FormField
+              control={form.control}
+              name="customer.courier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Courier</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ''}
+                    disabled={isLoadingCouriers}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isLoadingCouriers ? 'Loading couriers...' : 'Select a courier'
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {couriers.map((courier) => (
+                        <SelectItem key={courier.id} value={courier.code}>
+                          {courier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
         {/* Info message for pickup */}
-        {form.watch('customer.delivery_method') === 'pickup' && (
+        {deliveryMethod === 'pickup' && (
           <div className="mt-4 rounded-lg bg-muted p-4">
             <p className="text-sm text-muted-foreground">
               <strong>Pick-up selected:</strong> You won&apos;t need to provide a delivery address.

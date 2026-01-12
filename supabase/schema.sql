@@ -2,10 +2,27 @@
 -- Run this entire script in Supabase SQL Editor to set up the database
 --
 -- Includes:
--- 1. Tables (customers, addresses)
+-- 1. Tables (customers, addresses, couriers)
 -- 2. Indexes
 -- 3. Triggers for auto-updating timestamps
 -- 4. Row Level Security policies
+
+-- =============================================
+-- COURIERS TABLE (Reference table for delivery couriers)
+-- =============================================
+CREATE TABLE couriers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  code VARCHAR(50) NOT NULL UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Seed initial couriers
+INSERT INTO couriers (code, name) VALUES
+  ('lbc', 'LBC'),
+  ('jrs', 'JRS');
 
 -- =============================================
 -- CUSTOMERS TABLE
@@ -16,6 +33,9 @@ CREATE TABLE customers (
   email VARCHAR(255) NOT NULL UNIQUE,
   phone VARCHAR(50) NOT NULL,
   contact_preference VARCHAR(20) NOT NULL CHECK (contact_preference IN ('email', 'phone', 'sms')),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivered' CHECK (delivery_method IN ('pickup', 'delivered', 'cod')),
+  courier VARCHAR(50) REFERENCES couriers(code),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -45,6 +65,9 @@ CREATE TABLE addresses (
 -- Customer indexes for common queries
 CREATE INDEX idx_customers_email ON customers(email);
 CREATE INDEX idx_customers_name ON customers(name);
+CREATE INDEX idx_customers_user_id ON customers(user_id);
+CREATE INDEX idx_customers_delivery_method ON customers(delivery_method);
+CREATE INDEX idx_customers_courier ON customers(courier);
 
 -- Address indexes
 CREATE INDEX idx_addresses_customer_id ON addresses(customer_id);
@@ -79,6 +102,12 @@ CREATE TRIGGER update_addresses_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+-- Trigger for couriers table
+CREATE TRIGGER update_couriers_updated_at
+  BEFORE UPDATE ON couriers
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- =============================================
 -- ROW LEVEL SECURITY
 -- =============================================
@@ -96,3 +125,11 @@ CREATE POLICY "Allow public insert" ON addresses FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public read" ON addresses FOR SELECT USING (true);
 CREATE POLICY "Allow public update" ON addresses FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete" ON addresses FOR DELETE USING (true);
+
+-- Couriers RLS
+ALTER TABLE couriers ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can read active couriers (for form dropdowns)
+CREATE POLICY "Anyone can view active couriers"
+  ON couriers FOR SELECT
+  USING (is_active = TRUE);

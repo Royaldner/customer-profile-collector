@@ -84,6 +84,7 @@ describe('Customer With Addresses Schema', () => {
     phone: '09171234567',
     contact_preference: 'email',
     delivery_method: 'delivered',
+    courier: 'lbc',
   }
 
   const validAddress = {
@@ -254,6 +255,7 @@ describe('Customer With Addresses - Additional Edge Cases', () => {
     phone: '09171234567',
     contact_preference: 'email' as const,
     delivery_method: 'delivered' as const,
+    courier: 'lbc',
   }
 
   const validAddress = {
@@ -489,6 +491,7 @@ describe('Combined Validation Scenarios', () => {
         phone: '09171234567',
         contact_preference: 'email' as const,
         delivery_method: 'delivered' as const,
+        courier: 'lbc',
       },
       addresses: [
         {
@@ -525,6 +528,7 @@ describe('Combined Validation Scenarios', () => {
         phone: '09991234567',
         contact_preference: 'phone' as const,
         delivery_method: 'cod' as const,
+        courier: 'jrs',
       },
       addresses: [
         {

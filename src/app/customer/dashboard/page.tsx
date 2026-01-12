@@ -45,13 +45,14 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { Pencil, Plus, Trash2, Star } from 'lucide-react'
-import type { Customer, Address, DeliveryMethod } from '@/lib/types'
+import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
 
 export default function CustomerDashboardPage() {
   const router = useRouter()
   const supabase = createClient()
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
+  const [couriers, setCouriers] = useState<Courier[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -65,6 +66,7 @@ export default function CustomerDashboardPage() {
     contact_preference: 'email' as 'email' | 'sms',
   })
   const [editedDelivery, setEditedDelivery] = useState<DeliveryMethod>('delivered')
+  const [editedCourier, setEditedCourier] = useState<string | undefined>(undefined)
 
   // Address dialog states
   const [addressDialogOpen, setAddressDialogOpen] = useState(false)
@@ -82,7 +84,20 @@ export default function CustomerDashboardPage() {
 
   useEffect(() => {
     loadCustomerData()
+    loadCouriers()
   }, [])
+
+  async function loadCouriers() {
+    try {
+      const response = await fetch('/api/couriers')
+      if (response.ok) {
+        const data = await response.json()
+        setCouriers(data.couriers || [])
+      }
+    } catch (err) {
+      console.error('Failed to load couriers:', err)
+    }
+  }
 
   async function loadCustomerData() {
     try {
@@ -114,6 +129,7 @@ export default function CustomerDashboardPage() {
         contact_preference: customerData.contact_preference,
       })
       setEditedDelivery(customerData.delivery_method)
+      setEditedCourier(customerData.courier || undefined)
 
       const { data: addressData, error: addressError } = await supabase
         .from('addresses')
@@ -167,10 +183,16 @@ export default function CustomerDashboardPage() {
   async function handleSaveDelivery() {
     setIsSaving(true)
     try {
+      // Clear courier if switching to pickup
+      const courierToSave = editedDelivery === 'pickup' ? null : editedCourier
+
       const response = await fetch('/api/customer/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delivery_method: editedDelivery }),
+        body: JSON.stringify({
+          delivery_method: editedDelivery,
+          courier: courierToSave,
+        }),
       })
 
       if (!response.ok) {
@@ -186,6 +208,14 @@ export default function CustomerDashboardPage() {
       toast.error(err instanceof Error ? err.message : 'Failed to update delivery preference')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // Handle delivery method change - clear courier when switching to pickup
+  function handleDeliveryMethodChange(value: DeliveryMethod) {
+    setEditedDelivery(value)
+    if (value === 'pickup') {
+      setEditedCourier(undefined)
     }
   }
 
@@ -451,7 +481,7 @@ export default function CustomerDashboardPage() {
               <div className="space-y-4">
                 <RadioGroup
                   value={editedDelivery}
-                  onValueChange={(value: DeliveryMethod) => setEditedDelivery(value)}
+                  onValueChange={handleDeliveryMethodChange}
                   className="flex flex-col space-y-2"
                 >
                   <div className="flex items-center space-x-3">
@@ -476,6 +506,29 @@ export default function CustomerDashboardPage() {
                     </Label>
                   </div>
                 </RadioGroup>
+
+                {/* Courier dropdown - only show for delivery/cod */}
+                {editedDelivery !== 'pickup' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="courier">Preferred Courier</Label>
+                    <Select
+                      value={editedCourier || ''}
+                      onValueChange={(value) => setEditedCourier(value || undefined)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a courier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {couriers.map((courier) => (
+                          <SelectItem key={courier.id} value={courier.code}>
+                            {courier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Button onClick={handleSaveDelivery} disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Changes'}
@@ -486,9 +539,16 @@ export default function CustomerDashboardPage() {
                 </div>
               </div>
             ) : (
-              <Badge variant={customer.delivery_method === 'pickup' ? 'secondary' : 'default'}>
-                {deliveryMethodLabels[customer.delivery_method]}
-              </Badge>
+              <div className="space-y-2">
+                <Badge variant={customer.delivery_method === 'pickup' ? 'secondary' : 'default'}>
+                  {deliveryMethodLabels[customer.delivery_method]}
+                </Badge>
+                {customer.delivery_method !== 'pickup' && customer.courier && (
+                  <p className="text-sm text-muted-foreground">
+                    Courier: {couriers.find(c => c.code === customer.courier)?.name || customer.courier}
+                  </p>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

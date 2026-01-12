@@ -7,6 +7,7 @@ const updateProfileSchema = z.object({
   phone: z.string().min(10).max(50).optional(),
   contact_preference: z.enum(['email', 'sms']).optional(),
   delivery_method: z.enum(['pickup', 'delivered', 'cod']).optional(),
+  courier: z.string().max(50).nullable().optional(),
 })
 
 export async function GET() {

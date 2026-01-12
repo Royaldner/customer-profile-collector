@@ -1,5 +1,58 @@
 # Change Logs
 
+## [2026-01-10] - Courier Selection Feature
+
+### Changes
+- **Feature**: Added admin-managed courier selection for Delivery/COD orders
+- Created `couriers` table with LBC and JRS as default options
+- Added courier dropdown in registration form (visible for delivery/cod only)
+- Admin can add/edit/deactivate couriers via `/admin/couriers`
+- Customer dashboard shows and allows editing courier preference
+- Admin customer views display and allow editing courier
+
+### Files Created
+- `supabase/migrations/005_add_courier.sql` - Database migration
+- `src/lib/validations/courier.ts` - Courier validation schemas
+- `src/app/api/couriers/route.ts` - GET/POST couriers API
+- `src/app/api/couriers/[id]/route.ts` - GET/PUT/DELETE courier API
+- `src/app/admin/couriers/page.tsx` - Admin courier management page
+- `src/components/admin/courier-list.tsx` - Courier list with CRUD
+- `src/components/admin/courier-form-dialog.tsx` - Add/edit courier dialog
+
+### Files Modified
+- `supabase/schema.sql` - Added couriers table
+- `src/lib/types/index.ts` - Added Courier interface, updated Customer
+- `src/lib/validations/customer.ts` - Added courier validation
+- `src/components/forms/steps/delivery-method-step.tsx` - Added courier dropdown
+- `src/components/forms/steps/review-step.tsx` - Display courier in review
+- `src/app/api/customers/route.ts` - Handle courier in POST
+- `src/app/api/customers/[id]/route.ts` - Handle courier in PUT
+- `src/app/api/customer/profile/route.ts` - Handle courier in PUT
+- `src/app/admin/page.tsx` - Added link to courier management
+- `src/app/admin/customers/[id]/page.tsx` - Display courier in detail view
+- `src/components/admin/edit-customer-form.tsx` - Edit courier in admin form
+- `src/app/customer/dashboard/page.tsx` - Display/edit courier in profile
+- `test/customer-validation.test.ts` - Added courier to test data
+- `test/db-schema.test.ts` - Added delivery_method to test data
+
+### Git
+- **Commit:** `afdd629 CP-38: Add courier selection feature`
+- **Branch:** `feature/courier-selection`
+- **Status:** Committed locally, not pushed
+
+### Deployment Steps
+1. Run `supabase/migrations/005_add_courier.sql` in Supabase SQL Editor
+2. `git push -u origin feature/courier-selection`
+3. Create PR and merge to `main`
+4. Vercel auto-deploys on merge
+
+### Notes
+- Courier is required for delivery/cod orders, not needed for pickup
+- Admins can deactivate couriers (soft-delete) to hide from dropdowns
+- Existing customer data is preserved when courier is deactivated
+
+---
+
 ## [2026-01-09 Session 2] - EPIC 7 Complete
 
 ### Changes
