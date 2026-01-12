@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { Package, Truck, Banknote, MapPin } from 'lucide-react'
 import {
@@ -11,13 +11,6 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   Card,
   CardContent,
@@ -71,7 +64,10 @@ export function DeliveryMethodStep() {
   const isCOP = deliveryMethod === 'cop'
 
   // Get allowed couriers based on delivery method
-  const allowedCourierCodes: readonly string[] = deliveryMethod ? COURIER_OPTIONS[deliveryMethod] : []
+  const allowedCourierCodes: readonly string[] = useMemo(
+    () => (deliveryMethod ? COURIER_OPTIONS[deliveryMethod] : []),
+    [deliveryMethod]
+  )
   const filteredCouriers = couriers.filter((c) =>
     allowedCourierCodes.includes(c.code)
   )
@@ -187,36 +183,86 @@ export function DeliveryMethodStep() {
         {/* Courier selection for delivery/cod/cop */}
         {showCourierDropdown && (
           <div className="mt-6 pt-6 border-t">
+            <div className="mb-4">
+              <h3 className="text-base font-semibold">Select Your Preferred Courier</h3>
+              <p className="text-sm text-muted-foreground">
+                Required for {deliveryMethod === 'delivered' ? 'delivery' : deliveryMethod?.toUpperCase()} orders
+              </p>
+            </div>
             <FormField
               control={form.control}
               name="customer.courier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferred Courier</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || ''}
-                    disabled={isLoadingCouriers}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            isLoadingCouriers ? 'Loading couriers...' : 'Select a courier'
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {filteredCouriers.map((courier) => (
-                        <SelectItem key={courier.id} value={courier.code}>
-                          {courier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {(deliveryMethod === 'cod' || deliveryMethod === 'cop') && (
-                    <p className="text-xs text-muted-foreground">
+                  <FormControl>
+                    {isLoadingCouriers ? (
+                      <div className="flex items-center justify-center p-8 text-muted-foreground">
+                        Loading couriers...
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value || ''}
+                        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+                      >
+                        {filteredCouriers.map((courier) => {
+                          const isSelected = field.value === courier.code
+                          const CourierIcon = courier.code === 'lbc' ? Package : Truck
+
+                          return (
+                            <label
+                              key={courier.id}
+                              className={cn(
+                                'flex items-center gap-4 rounded-lg border-2 p-4 cursor-pointer transition-colors',
+                                isSelected
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-muted hover:border-muted-foreground/50'
+                              )}
+                            >
+                              <RadioGroupItem value={courier.code} className="sr-only" />
+                              <div
+                                className={cn(
+                                  'flex h-12 w-12 items-center justify-center rounded-lg',
+                                  isSelected
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                <CourierIcon className="h-6 w-6" />
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-medium">{courier.name}</span>
+                                {courier.code === 'lbc' && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Available for all delivery types
+                                  </p>
+                                )}
+                                {courier.code === 'jrs' && (
+                                  <p className="text-xs text-muted-foreground">
+                                    Standard delivery only
+                                  </p>
+                                )}
+                              </div>
+                              <div
+                                className={cn(
+                                  'h-5 w-5 rounded-full border-2 flex items-center justify-center',
+                                  isSelected
+                                    ? 'border-primary bg-primary'
+                                    : 'border-muted-foreground/50'
+                                )}
+                              >
+                                {isSelected && (
+                                  <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                                )}
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </RadioGroup>
+                    )}
+                  </FormControl>
+                  {(deliveryMethod === 'cod' || deliveryMethod === 'cop') && filteredCouriers.length === 1 && (
+                    <p className="text-xs text-muted-foreground mt-2">
                       Only LBC is available for {deliveryMethod === 'cod' ? 'COD' : 'COP'} orders
                     </p>
                   )}
