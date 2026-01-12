@@ -231,7 +231,7 @@ export function AddressForm() {
                     className="h-8 text-xs"
                   >
                     <Copy className="mr-1.5 h-3 w-3" />
-                    Copy from Profile
+                    Use my address
                   </Button>
                 )}
                 {fields.length > 1 && (
@@ -353,8 +353,8 @@ export function AddressForm() {
                       }}
                       onSelect={(option) => handleCitySelect(index, option)}
                       placeholder="Search city/municipality..."
-                      searchPlaceholder="Type to search cities..."
-                      emptyText="No cities found. Try a different search."
+                      searchPlaceholder="Type to search..."
+                      emptyText="Not found. You may type manually in the fields below."
                     />
                   </FormControl>
                   <FormMessage />

@@ -44,7 +44,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Plus, Trash2, Star } from 'lucide-react'
+import { Pencil, Plus, Trash2, Star, Package, Truck, Copy } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { COURIER_OPTIONS } from '@/lib/validations/customer'
 import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
 
 export default function CustomerDashboardPage() {
@@ -215,12 +217,42 @@ export default function CustomerDashboardPage() {
     }
   }
 
-  // Handle delivery method change - clear courier when switching to pickup
+  // Handle delivery method change - clear courier if not allowed for new method
   function handleDeliveryMethodChange(value: DeliveryMethod) {
     setEditedDelivery(value)
     if (value === 'pickup') {
       setEditedCourier(undefined)
+    } else {
+      // Check if current courier is allowed for new delivery method
+      const allowedCouriers = COURIER_OPTIONS[value] as readonly string[]
+      if (editedCourier && !allowedCouriers.includes(editedCourier)) {
+        setEditedCourier(undefined)
+      }
     }
+  }
+
+  // Get filtered couriers based on delivery method
+  const allowedCourierCodes = editedDelivery ? (COURIER_OPTIONS[editedDelivery] as readonly string[]) : []
+  const filteredCouriers = couriers.filter(c => allowedCourierCodes.includes(c.code))
+
+  // Check if profile address exists
+  const hasProfileAddress = !!customer?.profile_city
+
+  // Copy profile address to address form
+  function handleCopyFromProfile() {
+    if (!customer || !hasProfileAddress) return
+    setAddressForm({
+      ...addressForm,
+      first_name: customer.first_name,
+      last_name: customer.last_name,
+      street_address: customer.profile_street_address || '',
+      barangay: customer.profile_barangay || '',
+      city: customer.profile_city || '',
+      province: customer.profile_province || '',
+      region: customer.profile_region || '',
+      postal_code: customer.profile_postal_code || '',
+    })
+    toast.success('Profile address copied')
   }
 
   function openAddressDialog(address?: Address) {
@@ -458,23 +490,41 @@ export default function CustomerDashboardPage() {
                 </div>
               </>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="font-medium">{customer.first_name} {customer.last_name}</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="font-medium">{customer.first_name} {customer.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium">{customer.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p className="font-medium">{customer.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Contact Preference</p>
+                    <p className="font-medium capitalize">{customer.contact_preference}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{customer.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{customer.phone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Contact Preference</p>
-                  <p className="font-medium capitalize">{customer.contact_preference}</p>
-                </div>
+                {/* Profile Address */}
+                {customer.profile_city && (
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">Profile Address</p>
+                    <div className="text-sm space-y-1">
+                      {customer.profile_street_address && (
+                        <p className="font-medium">{customer.profile_street_address}</p>
+                      )}
+                      <p>{customer.profile_barangay}, {customer.profile_city}</p>
+                      <p>{customer.profile_province} {customer.profile_postal_code}</p>
+                      {customer.profile_region && (
+                        <p className="text-muted-foreground">{customer.profile_region}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -533,25 +583,70 @@ export default function CustomerDashboardPage() {
                   </div>
                 </RadioGroup>
 
-                {/* Courier dropdown - only show for delivery/cod */}
+                {/* Courier selection - only show for delivery/cod/cop */}
                 {editedDelivery !== 'pickup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="courier">Preferred Courier</Label>
-                    <Select
+                  <div className="space-y-3 pt-4 border-t">
+                    <div>
+                      <Label className="text-base font-semibold">Preferred Courier</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {(editedDelivery === 'cod' || editedDelivery === 'cop')
+                          ? 'Only LBC is available for COD/COP orders'
+                          : 'Select your preferred courier for deliveries'
+                        }
+                      </p>
+                    </div>
+                    <RadioGroup
                       value={editedCourier || ''}
                       onValueChange={(value) => setEditedCourier(value || undefined)}
+                      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a courier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {couriers.map((courier) => (
-                          <SelectItem key={courier.id} value={courier.code}>
-                            {courier.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {filteredCouriers.map((courier) => {
+                        const isSelected = editedCourier === courier.code
+                        const CourierIcon = courier.code === 'lbc' ? Package : Truck
+
+                        return (
+                          <label
+                            key={courier.id}
+                            className={cn(
+                              'flex items-center gap-4 rounded-lg border-2 p-4 cursor-pointer transition-colors',
+                              isSelected
+                                ? 'border-primary bg-primary/5'
+                                : 'border-muted hover:border-muted-foreground/50'
+                            )}
+                          >
+                            <RadioGroupItem value={courier.code} className="sr-only" />
+                            <div
+                              className={cn(
+                                'flex h-12 w-12 items-center justify-center rounded-lg',
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
+                              <CourierIcon className="h-6 w-6" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-medium">{courier.name}</span>
+                              <p className="text-xs text-muted-foreground">
+                                {courier.code === 'lbc' ? 'Available for all delivery types' : 'Standard delivery only'}
+                              </p>
+                            </div>
+                            <div
+                              className={cn(
+                                'h-5 w-5 rounded-full border-2 flex items-center justify-center',
+                                isSelected
+                                  ? 'border-primary bg-primary'
+                                  : 'border-muted-foreground/50'
+                              )}
+                            >
+                              {isSelected && (
+                                <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                              )}
+                            </div>
+                          </label>
+                        )
+                      })}
+                    </RadioGroup>
                   </div>
                 )}
 
@@ -713,10 +808,26 @@ export default function CustomerDashboardPage() {
       <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingAddress ? 'Edit Address' : 'Add Address'}</DialogTitle>
-            <DialogDescription>
-              {editingAddress ? 'Update your address details' : 'Add a new delivery address'}
-            </DialogDescription>
+            <div className="flex items-start justify-between">
+              <div>
+                <DialogTitle>{editingAddress ? 'Edit Address' : 'Add Address'}</DialogTitle>
+                <DialogDescription>
+                  {editingAddress ? 'Update your address details' : 'Add a new delivery address'}
+                </DialogDescription>
+              </div>
+              {hasProfileAddress && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyFromProfile}
+                  className="shrink-0"
+                >
+                  <Copy className="mr-1.5 h-3 w-3" />
+                  Use my address
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">

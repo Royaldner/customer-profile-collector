@@ -78,6 +78,12 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **"Use my profile name" Checkbox**: Auto-fill recipient name from profile (per address)
 - **Visual Courier Selection**: Radio cards instead of dropdown for better UX
 
+#### 8.7 Customer Dashboard UX (CP-51 to CP-54)
+- **Profile Address Display**: Shows in Personal Information section when exists
+- **Visual Courier Cards**: Replaced dropdown with styled radio cards (matches delivery preference)
+- **Conditional Courier Logic**: Filters based on delivery method (pickup: none, delivered: LBC/JRS, cod/cop: LBC only)
+- **"Use my address" Button**: One-click copy in address dialog
+
 ### Courier Management (From CP-38)
 - Admin courier management at `/admin/couriers`
 - Add, edit, deactivate couriers

@@ -199,6 +199,18 @@ export function CustomerForm() {
         break
       case 'delivery':
         fieldsToValidate = ['customer.delivery_method']
+        // Manually validate courier for non-pickup orders
+        const method = form.getValues('customer.delivery_method')
+        if (method !== 'pickup') {
+          const courier = form.getValues('customer.courier')
+          if (!courier) {
+            form.setError('customer.courier', {
+              type: 'manual',
+              message: 'Please select a courier for delivery orders',
+            })
+            return false
+          }
+        }
         break
       case 'address':
         // Validate all address fields

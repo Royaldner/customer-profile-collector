@@ -230,9 +230,9 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
                       }
                     }}
                     onSelect={handleProfileCitySelect}
-                    placeholder="Select city..."
-                    searchPlaceholder="Search cities..."
-                    emptyText="No city found."
+                    placeholder="Search city/municipality..."
+                    searchPlaceholder="Type to search..."
+                    emptyText="Not found. You may type manually below."
                   />
                 </FormControl>
                 {field.value && !selectedProfileCity && (

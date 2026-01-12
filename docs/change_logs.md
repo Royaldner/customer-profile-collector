@@ -1,5 +1,48 @@
 # Change Logs
 
+## [2026-01-12] - Customer Dashboard Enhancements
+
+### Changes
+- **CP-51**: Added profile address display in Personal Information section
+- **CP-52**: Changed courier selection to visual cards (matching delivery preference)
+- **CP-53**: Added conditional courier logic based on delivery method
+- **CP-54**: Added "Use my address" button in address dialog
+
+### Features Implemented
+
+#### 1. Profile Address Display
+- Shows in Personal Information section (view mode)
+- Displays street, barangay, city, province, postal code, region
+- Only visible when profile address exists
+
+#### 2. Visual Courier Selection
+- Replaced dropdown with styled radio cards
+- Icons: Package for LBC, Truck for JRS
+- Description text per courier
+- Matches delivery preference card styling
+
+#### 3. Conditional Courier Logic
+- Filters couriers based on delivery method:
+  - `pickup`: No courier section
+  - `delivered`: LBC + JRS
+  - `cod/cop`: LBC only
+- Auto-clears courier when switching to incompatible method
+- Message when only LBC available
+
+#### 4. "Use my address" Button
+- Added to address dialog header
+- Copies profile name + full address to form
+- Only shows when profile address exists
+
+### Files Modified
+- `src/app/customer/dashboard/page.tsx` - All 4 changes
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - Registration Form UX Enhancements
 
 ### Changes
