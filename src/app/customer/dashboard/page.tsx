@@ -47,6 +47,8 @@ import { Badge } from '@/components/ui/badge'
 import { Pencil, Plus, Trash2, Star, Package, Truck, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { COURIER_OPTIONS } from '@/lib/validations/customer'
+import { LocationCombobox } from '@/components/ui/location-combobox'
+import { cities } from '@/lib/data/philippines'
 import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
 
 export default function CustomerDashboardPage() {
@@ -57,6 +59,7 @@ export default function CustomerDashboardPage() {
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [greeting, setGreeting] = useState('Welcome')
 
   // Edit states
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -67,9 +70,21 @@ export default function CustomerDashboardPage() {
     last_name: '',
     phone: '',
     contact_preference: 'email' as 'email' | 'sms',
+    // Profile address fields
+    profile_street_address: '',
+    profile_barangay: '',
+    profile_city: '',
+    profile_province: '',
+    profile_region: '',
+    profile_postal_code: '',
   })
   const [editedDelivery, setEditedDelivery] = useState<DeliveryMethod>('delivered')
   const [editedCourier, setEditedCourier] = useState<string | undefined>(undefined)
+
+  // Profile address autocomplete states
+  const [selectedProfileCity, setSelectedProfileCity] = useState('')
+  const [profileBarangays, setProfileBarangays] = useState<{value: string, label: string}[]>([])
+  const [loadingProfileBarangays, setLoadingProfileBarangays] = useState(false)
 
   // Address dialog states
   const [addressDialogOpen, setAddressDialogOpen] = useState(false)
@@ -87,7 +102,25 @@ export default function CustomerDashboardPage() {
     is_default: false,
   })
 
+  // City/Barangay autocomplete states for address modal
+  const [selectedAddressCity, setSelectedAddressCity] = useState('')
+  const [addressBarangays, setAddressBarangays] = useState<{value: string, label: string}[]>([])
+  const [loadingAddressBarangays, setLoadingAddressBarangays] = useState(false)
+
+  // City options for combobox
+  const cityOptions = cities.map((city) => ({
+    value: city.code,
+    label: city.name,
+    description: `${city.province}, ${city.region}`,
+  }))
+
   useEffect(() => {
+    // Set greeting on client side to avoid hydration mismatch
+    const hour = new Date().getHours()
+    if (hour < 12) setGreeting('Good Morning')
+    else if (hour < 18) setGreeting('Good Afternoon')
+    else setGreeting('Good Evening')
+
     loadCustomerData()
     loadCouriers()
   }, [])
@@ -101,6 +134,38 @@ export default function CustomerDashboardPage() {
       }
     } catch (err) {
       console.error('Failed to load couriers:', err)
+    }
+  }
+
+  async function loadAddressBarangays(cityCode: string) {
+    setLoadingAddressBarangays(true)
+    setAddressBarangays([])
+    try {
+      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAddressBarangays(data.barangays || [])
+      }
+    } catch (err) {
+      console.error('Failed to load barangays:', err)
+    } finally {
+      setLoadingAddressBarangays(false)
+    }
+  }
+
+  async function loadProfileBarangays(cityCode: string) {
+    setLoadingProfileBarangays(true)
+    setProfileBarangays([])
+    try {
+      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
+      if (response.ok) {
+        const data = await response.json()
+        setProfileBarangays(data.barangays || [])
+      }
+    } catch (err) {
+      console.error('Failed to load profile barangays:', err)
+    } finally {
+      setLoadingProfileBarangays(false)
     }
   }
 
@@ -133,7 +198,21 @@ export default function CustomerDashboardPage() {
         last_name: customerData.last_name,
         phone: customerData.phone,
         contact_preference: customerData.contact_preference,
+        profile_street_address: customerData.profile_street_address || '',
+        profile_barangay: customerData.profile_barangay || '',
+        profile_city: customerData.profile_city || '',
+        profile_province: customerData.profile_province || '',
+        profile_region: customerData.profile_region || '',
+        profile_postal_code: customerData.profile_postal_code || '',
       })
+      // Initialize profile city selection if exists
+      if (customerData.profile_city) {
+        const matchingCity = cities.find(c => c.name === customerData.profile_city)
+        if (matchingCity) {
+          setSelectedProfileCity(matchingCity.code)
+          loadProfileBarangays(matchingCity.code)
+        }
+      }
       setEditedDelivery(customerData.delivery_method)
       setEditedCourier(customerData.courier || undefined)
 
@@ -256,6 +335,10 @@ export default function CustomerDashboardPage() {
   }
 
   function openAddressDialog(address?: Address) {
+    // Reset city/barangay selection state
+    setSelectedAddressCity('')
+    setAddressBarangays([])
+
     if (address) {
       setEditingAddress(address)
       setAddressForm({
@@ -270,6 +353,12 @@ export default function CustomerDashboardPage() {
         postal_code: address.postal_code,
         is_default: address.is_default,
       })
+      // Try to find and set the city code for editing
+      const matchingCity = cities.find(c => c.name === address.city)
+      if (matchingCity) {
+        setSelectedAddressCity(matchingCity.code)
+        loadAddressBarangays(matchingCity.code)
+      }
     } else {
       setEditingAddress(null)
       setAddressForm({
@@ -408,7 +497,9 @@ export default function CustomerDashboardPage() {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">My Profile</h1>
+          <h1 className="text-2xl font-bold text-primary">
+            {greeting}, {customer.first_name}!
+          </h1>
           <Button variant="outline" onClick={handleLogout}>
             Sign Out
           </Button>
@@ -480,6 +571,99 @@ export default function CustomerDashboardPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Profile Address Section */}
+                <div className="pt-4 border-t space-y-4">
+                  <h4 className="font-medium text-sm">Profile Address (Optional)</h4>
+                  <div className="space-y-2">
+                    <Label>Street Address</Label>
+                    <Input
+                      placeholder="House/Unit No., Street Name"
+                      value={editedProfile.profile_street_address}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, profile_street_address: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>City/Municipality</Label>
+                    <LocationCombobox
+                      options={cityOptions}
+                      value={selectedProfileCity}
+                      onValueChange={(value) => {
+                        const city = cities.find(c => c.code === value)
+                        if (city) {
+                          setSelectedProfileCity(value)
+                          setEditedProfile(prev => ({
+                            ...prev,
+                            profile_city: city.name,
+                            profile_province: city.province,
+                            profile_region: city.region,
+                            profile_barangay: '', // Reset barangay when city changes
+                          }))
+                          loadProfileBarangays(value)
+                        }
+                      }}
+                      placeholder="Search city/municipality..."
+                      searchPlaceholder="Type to search..."
+                      emptyText="No city found"
+                    />
+                    {!selectedProfileCity && editedProfile.profile_city && (
+                      <p className="text-xs text-muted-foreground">Current: {editedProfile.profile_city}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Barangay</Label>
+                    {loadingProfileBarangays ? (
+                      <Input placeholder="Loading barangays..." disabled />
+                    ) : profileBarangays.length > 0 ? (
+                      <LocationCombobox
+                        options={profileBarangays}
+                        value={editedProfile.profile_barangay}
+                        onValueChange={(value) => setEditedProfile(prev => ({ ...prev, profile_barangay: value }))}
+                        placeholder="Select barangay..."
+                        searchPlaceholder="Type to search..."
+                        emptyText="No barangay found"
+                      />
+                    ) : (
+                      <Input
+                        placeholder="Barangay name"
+                        value={editedProfile.profile_barangay}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, profile_barangay: e.target.value }))}
+                      />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Province</Label>
+                      <Input
+                        placeholder="Province"
+                        value={editedProfile.profile_province}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, profile_province: e.target.value }))}
+                        className={selectedProfileCity ? 'bg-muted' : ''}
+                        readOnly={!!selectedProfileCity}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Region</Label>
+                      <Input
+                        placeholder="e.g., NCR"
+                        value={editedProfile.profile_region}
+                        onChange={(e) => setEditedProfile(prev => ({ ...prev, profile_region: e.target.value }))}
+                        className={selectedProfileCity ? 'bg-muted' : ''}
+                        readOnly={!!selectedProfileCity}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Postal Code</Label>
+                    <Input
+                      placeholder="4 digits"
+                      maxLength={4}
+                      value={editedProfile.profile_postal_code}
+                      onChange={(e) => setEditedProfile(prev => ({ ...prev, profile_postal_code: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <Button onClick={handleSaveProfile} disabled={isSaving}>
                     {isSaving ? 'Saving...' : 'Save Changes'}
@@ -808,26 +992,22 @@ export default function CustomerDashboardPage() {
       <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <DialogTitle>{editingAddress ? 'Edit Address' : 'Add Address'}</DialogTitle>
-                <DialogDescription>
-                  {editingAddress ? 'Update your address details' : 'Add a new delivery address'}
-                </DialogDescription>
-              </div>
-              {hasProfileAddress && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyFromProfile}
-                  className="shrink-0"
-                >
-                  <Copy className="mr-1.5 h-3 w-3" />
-                  Use my address
-                </Button>
-              )}
-            </div>
+            <DialogTitle>{editingAddress ? 'Edit Address' : 'Add Address'}</DialogTitle>
+            <DialogDescription>
+              {editingAddress ? 'Update your address details' : 'Add a new delivery address'}
+            </DialogDescription>
+            {hasProfileAddress && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCopyFromProfile}
+                className="w-fit mt-2"
+              >
+                <Copy className="mr-1.5 h-3 w-3" />
+                Use my address
+              </Button>
+            )}
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -869,24 +1049,54 @@ export default function CustomerDashboardPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="addr-barangay">Barangay</Label>
-              <Input
-                id="addr-barangay"
-                placeholder="Barangay name"
-                value={addressForm.barangay}
-                onChange={(e) => setAddressForm(prev => ({ ...prev, barangay: e.target.value }))}
+              <Label>City/Municipality</Label>
+              <LocationCombobox
+                options={cityOptions}
+                value={selectedAddressCity}
+                onValueChange={(value) => {
+                  const city = cities.find(c => c.code === value)
+                  if (city) {
+                    setSelectedAddressCity(value)
+                    setAddressForm(prev => ({
+                      ...prev,
+                      city: city.name,
+                      province: city.province,
+                      region: city.region,
+                      barangay: '', // Reset barangay when city changes
+                    }))
+                    loadAddressBarangays(value)
+                  }
+                }}
+                placeholder="Search city/municipality..."
+                searchPlaceholder="Type to search..."
+                emptyText="No city found. You may type manually below."
               />
+              {!selectedAddressCity && addressForm.city && (
+                <p className="text-xs text-muted-foreground">Current: {addressForm.city}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>Barangay</Label>
+              {loadingAddressBarangays ? (
+                <Input placeholder="Loading barangays..." disabled />
+              ) : addressBarangays.length > 0 ? (
+                <LocationCombobox
+                  options={addressBarangays}
+                  value={addressForm.barangay}
+                  onValueChange={(value) => setAddressForm(prev => ({ ...prev, barangay: value }))}
+                  placeholder="Select barangay..."
+                  searchPlaceholder="Type to search..."
+                  emptyText="No barangay found"
+                />
+              ) : (
+                <Input
+                  placeholder="Barangay name"
+                  value={addressForm.barangay}
+                  onChange={(e) => setAddressForm(prev => ({ ...prev, barangay: e.target.value }))}
+                />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="addr-city">City/Municipality</Label>
-                <Input
-                  id="addr-city"
-                  placeholder="City"
-                  value={addressForm.city}
-                  onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
-                />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="addr-province">Province</Label>
                 <Input
@@ -894,29 +1104,31 @@ export default function CustomerDashboardPage() {
                   placeholder="Province"
                   value={addressForm.province}
                   onChange={(e) => setAddressForm(prev => ({ ...prev, province: e.target.value }))}
+                  className={selectedAddressCity ? 'bg-muted' : ''}
+                  readOnly={!!selectedAddressCity}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="addr-region">Region (Optional)</Label>
+                <Label htmlFor="addr-region">Region</Label>
                 <Input
                   id="addr-region"
                   placeholder="e.g., NCR"
                   value={addressForm.region}
                   onChange={(e) => setAddressForm(prev => ({ ...prev, region: e.target.value }))}
+                  className={selectedAddressCity ? 'bg-muted' : ''}
+                  readOnly={!!selectedAddressCity}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="addr-postal">Postal Code</Label>
-                <Input
-                  id="addr-postal"
-                  placeholder="4 digits"
-                  maxLength={4}
-                  value={addressForm.postal_code}
-                  onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
-                />
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="addr-postal">Postal Code</Label>
+              <Input
+                id="addr-postal"
+                placeholder="4 digits"
+                maxLength={4}
+                value={addressForm.postal_code}
+                onChange={(e) => setAddressForm(prev => ({ ...prev, postal_code: e.target.value }))}
+              />
             </div>
             <div className="flex items-center space-x-2">
               <input

@@ -1,5 +1,43 @@
 # Change Logs
 
+## [2026-01-12] - Customer Dashboard UI Fixes
+
+### Changes
+- **CP-56**: Fixed 4 UI issues in customer dashboard
+
+### Features Implemented
+
+#### 1. Dynamic Greeting
+- Replaced static "My Profile" heading with time-based greeting
+- "Good Morning/Afternoon/Evening, [Name]!"
+- Uses client-side rendering to avoid hydration mismatch
+
+#### 2. Button Overlap Fix
+- Moved "Use my address" button below dialog title
+- Previously overlapped with X close button in top-right corner
+- Now displays cleanly under the description
+
+#### 3. City/Barangay Autocomplete in Address Modal
+- Added LocationCombobox for city selection with search
+- Barangay dropdown auto-populates based on selected city
+- Province and region auto-fill when city is selected
+- Fallback to text input when no barangays available
+
+#### 4. Profile Address Editing
+- Added profile address section in Personal Information edit mode
+- Includes city/barangay autocomplete
+- Optional - can be left empty
+- Province/region auto-fill when city selected
+
+### Files Modified
+- `src/app/customer/dashboard/page.tsx` - All 4 fixes
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - Customer Dashboard Enhancements
 
 ### Changes

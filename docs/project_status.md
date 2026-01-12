@@ -137,11 +137,25 @@ Customer Profile Collector - A customer profile collection system for a small bu
 | Admin Customer List | `src/components/admin/customer-list.tsx` |
 | Admin Edit Form | `src/components/admin/edit-customer-form.tsx` |
 
+### CP-56: Customer Dashboard UI Fixes
+- **Dynamic Greeting**: Time-based greeting (Good Morning/Afternoon/Evening)
+- **Button Overlap Fix**: "Use my address" moved below dialog title
+- **City/Barangay Autocomplete**: Added to address modal
+- **Profile Address Editing**: Added to Personal Information edit mode
+
 ## Git State
 
-- **Current Branch:** `feature/registration-form-ux`
-- **Latest Commit:** CP-46-49: Registration form UX enhancements
-- **Status:** Committed
+- **Current Branch:** `feature/dashboard-ui-fixes`
+- **Latest Commit:** CP-56: Fix customer dashboard UI issues
+- **Status:** Ready to merge
+
+## Git Workflow Rules
+
+**CRITICAL:** Never merge/push to `main` or `develop` without explicit user permission.
+1. Create feature branch for all changes
+2. Commit on feature branch
+3. Ask user before merging
+4. Only merge after user confirms
 
 ## Test Status
 
@@ -152,14 +166,6 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings)
 
-## Next Steps
-
-1. **Push Branch:** `git push -u origin feature/customer-profile-enhancements`
-2. **Create PR:** Merge to `main`
-3. **Tag Release:** `epic-8-complete`
-4. **Deploy:** Vercel auto-deploys on merge
-
 ## Future Enhancements (Ideas)
 
-- Profile address editing in customer dashboard
 - Order management system (Phase 2)
