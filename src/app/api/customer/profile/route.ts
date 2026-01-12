@@ -3,10 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
 const updateProfileSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255).optional(),
+  first_name: z.string().min(1).max(100).optional(),
+  last_name: z.string().min(1).max(100).optional(),
   phone: z.string().min(10).max(50).optional(),
   contact_preference: z.enum(['email', 'sms']).optional(),
-  delivery_method: z.enum(['pickup', 'delivered', 'cod']).optional(),
+  delivery_method: z.enum(['pickup', 'delivered', 'cod', 'cop']).optional(),
   courier: z.string().max(50).nullable().optional(),
 })
 
