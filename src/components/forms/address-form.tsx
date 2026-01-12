@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useFormContext, useFieldArray } from 'react-hook-form'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -20,7 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { LocationCombobox } from '@/components/ui/location-combobox'
-import { cities, type Location, type Barangay } from '@/lib/data/philippines'
+import { cities, type Barangay } from '@/lib/data/philippines'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
 
 const DEFAULT_ADDRESS = {
@@ -53,6 +54,9 @@ export function AddressForm() {
   // Track selected city codes and barangays for each address
   const [selectedCities, setSelectedCities] = useState<Record<number, string>>({})
   const [barangayOptions, setBarangayOptions] = useState<Record<number, { value: string; label: string }[]>>({})
+
+  // Track which addresses use profile name
+  const [useProfileName, setUseProfileName] = useState<Record<number, boolean>>({})
 
   // Load barangays when city changes
   const loadBarangays = useCallback(async (index: number, cityCode: string) => {
@@ -120,6 +124,11 @@ export function AddressForm() {
         delete newState[index]
         return newState
       })
+      setUseProfileName((prev) => {
+        const newState = { ...prev }
+        delete newState[index]
+        return newState
+      })
 
       // If we removed the default address, set the first remaining one as default
       if (isRemovingDefault && fields.length > 1) {
@@ -138,6 +147,49 @@ export function AddressForm() {
       })
       form.setValue(`addresses.${index}.is_default`, true)
     }
+  }
+
+  // Watch customer data for profile name feature
+  const customer = form.watch('customer')
+  const hasProfileAddress = !!customer?.profile_city
+  const hasProfileName = !!(customer?.first_name && customer?.last_name)
+
+  // Handle "Use my profile name" checkbox toggle
+  const handleUseProfileNameChange = (index: number, checked: boolean) => {
+    setUseProfileName((prev) => ({ ...prev, [index]: checked }))
+
+    if (checked && hasProfileName) {
+      // Copy name from customer profile
+      form.setValue(`addresses.${index}.first_name`, customer.first_name || '')
+      form.setValue(`addresses.${index}.last_name`, customer.last_name || '')
+    } else {
+      // Clear the name fields when unchecked
+      form.setValue(`addresses.${index}.first_name`, '')
+      form.setValue(`addresses.${index}.last_name`, '')
+    }
+  }
+
+  const handleCopyFromProfile = (index: number) => {
+    if (!hasProfileAddress) return
+
+    // Copy name from customer profile and set the checkbox
+    form.setValue(`addresses.${index}.first_name`, customer.first_name || '')
+    form.setValue(`addresses.${index}.last_name`, customer.last_name || '')
+    setUseProfileName((prev) => ({ ...prev, [index]: true }))
+
+    // Copy address fields from profile
+    form.setValue(`addresses.${index}.street_address`, customer.profile_street_address || '')
+    form.setValue(`addresses.${index}.barangay`, customer.profile_barangay || '')
+    form.setValue(`addresses.${index}.city`, customer.profile_city || '')
+    form.setValue(`addresses.${index}.province`, customer.profile_province || '')
+    form.setValue(`addresses.${index}.region`, customer.profile_region || '')
+    form.setValue(`addresses.${index}.postal_code`, customer.profile_postal_code || '')
+
+    // Clear the city state since we're setting it manually
+    setSelectedCities((prev) => ({ ...prev, [index]: '' }))
+    setBarangayOptions((prev) => ({ ...prev, [index]: [] }))
+
+    toast.success('Profile address copied')
   }
 
   return (
@@ -169,20 +221,51 @@ export function AddressForm() {
               <CardTitle className="text-base">
                 Address {index + 1}
               </CardTitle>
-              {fields.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveAddress(index)}
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {hasProfileAddress && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCopyFromProfile(index)}
+                    className="h-8 text-xs"
+                  >
+                    <Copy className="mr-1.5 h-3 w-3" />
+                    Copy from Profile
+                  </Button>
+                )}
+                {fields.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveAddress(index)}
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* "Use my profile name" checkbox */}
+            {hasProfileName && (
+              <div className="flex items-center space-x-2 pb-2 border-b">
+                <Checkbox
+                  id={`use-profile-name-${index}`}
+                  checked={useProfileName[index] || false}
+                  onCheckedChange={(checked) => handleUseProfileNameChange(index, checked === true)}
+                />
+                <label
+                  htmlFor={`use-profile-name-${index}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Use my profile name ({customer.first_name} {customer.last_name})
+                </label>
+              </div>
+            )}
+
             {/* Recipient Name */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
@@ -192,7 +275,12 @@ export function AddressForm() {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Juan" {...field} />
+                      <Input
+                        placeholder="Juan"
+                        {...field}
+                        readOnly={useProfileName[index]}
+                        className={useProfileName[index] ? 'bg-muted' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,7 +293,12 @@ export function AddressForm() {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Dela Cruz" {...field} />
+                      <Input
+                        placeholder="Dela Cruz"
+                        {...field}
+                        readOnly={useProfileName[index]}
+                        className={useProfileName[index] ? 'bg-muted' : ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

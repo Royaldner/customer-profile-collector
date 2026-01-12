@@ -1,5 +1,51 @@
 # Change Logs
 
+## [2026-01-12] - Registration Form UX Enhancements
+
+### Changes
+- **CP-46**: Added profile address input to registration form
+- **CP-47**: Added "Copy from Profile" button to address form
+- **CP-48**: Added "Use my profile name" checkbox to address form
+- **CP-49**: Changed courier selection from dropdown to visual cards
+
+### Features Implemented
+
+#### 1. Profile Address Section (Personal Info Step)
+- Optional profile address input during registration
+- Uses Philippine address autocomplete (city/barangay comboboxes)
+- Auto-fills province and region when city is selected
+- Stored in customer's `profile_*` columns
+
+#### 2. "Copy from Profile" Button
+- Appears on each delivery address card when profile address exists
+- Copies customer name + full profile address in one click
+- Also checks the "Use my profile name" checkbox
+
+#### 3. "Use my profile name" Checkbox
+- Shows when customer has first/last name entered
+- When checked: auto-fills recipient name, fields become readonly
+- When unchecked: allows manual entry for different recipients
+- State tracked per address (each address independent)
+
+#### 4. Visual Courier Selection
+- Changed from dropdown to visual radio cards
+- Matches delivery method UI style (icons, descriptions)
+- Shows LBC/JRS with appropriate availability messaging
+
+### Files Modified
+- `src/components/forms/steps/personal-info-step.tsx` - Profile address section
+- `src/components/forms/address-form.tsx` - "Copy from Profile" + "Use my profile name"
+- `src/components/forms/steps/delivery-method-step.tsx` - Visual courier cards
+
+### Git
+- **Branch:** `feature/registration-form-ux`
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - EPIC 8 Implementation Complete
 
 ### Changes

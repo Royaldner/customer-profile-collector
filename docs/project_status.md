@@ -70,7 +70,13 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **pickup**: No courier required
 - **delivered**: LBC or JRS available
 - **cod/cop**: LBC only
-- Dropdown dynamically filters based on delivery method
+- Visual card selection (not dropdown)
+
+#### 8.6 Registration Form UX (CP-46 to CP-49)
+- **Profile Address Input**: Optional home address during registration with autocomplete
+- **"Copy from Profile" Button**: One-click copy of name + address to delivery address
+- **"Use my profile name" Checkbox**: Auto-fill recipient name from profile (per address)
+- **Visual Courier Selection**: Radio cards instead of dropdown for better UX
 
 ### Courier Management (From CP-38)
 - Admin courier management at `/admin/couriers`
@@ -127,9 +133,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Git State
 
-- **Current Branch:** `feature/customer-profile-enhancements`
-- **Latest Commit:** `e63d90c CP-39-45: EPIC 8 - Customer profile enhancements`
-- **Status:** Committed, ready to push
+- **Current Branch:** `feature/registration-form-ux`
+- **Latest Commit:** CP-46-49: Registration form UX enhancements
+- **Status:** Committed
 
 ## Test Status
 
@@ -149,7 +155,5 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Future Enhancements (Ideas)
 
-- "Use my profile name" checkbox for addresses
-- "Copy from profile address" button
 - Profile address editing in customer dashboard
 - Order management system (Phase 2)
