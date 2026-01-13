@@ -143,11 +143,15 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **City/Barangay Autocomplete**: Added to address modal
 - **Profile Address Editing**: Added to Personal Information edit mode
 
+### CP-57: Admin Edit Form Autocomplete
+- **City/Barangay Autocomplete**: Added LocationCombobox to admin edit customer form
+- Consistent UX across all forms (registration, customer dashboard, admin)
+
 ## Git State
 
-- **Current Branch:** `feature/dashboard-ui-fixes`
-- **Latest Commit:** CP-56: Fix customer dashboard UI issues
-- **Status:** Ready to merge
+- **Current Branch:** `main`
+- **Latest Commit:** CP-57: Add city/barangay autocomplete to admin edit form
+- **Status:** Up to date with origin/main
 
 ## Git Workflow Rules
 

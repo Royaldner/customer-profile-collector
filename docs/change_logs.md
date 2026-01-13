@@ -1,5 +1,28 @@
 # Change Logs
 
+## [2026-01-12] - Admin Edit Form Autocomplete
+
+### Changes
+- **CP-57**: Added city/barangay autocomplete to admin edit customer form
+
+### Features Implemented
+
+#### City/Barangay Autocomplete in Admin Form
+- Added LocationCombobox for city/municipality selection with search
+- Added LocationCombobox for barangay (with Input fallback)
+- Province and region auto-fill when city is selected
+- Province/region become readonly when using autocomplete
+- Consistent UX across all forms (registration, customer dashboard, admin)
+
+### Files Modified
+- `src/components/admin/edit-customer-form.tsx`
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - Customer Dashboard UI Fixes
 
 ### Changes
