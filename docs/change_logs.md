@@ -1,5 +1,24 @@
 # Change Logs
 
+## [2026-01-12] - Address Validation Error Display Fix
+
+### Changes
+- **CP-59**: Improved address validation error messages in customer dashboard
+
+### Features Implemented
+- Show specific field errors when address validation fails (e.g., "barangay: Barangay is required")
+- Added console logging for debugging address save issues
+- Better user feedback when required fields are missing
+
+### Files Modified
+- `src/app/customer/dashboard/page.tsx` - Enhanced error handling in `handleSaveAddress`
+
+### Notes
+- Users now see exactly which field failed validation instead of generic "Validation failed" message
+- Helps identify when barangay field is empty after selecting a city
+
+---
+
 ## [2026-01-12] - PSGC API Integration
 
 ### Changes

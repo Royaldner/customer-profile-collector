@@ -150,11 +150,21 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **City/Barangay Autocomplete**: Added LocationCombobox to admin edit customer form
 - Consistent UX across all forms (registration, customer dashboard, admin)
 
+### CP-58: PSGC API Integration
+- **Official PSGC GitLab API**: Replaced static 126 cities with 1,820 locations from official source
+- **Runtime API calls**: Always up-to-date data from `https://psgc.gitlab.io/api/`
+- **Caching**: Memory + localStorage with 7-day duration
+- **React Hooks**: `usePSGCLocations()` and `useBarangays()` for easy consumption
+
+### CP-59: Address Validation Error Display
+- **Specific field errors**: Shows exactly which field failed (e.g., "barangay: Barangay is required")
+- **Console logging**: Logs form data for debugging address save issues
+
 ## Git State
 
-- **Current Branch:** `fix/psgc-api-integration`
-- **Latest Commit:** CP-58: Integrate PSGC GitLab API for location data
-- **Status:** Feature branch with PSGC API integration
+- **Current Branch:** `main`
+- **Latest Commit:** CP-59: Improve address validation error display
+- **Status:** Up to date with origin/main, all changes deployed
 
 ## Git Workflow Rules
 
