@@ -1,5 +1,51 @@
 # Change Logs
 
+## [2026-01-12] - PSGC API Integration
+
+### Changes
+- **CP-58**: Integrated official PSGC GitLab API for Philippine location data
+
+### Features Implemented
+
+#### PSGC API Client Service
+- Created `src/lib/services/psgc.ts` with caching (memory + localStorage, 7-day duration)
+- Runtime API calls to `https://psgc.gitlab.io/api/` for always up-to-date data
+- Combined cities (186) + municipalities (1,634) = 1,820 total locations
+- Barangays loaded dynamically per city/municipality
+
+#### React Hooks for Location Data
+- Created `src/hooks/use-psgc-locations.ts`
+- `usePSGCLocations()` - loads and searches city/municipality data
+- `useBarangays()` - loads barangays for selected location
+- Helper functions: `locationToComboboxOption()`, `barangayToComboboxOption()`
+
+#### Updated All Address Forms
+- Registration Form (address-form.tsx, personal-info-step.tsx)
+- Customer Dashboard (address modal and profile address)
+- Admin Edit Form (edit-customer-form.tsx)
+- All use PSGC API with loading states
+
+### Files Created
+- `src/lib/services/psgc.ts` - PSGC API client with caching
+- `src/hooks/use-psgc-locations.ts` - React hooks for consuming PSGC data
+
+### Files Modified
+- `src/app/api/barangays/route.ts` - Uses PSGC API instead of static data
+- `src/components/forms/address-form.tsx` - PSGC hook integration
+- `src/components/forms/steps/personal-info-step.tsx` - PSGC hook integration
+- `src/app/customer/dashboard/page.tsx` - PSGC hook integration
+- `src/components/admin/edit-customer-form.tsx` - PSGC hook integration
+
+### Data Improvement
+- **Before**: 126 cities (static local file)
+- **After**: 1,820 cities/municipalities from official PSGC GitLab API
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - Admin Edit Form Autocomplete
 
 ### Changes

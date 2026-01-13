@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useFormContext, useFieldArray } from 'react-hook-form'
-import { Plus, Trash2, Copy } from 'lucide-react'
+import { Plus, Trash2, Copy, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { LocationCombobox } from '@/components/ui/location-combobox'
-import { cities, type Barangay } from '@/lib/data/philippines'
+import { usePSGCLocations, locationToComboboxOption, barangayToComboboxOption } from '@/hooks/use-psgc-locations'
+import { getBarangays, type BarangayOption } from '@/lib/services/psgc'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
 
 const DEFAULT_ADDRESS = {
@@ -37,13 +38,6 @@ const DEFAULT_ADDRESS = {
   is_default: false,
 }
 
-// Convert cities to combobox options
-const cityOptions = cities.map((city) => ({
-  value: city.code,
-  label: city.name,
-  description: `${city.province}, ${city.region}`,
-}))
-
 export function AddressForm() {
   const form = useFormContext<CustomerWithAddressesFormData>()
   const { fields, append, remove } = useFieldArray({
@@ -51,9 +45,18 @@ export function AddressForm() {
     name: 'addresses',
   })
 
+  // PSGC locations hook
+  const { locations, isLoading: isLoadingLocations, searchLocations, getLocationByCode } = usePSGCLocations()
+
+  // Convert locations to combobox options
+  const cityOptions = useMemo(() => {
+    return locations.map(locationToComboboxOption)
+  }, [locations])
+
   // Track selected city codes and barangays for each address
   const [selectedCities, setSelectedCities] = useState<Record<number, string>>({})
   const [barangayOptions, setBarangayOptions] = useState<Record<number, { value: string; label: string }[]>>({})
+  const [loadingBarangays, setLoadingBarangays] = useState<Record<number, boolean>>({})
 
   // Track which addresses use profile name
   const [useProfileName, setUseProfileName] = useState<Record<number, boolean>>({})
@@ -65,31 +68,30 @@ export function AddressForm() {
       return
     }
 
+    setLoadingBarangays((prev) => ({ ...prev, [index]: true }))
+
     try {
-      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
-      if (response.ok) {
-        const { barangays } = await response.json()
-        setBarangayOptions((prev) => ({
-          ...prev,
-          [index]: barangays.map((b: Barangay) => ({
-            value: b.code,
-            label: b.name,
-          })),
-        }))
-      }
+      const barangays = await getBarangays(cityCode)
+      setBarangayOptions((prev) => ({
+        ...prev,
+        [index]: barangays.map(barangayToComboboxOption),
+      }))
     } catch (error) {
       console.error('Failed to load barangays:', error)
+      setBarangayOptions((prev) => ({ ...prev, [index]: [] }))
+    } finally {
+      setLoadingBarangays((prev) => ({ ...prev, [index]: false }))
     }
   }, [])
 
   const handleCitySelect = (index: number, option: { value: string; label: string; description?: string }) => {
-    // Find the full city data
-    const city = cities.find((c) => c.code === option.value)
-    if (city) {
+    // Find the full location data
+    const location = getLocationByCode(option.value)
+    if (location) {
       // Update form values
-      form.setValue(`addresses.${index}.city`, city.name)
-      form.setValue(`addresses.${index}.province`, city.province)
-      form.setValue(`addresses.${index}.region`, city.region)
+      form.setValue(`addresses.${index}.city`, location.name)
+      form.setValue(`addresses.${index}.province`, location.province)
+      form.setValue(`addresses.${index}.region`, location.region)
       form.setValue(`addresses.${index}.barangay`, '') // Clear barangay when city changes
 
       // Track selected city and load barangays
@@ -342,20 +344,27 @@ export function AddressForm() {
                 <FormItem>
                   <FormLabel>City/Municipality</FormLabel>
                   <FormControl>
-                    <LocationCombobox
-                      options={cityOptions}
-                      value={selectedCities[index] || ''}
-                      onValueChange={(value) => {
-                        const option = cityOptions.find((o) => o.value === value)
-                        if (option) {
-                          handleCitySelect(index, option)
-                        }
-                      }}
-                      onSelect={(option) => handleCitySelect(index, option)}
-                      placeholder="Search city/municipality..."
-                      searchPlaceholder="Type to search..."
-                      emptyText="Not found. You may type manually in the fields below."
-                    />
+                    {isLoadingLocations ? (
+                      <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading locations...</span>
+                      </div>
+                    ) : (
+                      <LocationCombobox
+                        options={cityOptions}
+                        value={selectedCities[index] || ''}
+                        onValueChange={(value) => {
+                          const option = cityOptions.find((o) => o.value === value)
+                          if (option) {
+                            handleCitySelect(index, option)
+                          }
+                        }}
+                        onSelect={(option) => handleCitySelect(index, option)}
+                        placeholder="Search city/municipality..."
+                        searchPlaceholder="Type to search (1,820 locations)..."
+                        emptyText="Not found. You may type manually in the fields below."
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                   {field.value && !selectedCities[index] && (
@@ -375,7 +384,12 @@ export function AddressForm() {
                 <FormItem>
                   <FormLabel>Barangay</FormLabel>
                   <FormControl>
-                    {barangayOptions[index] && barangayOptions[index].length > 0 ? (
+                    {loadingBarangays[index] ? (
+                      <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading barangays...</span>
+                      </div>
+                    ) : barangayOptions[index] && barangayOptions[index].length > 0 ? (
                       <LocationCombobox
                         options={barangayOptions[index]}
                         value={barangayOptions[index].find((b) => b.label === field.value)?.value || ''}

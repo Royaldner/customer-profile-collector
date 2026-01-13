@@ -36,8 +36,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 #### 7.3 Philippine Address Autocomplete
 - LocationCombobox component for city/barangay search
-- PSGC city data integration
-- Barangays API route
+- **PSGC GitLab API integration** (1,820 cities/municipalities from official source)
+- Runtime API calls with memory + localStorage caching (7-day duration)
+- Barangays API route (dynamic loading per city)
 - Auto-fill province and region on city selection
 
 #### 7.4 Supabase Keep-Alive
@@ -129,6 +130,8 @@ Customer Profile Collector - A customer profile collection system for a small bu
 |---------|------|
 | Types & Interfaces | `src/lib/types/index.ts` |
 | Validation Schemas | `src/lib/validations/customer.ts` |
+| PSGC API Client | `src/lib/services/psgc.ts` |
+| PSGC React Hooks | `src/hooks/use-psgc-locations.ts` |
 | Multi-Step Form | `src/components/forms/customer-form.tsx` |
 | Personal Info Step | `src/components/forms/steps/personal-info-step.tsx` |
 | Delivery Method Step | `src/components/forms/steps/delivery-method-step.tsx` |
@@ -149,9 +152,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Git State
 
-- **Current Branch:** `main`
-- **Latest Commit:** CP-57: Add city/barangay autocomplete to admin edit form
-- **Status:** Up to date with origin/main
+- **Current Branch:** `fix/psgc-api-integration`
+- **Latest Commit:** CP-58: Integrate PSGC GitLab API for location data
+- **Status:** Feature branch with PSGC API integration
 
 ## Git Workflow Rules
 
