@@ -8,6 +8,8 @@ import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { LocationCombobox } from '@/components/ui/location-combobox'
+import { cities } from '@/lib/data/philippines'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -62,6 +64,18 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   const [couriers, setCouriers] = useState<Courier[]>([])
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(true)
 
+  // City/Barangay autocomplete states (per address index)
+  const [selectedCities, setSelectedCities] = useState<Record<number, string>>({})
+  const [addressBarangays, setAddressBarangays] = useState<Record<number, {value: string, label: string}[]>>({})
+  const [loadingBarangays, setLoadingBarangays] = useState<Record<number, boolean>>({})
+
+  // City options for combobox
+  const cityOptions = cities.map((city) => ({
+    value: city.code,
+    label: city.name,
+    description: `${city.province}, ${city.region}`,
+  }))
+
   const form = useForm<CustomerWithAddressesFormData>({
     resolver: zodResolver(customerWithAddressesSchema),
     defaultValues: {
@@ -98,6 +112,36 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
 
   const isPickup = deliveryMethod === 'pickup'
 
+  // Load barangays for a specific address index
+  async function loadBarangays(index: number, cityCode: string) {
+    setLoadingBarangays(prev => ({ ...prev, [index]: true }))
+    setAddressBarangays(prev => ({ ...prev, [index]: [] }))
+    try {
+      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAddressBarangays(prev => ({ ...prev, [index]: data.barangays || [] }))
+      }
+    } catch (err) {
+      console.error('Failed to load barangays:', err)
+    } finally {
+      setLoadingBarangays(prev => ({ ...prev, [index]: false }))
+    }
+  }
+
+  // Handle city selection for an address
+  function handleCitySelect(index: number, cityCode: string) {
+    const city = cities.find(c => c.code === cityCode)
+    if (city) {
+      setSelectedCities(prev => ({ ...prev, [index]: cityCode }))
+      form.setValue(`addresses.${index}.city`, city.name)
+      form.setValue(`addresses.${index}.province`, city.province)
+      form.setValue(`addresses.${index}.region`, city.region)
+      form.setValue(`addresses.${index}.barangay`, '') // Reset barangay
+      loadBarangays(index, cityCode)
+    }
+  }
+
   // Fetch couriers on mount
   useEffect(() => {
     async function fetchCouriers() {
@@ -115,6 +159,19 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     }
     fetchCouriers()
   }, [])
+
+  // Initialize city selections for existing addresses
+  useEffect(() => {
+    customer.addresses?.forEach((addr, index) => {
+      if (addr.city) {
+        const matchingCity = cities.find(c => c.name === addr.city)
+        if (matchingCity) {
+          setSelectedCities(prev => ({ ...prev, [index]: matchingCity.code }))
+          loadBarangays(index, matchingCity.code)
+        }
+      }
+    })
+  }, [customer.addresses])
 
   // Clear courier when switching to pickup
   useEffect(() => {
@@ -484,20 +541,6 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name={`addresses.${index}.barangay`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Barangay</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Barangay name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
@@ -505,9 +548,14 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>City/Municipality</FormLabel>
-                        <FormControl>
-                          <Input placeholder="City or Municipality" {...field} />
-                        </FormControl>
+                        <LocationCombobox
+                          options={cityOptions}
+                          value={selectedCities[index] || ''}
+                          onValueChange={(value) => handleCitySelect(index, value)}
+                          placeholder="Search city..."
+                          searchPlaceholder="Type to search..."
+                          emptyText="No city found"
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -515,13 +563,29 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
 
                   <FormField
                     control={form.control}
-                    name={`addresses.${index}.province`}
+                    name={`addresses.${index}.barangay`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Province</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Province" {...field} />
-                        </FormControl>
+                        <FormLabel>Barangay</FormLabel>
+                        {addressBarangays[index]?.length ? (
+                          <LocationCombobox
+                            options={addressBarangays[index]}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select barangay..."
+                            searchPlaceholder="Type to search..."
+                            emptyText="No barangay found"
+                            disabled={loadingBarangays[index]}
+                          />
+                        ) : (
+                          <FormControl>
+                            <Input
+                              placeholder={loadingBarangays[index] ? "Loading barangays..." : "Barangay name"}
+                              {...field}
+                              disabled={loadingBarangays[index]}
+                            />
+                          </FormControl>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -531,12 +595,36 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
+                    name={`addresses.${index}.province`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Province</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Province"
+                            {...field}
+                            readOnly={!!selectedCities[index]}
+                            className={selectedCities[index] ? "bg-muted" : ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name={`addresses.${index}.region`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Region (Optional)</FormLabel>
+                        <FormLabel>Region</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., NCR, Region IV-A" {...field} />
+                          <Input
+                            placeholder="e.g., NCR, Region IV-A"
+                            {...field}
+                            readOnly={!!selectedCities[index]}
+                            className={selectedCities[index] ? "bg-muted" : ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
