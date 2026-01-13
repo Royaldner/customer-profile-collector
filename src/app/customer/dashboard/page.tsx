@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -29,7 +29,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
@@ -44,11 +43,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Plus, Trash2, Star, Package, Truck, Copy } from 'lucide-react'
+import { Pencil, Plus, Trash2, Star, Package, Truck, Copy, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { COURIER_OPTIONS } from '@/lib/validations/customer'
 import { LocationCombobox } from '@/components/ui/location-combobox'
-import { cities } from '@/lib/data/philippines'
+import { usePSGCLocations, locationToComboboxOption, barangayToComboboxOption } from '@/hooks/use-psgc-locations'
+import { getBarangays } from '@/lib/services/psgc'
 import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
 
 export default function CustomerDashboardPage() {
@@ -60,6 +60,14 @@ export default function CustomerDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [greeting, setGreeting] = useState('Welcome')
+
+  // PSGC locations hook
+  const { locations, isLoading: isLoadingLocations, getLocationByCode } = usePSGCLocations()
+
+  // City options for combobox
+  const cityOptions = useMemo(() => {
+    return locations.map(locationToComboboxOption)
+  }, [locations])
 
   // Edit states
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -107,13 +115,6 @@ export default function CustomerDashboardPage() {
   const [addressBarangays, setAddressBarangays] = useState<{value: string, label: string}[]>([])
   const [loadingAddressBarangays, setLoadingAddressBarangays] = useState(false)
 
-  // City options for combobox
-  const cityOptions = cities.map((city) => ({
-    value: city.code,
-    label: city.name,
-    description: `${city.province}, ${city.region}`,
-  }))
-
   useEffect(() => {
     // Set greeting on client side to avoid hydration mismatch
     const hour = new Date().getHours()
@@ -124,6 +125,17 @@ export default function CustomerDashboardPage() {
     loadCustomerData()
     loadCouriers()
   }, [])
+
+  // Try to match city name to code when locations are loaded
+  useEffect(() => {
+    if (locations.length > 0 && customer?.profile_city && !selectedProfileCity) {
+      const matchingCity = locations.find(c => c.name === customer.profile_city)
+      if (matchingCity) {
+        setSelectedProfileCity(matchingCity.code)
+        loadProfileBarangays(matchingCity.code)
+      }
+    }
+  }, [locations, customer?.profile_city])
 
   async function loadCouriers() {
     try {
@@ -141,11 +153,8 @@ export default function CustomerDashboardPage() {
     setLoadingAddressBarangays(true)
     setAddressBarangays([])
     try {
-      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
-      if (response.ok) {
-        const data = await response.json()
-        setAddressBarangays(data.barangays || [])
-      }
+      const barangays = await getBarangays(cityCode)
+      setAddressBarangays(barangays.map(barangayToComboboxOption))
     } catch (err) {
       console.error('Failed to load barangays:', err)
     } finally {
@@ -157,11 +166,8 @@ export default function CustomerDashboardPage() {
     setLoadingProfileBarangays(true)
     setProfileBarangays([])
     try {
-      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
-      if (response.ok) {
-        const data = await response.json()
-        setProfileBarangays(data.barangays || [])
-      }
+      const barangays = await getBarangays(cityCode)
+      setProfileBarangays(barangays.map(barangayToComboboxOption))
     } catch (err) {
       console.error('Failed to load profile barangays:', err)
     } finally {
@@ -205,14 +211,6 @@ export default function CustomerDashboardPage() {
         profile_region: customerData.profile_region || '',
         profile_postal_code: customerData.profile_postal_code || '',
       })
-      // Initialize profile city selection if exists
-      if (customerData.profile_city) {
-        const matchingCity = cities.find(c => c.name === customerData.profile_city)
-        if (matchingCity) {
-          setSelectedProfileCity(matchingCity.code)
-          loadProfileBarangays(matchingCity.code)
-        }
-      }
       setEditedDelivery(customerData.delivery_method)
       setEditedCourier(customerData.courier || undefined)
 
@@ -354,10 +352,12 @@ export default function CustomerDashboardPage() {
         is_default: address.is_default,
       })
       // Try to find and set the city code for editing
-      const matchingCity = cities.find(c => c.name === address.city)
-      if (matchingCity) {
-        setSelectedAddressCity(matchingCity.code)
-        loadAddressBarangays(matchingCity.code)
+      if (locations.length > 0) {
+        const matchingCity = locations.find(c => c.name === address.city)
+        if (matchingCity) {
+          setSelectedAddressCity(matchingCity.code)
+          loadAddressBarangays(matchingCity.code)
+        }
       }
     } else {
       setEditingAddress(null)
@@ -443,6 +443,38 @@ export default function CustomerDashboardPage() {
       toast.success('Default address updated')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to set default address')
+    }
+  }
+
+  // Handle profile city selection
+  function handleProfileCitySelect(value: string) {
+    const location = getLocationByCode(value)
+    if (location) {
+      setSelectedProfileCity(value)
+      setEditedProfile(prev => ({
+        ...prev,
+        profile_city: location.name,
+        profile_province: location.province,
+        profile_region: location.region,
+        profile_barangay: '', // Reset barangay when city changes
+      }))
+      loadProfileBarangays(value)
+    }
+  }
+
+  // Handle address city selection
+  function handleAddressCitySelect(value: string) {
+    const location = getLocationByCode(value)
+    if (location) {
+      setSelectedAddressCity(value)
+      setAddressForm(prev => ({
+        ...prev,
+        city: location.name,
+        province: location.province,
+        region: location.region,
+        barangay: '', // Reset barangay when city changes
+      }))
+      loadAddressBarangays(value)
     }
   }
 
@@ -585,27 +617,21 @@ export default function CustomerDashboardPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>City/Municipality</Label>
-                    <LocationCombobox
-                      options={cityOptions}
-                      value={selectedProfileCity}
-                      onValueChange={(value) => {
-                        const city = cities.find(c => c.code === value)
-                        if (city) {
-                          setSelectedProfileCity(value)
-                          setEditedProfile(prev => ({
-                            ...prev,
-                            profile_city: city.name,
-                            profile_province: city.province,
-                            profile_region: city.region,
-                            profile_barangay: '', // Reset barangay when city changes
-                          }))
-                          loadProfileBarangays(value)
-                        }
-                      }}
-                      placeholder="Search city/municipality..."
-                      searchPlaceholder="Type to search..."
-                      emptyText="No city found"
-                    />
+                    {isLoadingLocations ? (
+                      <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading locations...</span>
+                      </div>
+                    ) : (
+                      <LocationCombobox
+                        options={cityOptions}
+                        value={selectedProfileCity}
+                        onValueChange={handleProfileCitySelect}
+                        placeholder="Search city/municipality..."
+                        searchPlaceholder="Type to search (1,820 locations)..."
+                        emptyText="No city found"
+                      />
+                    )}
                     {!selectedProfileCity && editedProfile.profile_city && (
                       <p className="text-xs text-muted-foreground">Current: {editedProfile.profile_city}</p>
                     )}
@@ -613,12 +639,20 @@ export default function CustomerDashboardPage() {
                   <div className="space-y-2">
                     <Label>Barangay</Label>
                     {loadingProfileBarangays ? (
-                      <Input placeholder="Loading barangays..." disabled />
+                      <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">Loading barangays...</span>
+                      </div>
                     ) : profileBarangays.length > 0 ? (
                       <LocationCombobox
                         options={profileBarangays}
-                        value={editedProfile.profile_barangay}
-                        onValueChange={(value) => setEditedProfile(prev => ({ ...prev, profile_barangay: value }))}
+                        value={profileBarangays.find(b => b.label === editedProfile.profile_barangay)?.value || ''}
+                        onValueChange={(value) => {
+                          const option = profileBarangays.find(o => o.value === value)
+                          if (option) {
+                            setEditedProfile(prev => ({ ...prev, profile_barangay: option.label }))
+                          }
+                        }}
                         placeholder="Select barangay..."
                         searchPlaceholder="Type to search..."
                         emptyText="No barangay found"
@@ -1050,27 +1084,21 @@ export default function CustomerDashboardPage() {
             </div>
             <div className="space-y-2">
               <Label>City/Municipality</Label>
-              <LocationCombobox
-                options={cityOptions}
-                value={selectedAddressCity}
-                onValueChange={(value) => {
-                  const city = cities.find(c => c.code === value)
-                  if (city) {
-                    setSelectedAddressCity(value)
-                    setAddressForm(prev => ({
-                      ...prev,
-                      city: city.name,
-                      province: city.province,
-                      region: city.region,
-                      barangay: '', // Reset barangay when city changes
-                    }))
-                    loadAddressBarangays(value)
-                  }
-                }}
-                placeholder="Search city/municipality..."
-                searchPlaceholder="Type to search..."
-                emptyText="No city found. You may type manually below."
-              />
+              {isLoadingLocations ? (
+                <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading locations...</span>
+                </div>
+              ) : (
+                <LocationCombobox
+                  options={cityOptions}
+                  value={selectedAddressCity}
+                  onValueChange={handleAddressCitySelect}
+                  placeholder="Search city/municipality..."
+                  searchPlaceholder="Type to search (1,820 locations)..."
+                  emptyText="No city found. You may type manually below."
+                />
+              )}
               {!selectedAddressCity && addressForm.city && (
                 <p className="text-xs text-muted-foreground">Current: {addressForm.city}</p>
               )}
@@ -1078,12 +1106,20 @@ export default function CustomerDashboardPage() {
             <div className="space-y-2">
               <Label>Barangay</Label>
               {loadingAddressBarangays ? (
-                <Input placeholder="Loading barangays..." disabled />
+                <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Loading barangays...</span>
+                </div>
               ) : addressBarangays.length > 0 ? (
                 <LocationCombobox
                   options={addressBarangays}
-                  value={addressForm.barangay}
-                  onValueChange={(value) => setAddressForm(prev => ({ ...prev, barangay: value }))}
+                  value={addressBarangays.find(b => b.label === addressForm.barangay)?.value || ''}
+                  onValueChange={(value) => {
+                    const option = addressBarangays.find(o => o.value === value)
+                    if (option) {
+                      setAddressForm(prev => ({ ...prev, barangay: option.label }))
+                    }
+                  }}
                   placeholder="Select barangay..."
                   searchPlaceholder="Type to search..."
                   emptyText="No barangay found"

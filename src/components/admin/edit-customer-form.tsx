@@ -4,12 +4,13 @@ import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LocationCombobox } from '@/components/ui/location-combobox'
-import { cities } from '@/lib/data/philippines'
+import { usePSGCLocations, locationToComboboxOption } from '@/hooks/use-psgc-locations'
+import { getBarangays } from '@/lib/services/psgc'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
@@ -69,12 +70,11 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   const [addressBarangays, setAddressBarangays] = useState<Record<number, {value: string, label: string}[]>>({})
   const [loadingBarangays, setLoadingBarangays] = useState<Record<number, boolean>>({})
 
-  // City options for combobox
-  const cityOptions = cities.map((city) => ({
-    value: city.code,
-    label: city.name,
-    description: `${city.province}, ${city.region}`,
-  }))
+  // PSGC locations hook for city autocomplete
+  const { locations, isLoading: isLoadingLocations, getLocationByCode } = usePSGCLocations()
+
+  // City options for combobox (from PSGC API)
+  const cityOptions = locations.map(locationToComboboxOption)
 
   const form = useForm<CustomerWithAddressesFormData>({
     resolver: zodResolver(customerWithAddressesSchema),
@@ -117,11 +117,11 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     setLoadingBarangays(prev => ({ ...prev, [index]: true }))
     setAddressBarangays(prev => ({ ...prev, [index]: [] }))
     try {
-      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
-      if (response.ok) {
-        const data = await response.json()
-        setAddressBarangays(prev => ({ ...prev, [index]: data.barangays || [] }))
-      }
+      const barangays = await getBarangays(cityCode)
+      setAddressBarangays(prev => ({
+        ...prev,
+        [index]: barangays.map(b => ({ value: b.name, label: b.name }))
+      }))
     } catch (err) {
       console.error('Failed to load barangays:', err)
     } finally {
@@ -131,12 +131,12 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
 
   // Handle city selection for an address
   function handleCitySelect(index: number, cityCode: string) {
-    const city = cities.find(c => c.code === cityCode)
-    if (city) {
+    const location = getLocationByCode(cityCode)
+    if (location) {
       setSelectedCities(prev => ({ ...prev, [index]: cityCode }))
-      form.setValue(`addresses.${index}.city`, city.name)
-      form.setValue(`addresses.${index}.province`, city.province)
-      form.setValue(`addresses.${index}.region`, city.region)
+      form.setValue(`addresses.${index}.city`, location.name)
+      form.setValue(`addresses.${index}.province`, location.province)
+      form.setValue(`addresses.${index}.region`, location.region)
       form.setValue(`addresses.${index}.barangay`, '') // Reset barangay
       loadBarangays(index, cityCode)
     }
@@ -162,16 +162,18 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
 
   // Initialize city selections for existing addresses
   useEffect(() => {
+    if (locations.length === 0) return // Wait for locations to load
+
     customer.addresses?.forEach((addr, index) => {
       if (addr.city) {
-        const matchingCity = cities.find(c => c.name === addr.city)
-        if (matchingCity) {
-          setSelectedCities(prev => ({ ...prev, [index]: matchingCity.code }))
-          loadBarangays(index, matchingCity.code)
+        const matchingLocation = locations.find(loc => loc.name === addr.city)
+        if (matchingLocation) {
+          setSelectedCities(prev => ({ ...prev, [index]: matchingLocation.code }))
+          loadBarangays(index, matchingLocation.code)
         }
       }
     })
-  }, [customer.addresses])
+  }, [customer.addresses, locations])
 
   // Clear courier when switching to pickup
   useEffect(() => {
@@ -548,14 +550,21 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>City/Municipality</FormLabel>
-                        <LocationCombobox
-                          options={cityOptions}
-                          value={selectedCities[index] || ''}
-                          onValueChange={(value) => handleCitySelect(index, value)}
-                          placeholder="Search city..."
-                          searchPlaceholder="Type to search..."
-                          emptyText="No city found"
-                        />
+                        {isLoadingLocations ? (
+                          <div className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading cities...
+                          </div>
+                        ) : (
+                          <LocationCombobox
+                            options={cityOptions}
+                            value={selectedCities[index] || ''}
+                            onValueChange={(value) => handleCitySelect(index, value)}
+                            placeholder="Search city..."
+                            searchPlaceholder="Type to search..."
+                            emptyText="No city found"
+                          />
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}

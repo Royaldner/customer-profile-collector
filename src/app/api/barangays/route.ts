@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getBarangaysByCity } from '@/lib/data/philippines'
+import { getBarangays } from '@/lib/services/psgc'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -12,7 +12,15 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const barangays = getBarangaysByCity(cityCode)
+  try {
+    const barangays = await getBarangays(cityCode)
 
-  return NextResponse.json({ barangays })
+    return NextResponse.json({ barangays })
+  } catch (error) {
+    console.error('Failed to fetch barangays:', error)
+    return NextResponse.json(
+      { message: 'Failed to fetch barangays', barangays: [] },
+      { status: 500 }
+    )
+  }
 }

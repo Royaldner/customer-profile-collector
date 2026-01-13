@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
+import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import {
   FormControl,
@@ -25,15 +26,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { LocationCombobox } from '@/components/ui/location-combobox'
-import { cities, type Barangay } from '@/lib/data/philippines'
+import { usePSGCLocations, locationToComboboxOption, barangayToComboboxOption } from '@/hooks/use-psgc-locations'
+import { getBarangays } from '@/lib/services/psgc'
 import type { CustomerWithAddressesFormData } from '@/lib/validations/customer'
-
-// Convert cities to combobox options
-const cityOptions = cities.map((city) => ({
-  value: city.code,
-  label: city.name,
-  description: `${city.province}, ${city.region}`,
-}))
 
 interface PersonalInfoStepProps {
   isEmailReadOnly?: boolean
@@ -42,9 +37,18 @@ interface PersonalInfoStepProps {
 export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepProps) {
   const form = useFormContext<CustomerWithAddressesFormData>()
 
+  // PSGC locations hook
+  const { locations, isLoading: isLoadingLocations, getLocationByCode } = usePSGCLocations()
+
+  // Convert locations to combobox options
+  const cityOptions = useMemo(() => {
+    return locations.map(locationToComboboxOption)
+  }, [locations])
+
   // State for profile address city/barangay autocomplete
   const [selectedProfileCity, setSelectedProfileCity] = useState<string>('')
   const [profileBarangayOptions, setProfileBarangayOptions] = useState<{ value: string; label: string }[]>([])
+  const [loadingBarangays, setLoadingBarangays] = useState(false)
 
   // Load barangays when city changes
   const loadProfileBarangays = useCallback(async (cityCode: string) => {
@@ -53,28 +57,25 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
       return
     }
 
+    setLoadingBarangays(true)
+
     try {
-      const response = await fetch(`/api/barangays?cityCode=${cityCode}`)
-      if (response.ok) {
-        const { barangays } = await response.json()
-        setProfileBarangayOptions(
-          barangays.map((b: Barangay) => ({
-            value: b.code,
-            label: b.name,
-          }))
-        )
-      }
+      const barangays = await getBarangays(cityCode)
+      setProfileBarangayOptions(barangays.map(barangayToComboboxOption))
     } catch (error) {
       console.error('Failed to load barangays:', error)
+      setProfileBarangayOptions([])
+    } finally {
+      setLoadingBarangays(false)
     }
   }, [])
 
   const handleProfileCitySelect = (option: { value: string; label: string; description?: string }) => {
-    const city = cities.find((c) => c.code === option.value)
-    if (city) {
-      form.setValue('customer.profile_city', city.name)
-      form.setValue('customer.profile_province', city.province)
-      form.setValue('customer.profile_region', city.region)
+    const location = getLocationByCode(option.value)
+    if (location) {
+      form.setValue('customer.profile_city', location.name)
+      form.setValue('customer.profile_province', location.province)
+      form.setValue('customer.profile_region', location.region)
       form.setValue('customer.profile_barangay', '') // Clear barangay when city changes
 
       setSelectedProfileCity(option.value)
@@ -220,20 +221,27 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
               <FormItem>
                 <FormLabel>City/Municipality</FormLabel>
                 <FormControl>
-                  <LocationCombobox
-                    options={cityOptions}
-                    value={selectedProfileCity || ''}
-                    onValueChange={(value) => {
-                      const option = cityOptions.find((o) => o.value === value)
-                      if (option) {
-                        handleProfileCitySelect(option)
-                      }
-                    }}
-                    onSelect={handleProfileCitySelect}
-                    placeholder="Search city/municipality..."
-                    searchPlaceholder="Type to search..."
-                    emptyText="Not found. You may type manually below."
-                  />
+                  {isLoadingLocations ? (
+                    <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Loading locations...</span>
+                    </div>
+                  ) : (
+                    <LocationCombobox
+                      options={cityOptions}
+                      value={selectedProfileCity || ''}
+                      onValueChange={(value) => {
+                        const option = cityOptions.find((o) => o.value === value)
+                        if (option) {
+                          handleProfileCitySelect(option)
+                        }
+                      }}
+                      onSelect={handleProfileCitySelect}
+                      placeholder="Search city/municipality..."
+                      searchPlaceholder="Type to search (1,820 locations)..."
+                      emptyText="Not found. You may type manually below."
+                    />
+                  )}
                 </FormControl>
                 {field.value && !selectedProfileCity && (
                   <p className="text-xs text-muted-foreground">
@@ -252,7 +260,12 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
               <FormItem>
                 <FormLabel>Barangay</FormLabel>
                 <FormControl>
-                  {profileBarangayOptions.length > 0 ? (
+                  {loadingBarangays ? (
+                    <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Loading...</span>
+                    </div>
+                  ) : profileBarangayOptions.length > 0 ? (
                     <LocationCombobox
                       options={profileBarangayOptions}
                       value={profileBarangayOptions.find(b => b.label === field.value)?.value || ''}
