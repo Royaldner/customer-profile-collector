@@ -392,6 +392,13 @@ export default function CustomerDashboardPage() {
 
       if (!response.ok) {
         const error = await response.json()
+        // Show specific field errors if available
+        if (error.errors) {
+          const fieldErrors = Object.entries(error.errors)
+            .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(', ')}`)
+            .join('; ')
+          throw new Error(fieldErrors || error.message)
+        }
         throw new Error(error.message)
       }
 
@@ -399,6 +406,7 @@ export default function CustomerDashboardPage() {
       setAddressDialogOpen(false)
       toast.success(editingAddress ? 'Address updated' : 'Address added')
     } catch (err) {
+      console.error('Address save error:', err, 'Form data:', addressForm)
       toast.error(err instanceof Error ? err.message : 'Failed to save address')
     } finally {
       setIsSaving(false)
