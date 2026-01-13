@@ -175,6 +175,28 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             </CardContent>
           </Card>
 
+          {/* Profile Address Card - Only show if customer has a profile address */}
+          {customer.profile_street_address && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Address</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 text-sm">
+                  <p>{customer.profile_street_address}</p>
+                  <p>
+                    Barangay {customer.profile_barangay}, {customer.profile_city}
+                  </p>
+                  <p>
+                    {customer.profile_province}
+                    {customer.profile_region && `, ${customer.profile_region}`}
+                  </p>
+                  <p>{customer.profile_postal_code}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Addresses Card - Only show for delivery/COD */}
           {!isPickup ? (
             <Card>

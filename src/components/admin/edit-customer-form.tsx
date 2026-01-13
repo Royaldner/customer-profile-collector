@@ -111,6 +111,15 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   })
 
   const isPickup = deliveryMethod === 'pickup'
+  const isCodOrCop = deliveryMethod === 'cod' || deliveryMethod === 'cop'
+
+  // Filter couriers based on delivery method
+  // pickup: none, delivered: all active, cod/cop: LBC only
+  const filteredCouriers = couriers.filter((c) => {
+    if (!c.is_active) return false
+    if (isCodOrCop) return c.code === 'lbc'
+    return true
+  })
 
   // Load barangays for a specific address index
   async function loadBarangays(index: number, cityCode: string) {
@@ -175,12 +184,18 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     })
   }, [customer.addresses, locations])
 
-  // Clear courier when switching to pickup
+  // Clear courier when switching to pickup or incompatible delivery method
   useEffect(() => {
     if (isPickup) {
       form.setValue('customer.courier', undefined)
+    } else if (isCodOrCop) {
+      // COD/COP only supports LBC - clear if other courier selected
+      const currentCourier = form.getValues('customer.courier')
+      if (currentCourier && currentCourier !== 'lbc') {
+        form.setValue('customer.courier', 'lbc')
+      }
     }
-  }, [isPickup, form])
+  }, [isPickup, isCodOrCop, form])
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -426,13 +441,18 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {couriers.map((courier) => (
+                        {filteredCouriers.map((courier) => (
                           <SelectItem key={courier.id} value={courier.code}>
                             {courier.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {isCodOrCop && (
+                      <p className="text-xs text-muted-foreground">
+                        Only LBC is available for Cash on Delivery/Pickup orders
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
