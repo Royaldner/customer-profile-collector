@@ -1,5 +1,6 @@
 'use client'
 
+// Confirmation page for one-click delivery confirmation
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
