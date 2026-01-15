@@ -52,6 +52,13 @@ export function substituteTemplateVariables(
 }
 
 /**
+ * Generate HTML button
+ */
+function generateHtmlButton(url: string, text: string, color: string = '#dc2626'): string {
+  return `<a href="${url}" style="display: inline-block; background-color: ${color}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 8px 0;">${text}</a>`
+}
+
+/**
  * Build variable values for a customer
  */
 export function buildTemplateVariables(
@@ -61,15 +68,18 @@ export function buildTemplateVariables(
 ): Record<string, string> {
   const appUrl = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
+  const dashboardUrl = `${appUrl}/customer/dashboard`
+
   const variables: Record<string, string> = {
     first_name: customer.first_name,
     last_name: customer.last_name,
     email: customer.email,
-    update_profile_link: `${appUrl}/customer/dashboard`,
+    update_profile_link: generateHtmlButton(dashboardUrl, 'Update My Profile'),
   }
 
   if (confirmToken) {
-    variables.confirm_button = `${appUrl}/confirm/${confirmToken}`
+    const confirmUrl = `${appUrl}/confirm/${confirmToken}`
+    variables.confirm_button = generateHtmlButton(confirmUrl, 'Confirm My Details', '#16a34a')
   }
 
   return variables
@@ -144,6 +154,33 @@ export async function createConfirmationToken(customerId: string): Promise<strin
 }
 
 /**
+ * Convert body text to HTML email
+ */
+function bodyToHtml(body: string): string {
+  // Convert line breaks to HTML and wrap in email template
+  const htmlBody = body
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px;">
+    <p>${htmlBody}</p>
+  </div>
+  <p style="text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px;">
+    Canada Goodies Inc.
+  </p>
+</body>
+</html>`
+}
+
+/**
  * Send a single email
  */
 export async function sendEmail(params: {
@@ -166,7 +203,8 @@ export async function sendEmail(params: {
       from,
       to,
       subject,
-      text: body,
+      html: bodyToHtml(body),
+      text: body.replace(/<[^>]*>/g, ''), // Strip HTML for plain text fallback
     })
 
     if (error) {
