@@ -33,6 +33,8 @@ export interface Customer {
   profile_province?: string
   profile_region?: string
   profile_postal_code?: string
+  // Delivery confirmation
+  delivery_confirmed_at?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
@@ -98,4 +100,64 @@ export interface AddressInput {
 export interface CustomerWithAddressesInput {
   customer: CustomerInput
   addresses: AddressInput[]
+}
+
+// ============================================
+// EMAIL NOTIFICATION TYPES
+// ============================================
+
+export type EmailStatus = 'pending' | 'scheduled' | 'sent' | 'failed'
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  display_name: string
+  subject: string
+  body: string
+  variables: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface EmailTemplateInput {
+  name: string
+  display_name: string
+  subject: string
+  body: string
+  variables?: string[]
+  is_active?: boolean
+}
+
+export interface EmailLog {
+  id: string
+  template_id?: string
+  customer_id?: string
+  recipient_email: string
+  recipient_name?: string
+  subject: string
+  body: string
+  status: EmailStatus
+  scheduled_for?: string
+  sent_at?: string
+  error_message?: string
+  created_at: string
+  // Joined fields
+  template?: EmailTemplate
+  customer?: Customer
+}
+
+export interface ConfirmationToken {
+  id: string
+  customer_id: string
+  token: string
+  expires_at: string
+  used_at?: string
+  created_at: string
+}
+
+export interface SendEmailInput {
+  customer_ids: string[]
+  template_id: string
+  scheduled_for?: string
 }
