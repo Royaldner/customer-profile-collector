@@ -2,13 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { Customer, Courier } from '@/lib/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Pencil } from 'lucide-react'
+import { Pencil, Check, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { LogoutButton } from '@/components/admin/logout-button'
 import { DeleteCustomerDialog } from '@/components/admin/delete-customer-dialog'
 import { SetDefaultAddressButton } from '@/components/admin/set-default-address-button'
+import { SendSingleEmailButton } from '@/components/admin/send-single-email-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,19 +81,37 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
     })
   }
 
+  const isReadyToShip = !!customer.delivery_confirmed_at
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
+                <Badge variant={isReadyToShip ? 'default' : 'secondary'}>
+                  {isReadyToShip ? (
+                    <>
+                      <Check className="mr-1 h-3 w-3" />
+                      Ready to Ship
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="mr-1 h-3 w-3" />
+                      Pending
+                    </>
+                  )}
+                </Badge>
+              </div>
               <p className="text-sm text-muted-foreground">{customer.first_name} {customer.last_name}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">Back to List</Link>
               </Button>
+              <SendSingleEmailButton customer={customer} />
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/admin/customers/${id}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" />

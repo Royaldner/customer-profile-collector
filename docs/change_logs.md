@@ -1,5 +1,99 @@
 # Change Logs
 
+## [2026-01-14 22:30] - EPIC-9: Admin Email Notifications
+
+### Changes
+- **CP-62**: Created database migration for email_templates, email_logs, confirmation_tokens tables
+- **CP-63**: Added TypeScript types and Zod validation schemas for email features
+- **CP-64**: Created Resend email service wrapper with rate limiting (100/day)
+- **CP-65**: Built email templates API (CRUD endpoints)
+- **CP-66**: Built send email API with bulk send and token generation
+- **CP-67**: Built confirmation API for token validation and customer update
+- **CP-68**: Built email logs API with history filtering and pagination
+- **CP-69**: Created email templates admin page with CRUD UI
+- **CP-70**: Created email logs admin page with filtering and detail view
+- **CP-71**: Updated customer list with checkboxes, bulk select, "Ready to Ship" column
+- **CP-72**: Updated customer detail with Send Email button and Ready to Ship badge
+- **CP-73**: Created customer-facing confirmation thank you page
+- **CP-74**: Set up Vercel cron job for scheduled email processing
+- **CP-75**: Updated admin-components tests for new table structure
+
+### Features Implemented
+
+#### Email Template Management
+- Admin UI at `/admin/email-templates` for creating/editing templates
+- Template variables: `{{first_name}}`, `{{last_name}}`, `{{email}}`, `{{confirm_button}}`, `{{update_profile_link}}`
+- Toggle templates active/inactive
+
+#### Email Sending
+- Bulk send from customer list (checkbox selection)
+- Single send from customer detail page
+- Rate limiting: 100 emails per day
+- Scheduled send option (processed by hourly cron)
+
+#### One-Click Delivery Confirmation
+- Customers click link in email to confirm delivery address
+- Secure 32-byte confirmation tokens with 30-day expiry
+- Updates `delivery_confirmed_at` timestamp on customer record
+
+#### Ready to Ship Status
+- New column in customer list showing "Ready" (green) or "Pending" (yellow)
+- Based on `delivery_confirmed_at` being set or null
+- Badge in customer detail header
+
+### Database Migration (008_email_notifications.sql)
+- `email_templates` table with name, subject, body, variables
+- `email_logs` table with status tracking (pending/scheduled/sent/failed)
+- `confirmation_tokens` table with expiry and used_at tracking
+- Added `delivery_confirmed_at` column to customers
+
+### Files Created
+- `supabase/migrations/008_email_notifications.sql`
+- `src/lib/services/resend.ts` - Email service with rate limiting
+- `src/lib/validations/email.ts` - Email validation schemas
+- `src/app/api/admin/email-templates/route.ts` - GET/POST templates
+- `src/app/api/admin/email-templates/[id]/route.ts` - GET/PUT/DELETE template
+- `src/app/api/admin/send-email/route.ts` - POST bulk send
+- `src/app/api/confirm/[token]/route.ts` - GET confirmation handler
+- `src/app/api/admin/email-logs/route.ts` - GET email history
+- `src/app/api/admin/email-logs/daily-count/route.ts` - GET daily count
+- `src/app/api/cron/send-scheduled-emails/route.ts` - Cron processor
+- `src/app/admin/email-templates/page.tsx` - Templates admin page
+- `src/app/admin/email-logs/page.tsx` - Email logs admin page
+- `src/components/admin/email-template-list.tsx` - Template CRUD list
+- `src/components/admin/email-template-form-dialog.tsx` - Template form
+- `src/components/admin/email-log-list.tsx` - Email history list
+- `src/components/admin/send-email-dialog.tsx` - Bulk send dialog
+- `src/components/admin/send-single-email-button.tsx` - Single send button
+- `src/app/confirm/[token]/page.tsx` - Confirmation thank you page
+- `src/components/ui/alert.tsx` - shadcn alert component
+- `src/components/ui/textarea.tsx` - shadcn textarea component
+
+### Files Modified
+- `src/lib/types/index.ts` - Added EmailTemplate, EmailLog, ConfirmationToken types
+- `src/app/admin/page.tsx` - Added Email Templates and Email Logs nav links
+- `src/components/admin/customer-list.tsx` - Checkbox selection, Ready to Ship column
+- `src/app/admin/customers/[id]/page.tsx` - Send Email button, Ready to Ship badge
+- `vercel.json` - Added hourly cron for scheduled emails
+- `test/admin-components.test.tsx` - Updated tests for new columns
+- `.env.example` - Added RESEND_API_KEY
+
+### Git
+- **Branch:** `feature/admin-email-notifications`
+- **Status:** Implementation complete, ready for commit
+
+### Test Results
+- 94/104 tests passing (10 db-schema tests require live database)
+- Build passes
+- All admin-components tests updated and passing (39 tests)
+
+### Notes
+- Resend API key not yet configured (emails won't send until key added)
+- Database migration 008 needs to be run in Supabase
+- Cron job runs hourly to process scheduled emails
+
+---
+
 ## [2026-01-14] - Admin Page Improvements
 
 ### Changes
