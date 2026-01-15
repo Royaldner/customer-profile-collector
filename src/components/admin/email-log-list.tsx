@@ -30,7 +30,19 @@ import {
 import { ChevronLeft, ChevronRight, Eye, Mail, AlertCircle, Clock, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface EmailLogWithRelations extends EmailLog {
+interface EmailLogWithRelations {
+  id: string
+  template_id?: string
+  customer_id?: string
+  recipient_email: string
+  recipient_name?: string
+  subject: string
+  body: string
+  status: EmailStatus
+  scheduled_for?: string
+  sent_at?: string
+  error_message?: string
+  created_at: string
   template?: { id: string; name: string; display_name: string } | null
   customer?: { id: string; first_name: string; last_name: string; email: string } | null
 }

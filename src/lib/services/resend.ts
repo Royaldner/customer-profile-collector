@@ -8,8 +8,18 @@ import { randomBytes } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import type { Customer, EmailTemplate } from '@/lib/types'
 
-// Initialize Resend client (will throw if API key not set)
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization of Resend client
+let resend: Resend | null = null
+
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 // Daily email limit for rate limiting
 const DAILY_EMAIL_LIMIT = 100
@@ -145,13 +155,14 @@ export async function sendEmail(params: {
   const { to, subject, body, from = DEFAULT_FROM } = params
 
   // Check if API key is configured
-  if (!process.env.RESEND_API_KEY) {
+  const client = getResendClient()
+  if (!client) {
     console.warn('RESEND_API_KEY not configured, email not sent')
     return { success: false, error: 'Email service not configured' }
   }
 
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await client.emails.send({
       from,
       to,
       subject,

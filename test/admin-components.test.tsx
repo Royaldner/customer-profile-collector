@@ -36,6 +36,7 @@ const createMockCustomer = (overrides?: Partial<Customer>): Customer => ({
   phone: '09171234567',
   contact_preference: 'email',
   delivery_method: 'delivered',
+  delivery_confirmed_at: undefined,
   created_at: '2024-01-15T10:00:00Z',
   updated_at: '2024-01-15T10:00:00Z',
   addresses: [createMockAddress()],
@@ -76,8 +77,9 @@ describe('CustomerList Component', () => {
       render(<CustomerList initialCustomers={customers} />)
 
       expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument()
+      expect(screen.getByRole('columnheader', { name: 'Email' })).toBeInTheDocument()
       expect(screen.getByRole('columnheader', { name: 'Phone' })).toBeInTheDocument()
-      expect(screen.getByRole('columnheader', { name: 'Contact Pref.' })).toBeInTheDocument()
+      expect(screen.getByRole('columnheader', { name: 'Ready to Ship' })).toBeInTheDocument()
       expect(screen.getByRole('columnheader', { name: 'Location' })).toBeInTheDocument()
       expect(screen.getByRole('columnheader', { name: 'Registered' })).toBeInTheDocument()
       expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
@@ -199,33 +201,70 @@ describe('CustomerList Component', () => {
     })
   })
 
-  describe('Contact Preference Badge Display', () => {
-    it('should display "Email" badge for email preference', () => {
-      const customers = [createMockCustomer({ contact_preference: 'email' })]
+  describe('Ready to Ship Badge Display', () => {
+    it('should display "Pending" badge when customer has not confirmed delivery', () => {
+      const customers = [createMockCustomer({ delivery_confirmed_at: undefined })]
       render(<CustomerList initialCustomers={customers} />)
 
-      // Find the badge within a table cell
+      // Find the badge within a table cell (contains icon + text)
       const cells = screen.getAllByRole('cell')
-      const badgeCell = cells.find(cell => cell.textContent === 'Email')
-      expect(badgeCell).toBeDefined()
+      const pendingCell = cells.find(cell => cell.textContent?.includes('Pending'))
+      expect(pendingCell).toBeDefined()
     })
 
-    it('should display "Phone" badge for phone preference', () => {
-      const customers = [createMockCustomer({ contact_preference: 'phone' })]
+    it('should display "Ready" badge when customer has confirmed delivery', () => {
+      const customers = [createMockCustomer({ delivery_confirmed_at: '2024-01-20T10:00:00Z' })]
       render(<CustomerList initialCustomers={customers} />)
 
       const cells = screen.getAllByRole('cell')
-      const badgeCell = cells.find(cell => cell.textContent === 'Phone')
-      expect(badgeCell).toBeDefined()
+      const readyCell = cells.find(cell => cell.textContent?.includes('Ready'))
+      expect(readyCell).toBeDefined()
     })
 
-    it('should display "SMS" badge for sms preference', () => {
-      const customers = [createMockCustomer({ contact_preference: 'sms' })]
+    it('should display "Pending" badge when delivery_confirmed_at is null', () => {
+      const customers = [createMockCustomer({ delivery_confirmed_at: null as unknown as undefined })]
       render(<CustomerList initialCustomers={customers} />)
 
       const cells = screen.getAllByRole('cell')
-      const badgeCell = cells.find(cell => cell.textContent === 'SMS')
-      expect(badgeCell).toBeDefined()
+      const pendingCell = cells.find(cell => cell.textContent?.includes('Pending'))
+      expect(pendingCell).toBeDefined()
+    })
+  })
+
+  describe('Checkbox Selection', () => {
+    it('should render checkbox for each customer row', () => {
+      const customers = [
+        createMockCustomer({ id: '1' }),
+        createMockCustomer({ id: '2' }),
+      ]
+      render(<CustomerList initialCustomers={customers} />)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      // Should have checkboxes for each row plus the select all checkbox
+      expect(checkboxes.length).toBeGreaterThanOrEqual(2)
+    })
+
+    it('should have select all checkbox in header', () => {
+      const customers = [createMockCustomer()]
+      render(<CustomerList initialCustomers={customers} />)
+
+      // The header checkbox for select all
+      const headerCheckbox = screen.getAllByRole('checkbox')[0]
+      expect(headerCheckbox).toBeInTheDocument()
+    })
+
+    it('should toggle individual customer selection', async () => {
+      const user = userEvent.setup()
+      const customers = [createMockCustomer({ id: '1' })]
+      render(<CustomerList initialCustomers={customers} />)
+
+      const checkboxes = screen.getAllByRole('checkbox')
+      // The second checkbox should be the row checkbox (first is header)
+      const rowCheckbox = checkboxes[1]
+
+      expect(rowCheckbox).not.toBeChecked()
+      await user.click(rowCheckbox)
+      expect(rowCheckbox).toBeChecked()
     })
   })
 
