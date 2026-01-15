@@ -1,21 +1,29 @@
 # Project Status
 
-**Last Updated:** 2026-01-14 (Session 4 - EPIC-9 Implementation)
+**Last Updated:** 2026-01-15 (EPIC-9 Deployed)
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-9 implemented. Admin email notification system complete (pending API key configuration).
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-9 implemented and deployed to production.
+
+**Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `feature/admin-email-notifications`
-**Status:** EPIC-9 implementation complete, ready for commit/merge
+**Branch:** `main`
+**Status:** EPIC-9 deployed, confirmation page 404 issue pending
 
-### Pending Deployment Steps
-1. Run `supabase/migrations/008_email_notifications.sql` in Supabase
-2. Add `RESEND_API_KEY` to Vercel environment variables
-3. Commit and push branch
-4. Create PR and merge to main
+### Known Issue (To Fix Next Session)
+The `/confirm/[token]` route returns 404 on production. This needs investigation:
+- Route file exists: `src/app/confirm/[token]/page.tsx`
+- Works locally
+- Build output shows the route
+- Other routes work fine
+
+**Environment Variable Needed:**
+```
+NEXT_PUBLIC_APP_URL=https://customer-profile-registration.vercel.app
+```
 
 ## Completed Features
 
@@ -58,7 +66,6 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ### EPIC 8: Customer Profile Enhancements (100% Complete)
 
-#### 8.1-8.7 Summary
 - Split `name` into `first_name` + `last_name`
 - Profile address columns on customers table
 - Address names (recipient first/last name)
@@ -67,7 +74,7 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - Visual courier selection cards
 - "Copy from Profile" and "Use my profile name" features
 
-### EPIC 9: Admin Email Notifications (100% Complete - Pending Deployment)
+### EPIC 9: Admin Email Notifications (100% Complete - Deployed)
 
 #### 9.1 Email Template Management
 - Admin UI at `/admin/email-templates`
@@ -79,13 +86,14 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - Bulk send from customer list (checkbox selection)
 - Single send from customer detail page
 - Rate limiting: 100 emails per day
-- Scheduled send option (processed by hourly cron)
+- Scheduled send option (processed by daily cron at 8 AM UTC)
+- HTML emails with styled buttons (green for confirm, red for update profile)
 
 #### 9.3 One-Click Delivery Confirmation
-- Customers click link in email to confirm delivery address
+- Customers click button in email to confirm delivery address
 - Secure 32-byte confirmation tokens with 30-day expiry
 - Updates `delivery_confirmed_at` timestamp on customer record
-- Customer-facing thank you page at `/confirm/[token]`
+- Customer-facing thank you page at `/confirm/[token]` **(404 issue pending)**
 
 #### 9.4 Ready to Ship Status
 - New column in customer list showing "Ready" (green) or "Pending" (yellow)
@@ -107,7 +115,7 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Database State
 
-**All Migrations Applied (001-007):**
+**All Migrations Applied (001-008):**
 - 001_create_tables.sql - Base schema
 - 002_enable_rls.sql - RLS policies
 - 003_add_customer_fields.sql - Added `user_id` and `delivery_method`
@@ -115,9 +123,17 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - 005_add_courier.sql - Couriers table and `customer.courier` column
 - 006_split_name_and_profile_address.sql - Split name, profile address columns
 - 007_address_names_and_cop.sql - Address names, COP delivery method
-
-**Pending Migration (008):**
 - 008_email_notifications.sql - Email templates, logs, confirmation tokens, delivery_confirmed_at
+
+**RLS Policies Added for Email Tables:**
+```sql
+CREATE POLICY "Allow all access to email_templates"
+  ON email_templates FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to email_logs"
+  ON email_logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to confirmation_tokens"
+  ON confirmation_tokens FOR ALL USING (true) WITH CHECK (true);
+```
 
 ## Current Schema
 
@@ -128,7 +144,7 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - `courier` (lbc/jrs/null)
 - `user_id` (FK to auth.users, optional)
 - `profile_street_address`, `profile_barangay`, `profile_city`, `profile_province`, `profile_region`, `profile_postal_code` (all optional)
-- `delivery_confirmed_at` (timestamp, null until confirmed) - **NEW in 008**
+- `delivery_confirmed_at` (timestamp, null until confirmed)
 - `created_at`, `updated_at`
 
 **addresses table:**
@@ -142,17 +158,17 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - `id`, `name`, `code`, `is_active`
 - `created_at`, `updated_at`
 
-**email_templates table (NEW in 008):**
+**email_templates table:**
 - `id`, `name`, `display_name`, `subject`, `body`, `variables`, `is_active`
 - `created_at`, `updated_at`
 
-**email_logs table (NEW in 008):**
+**email_logs table:**
 - `id`, `template_id`, `customer_id`, `recipient_email`, `recipient_name`
 - `subject`, `body`, `status` (pending/scheduled/sent/failed)
 - `scheduled_for`, `sent_at`, `error_message`
 - `created_at`
 
-**confirmation_tokens table (NEW in 008):**
+**confirmation_tokens table:**
 - `id`, `customer_id`, `token`, `expires_at`, `used_at`
 - `created_at`
 
@@ -172,34 +188,52 @@ Customer Profile Collector - A customer profile collection system for a small bu
 | Send Email Dialog | `src/components/admin/send-email-dialog.tsx` |
 | Confirmation Page | `src/app/confirm/[token]/page.tsx` |
 
+## Vercel Configuration
+
+**vercel.json:**
+```json
+{
+  "crons": [
+    { "path": "/api/health", "schedule": "0 0 * * 0" },
+    { "path": "/api/cron/send-scheduled-emails", "schedule": "0 8 * * *" }
+  ]
+}
+```
+
+Note: Vercel Hobby tier only supports daily crons (not hourly).
+
+## Environment Variables (Vercel)
+
+| Variable | Status |
+|----------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Set |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set |
+| `ADMIN_USERNAME` | Set |
+| `ADMIN_PASSWORD` | Set |
+| `RESEND_API_KEY` | Set |
+| `NEXT_PUBLIC_APP_URL` | **Needs to be set** to `https://customer-profile-registration.vercel.app` |
+
 ## Git State
 
-- **Current Branch:** `feature/admin-email-notifications`
-- **Latest Main Commit:** `bdc2fe3 Merge feature/admin-improvements`
-- **Status:** Feature branch with all EPIC-9 changes, uncommitted
-
-## Git Workflow Rules
-
-**CRITICAL:** Never merge/push to `main` or `develop` without explicit user permission.
-1. Create feature branch for all changes
-2. Commit on feature branch
-3. Ask user before merging
-4. Only merge after user confirms
+- **Current Branch:** `main`
+- **Latest Commit:** PR #4 merged (EPIC-9)
+- **Tags:** `epic-1-complete` through `epic-8-complete` (need `epic-9-complete`)
 
 ## Test Status
 
 - **Unit Tests:** 94/104 passing
   - customer-validation.test.ts: 54 tests
-  - admin-components.test.tsx: 39 tests (updated for new columns)
+  - admin-components.test.tsx: 39 tests
   - db-schema.test.ts: 1/11 passing (10 require live database)
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings)
 
-## Next Steps
+## Next Steps (Next Session)
 
-1. **Immediate:** Commit EPIC-9 changes on feature branch
-2. **Deploy:** Run migration 008, add RESEND_API_KEY, merge to main
-3. **Verify:** Test email sending in production
+1. **Fix confirmation page 404** - Investigate why `/confirm/[token]` returns 404 on production
+2. **Set NEXT_PUBLIC_APP_URL** in Vercel environment variables
+3. **Tag release** - `git tag -a epic-9-complete -m "EPIC 9: Admin Email Notifications"`
+4. **Test email flow end-to-end** after fixing 404
 
 ## Future Enhancements (Ideas)
 

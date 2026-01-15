@@ -1,6 +1,6 @@
 # Change Logs
 
-## [2026-01-14 22:30] - EPIC-9: Admin Email Notifications
+## [2026-01-15] - EPIC-9: Admin Email Notifications - DEPLOYED
 
 ### Changes
 - **CP-62**: Created database migration for email_templates, email_logs, confirmation_tokens tables
@@ -29,10 +29,11 @@
 - Bulk send from customer list (checkbox selection)
 - Single send from customer detail page
 - Rate limiting: 100 emails per day
-- Scheduled send option (processed by hourly cron)
+- Scheduled send option (processed by daily cron at 8 AM UTC)
+- **HTML emails with styled buttons** (green for confirm, red for update profile)
 
 #### One-Click Delivery Confirmation
-- Customers click link in email to confirm delivery address
+- Customers click button in email to confirm delivery address
 - Secure 32-byte confirmation tokens with 30-day expiry
 - Updates `delivery_confirmed_at` timestamp on customer record
 
@@ -46,10 +47,11 @@
 - `email_logs` table with status tracking (pending/scheduled/sent/failed)
 - `confirmation_tokens` table with expiry and used_at tracking
 - Added `delivery_confirmed_at` column to customers
+- **RLS policies added** for email_templates, email_logs, confirmation_tokens
 
 ### Files Created
 - `supabase/migrations/008_email_notifications.sql`
-- `src/lib/services/resend.ts` - Email service with rate limiting
+- `src/lib/services/resend.ts` - Email service with HTML buttons and rate limiting
 - `src/lib/validations/email.ts` - Email validation schemas
 - `src/app/api/admin/email-templates/route.ts` - GET/POST templates
 - `src/app/api/admin/email-templates/[id]/route.ts` - GET/PUT/DELETE template
@@ -74,23 +76,31 @@
 - `src/app/admin/page.tsx` - Added Email Templates and Email Logs nav links
 - `src/components/admin/customer-list.tsx` - Checkbox selection, Ready to Ship column
 - `src/app/admin/customers/[id]/page.tsx` - Send Email button, Ready to Ship badge
-- `vercel.json` - Added hourly cron for scheduled emails
+- `vercel.json` - Daily cron for scheduled emails (0 8 * * *)
 - `test/admin-components.test.tsx` - Updated tests for new columns
 - `.env.example` - Added RESEND_API_KEY
 
 ### Git
 - **Branch:** `feature/admin-email-notifications`
-- **Status:** Implementation complete, ready for commit
+- **PR:** #4 (merged)
+- **Status:** ✅ Merged to main and deployed
+
+### Deployment Notes
+- Migration 008 applied to Supabase
+- RESEND_API_KEY added to Vercel environment
+- NEXT_PUBLIC_APP_URL needs to be set to `https://customer-profile-registration.vercel.app`
+- Cron changed from hourly to daily (Vercel Hobby tier limitation)
 
 ### Test Results
 - 94/104 tests passing (10 db-schema tests require live database)
 - Build passes
 - All admin-components tests updated and passing (39 tests)
 
-### Notes
-- Resend API key not yet configured (emails won't send until key added)
-- Database migration 008 needs to be run in Supabase
-- Cron job runs hourly to process scheduled emails
+### Known Issue (To Fix Next Session)
+- **Confirmation page 404**: The `/confirm/[token]` route returns 404 on production
+- Production URL is `https://customer-profile-registration.vercel.app` (not collector)
+- Route exists in build output and works locally
+- Requires investigation in next session
 
 ---
 
