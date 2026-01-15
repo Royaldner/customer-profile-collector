@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-14 (Session 3)
 
 ## Overview
 
@@ -182,6 +182,24 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - **Integration Tests:** 10 tests (require live database)
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings)
+
+### Admin Page Improvements (CP-60, CP-61) ✅ COMPLETE
+
+**CP-60: Admin Customer Detail View Enhancement**
+- Display all important customer info when viewing a customer
+- Profile address, delivery method, courier, and all fields visible
+- Improved layout for better readability
+
+**CP-61: Admin Courier Conditional Logic**
+- Conditional courier filtering based on delivery preference
+- **pickup**: No courier field shown
+- **delivered**: LBC + JRS available
+- **cod/cop**: LBC only
+- Auto-clears courier when switching to incompatible delivery method
+
+## Next Phase
+
+**EPIC-9: Admin Email Notifications** - See `docs/post-mvp-features/EPIC-9-admin-email-notifications.md`
 
 ## Future Enhancements (Ideas)
 

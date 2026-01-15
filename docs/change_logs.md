@@ -1,5 +1,41 @@
 # Change Logs
 
+## [2026-01-14] - Admin Page Improvements
+
+### Changes
+- **CP-60**: Enhanced admin customer detail view to display all customer information
+- **CP-61**: Added conditional courier logic to admin edit form
+
+### Features Implemented
+
+#### Admin Customer Detail View (CP-60)
+- Display all customer fields: first name, last name, email, phone, contact preference
+- Show delivery method and courier selection
+- Display profile address when available
+- Improved layout for better readability
+
+#### Admin Courier Conditional Logic (CP-61)
+- Courier field visibility based on delivery method:
+  - **pickup**: No courier field shown
+  - **delivered**: LBC + JRS available
+  - **cod/cop**: LBC only
+- Auto-clears courier when switching to incompatible delivery method
+- Consistent with registration form behavior
+
+### Files Modified
+- `src/app/admin/customers/[id]/page.tsx` - Enhanced detail view display
+- `src/components/admin/edit-customer-form.tsx` - Conditional courier logic
+
+### Git
+- **Commit:** `3db8bba CP-60, CP-61: Admin improvements`
+- **Merged:** `bdc2fe3 Merge feature/admin-improvements`
+
+### Test Results
+- 90/90 unit tests passing
+- Build passes
+
+---
+
 ## [2026-01-12] - Address Validation Error Display Fix
 
 ### Changes
