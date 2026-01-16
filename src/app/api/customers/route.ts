@@ -55,9 +55,17 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
+      // Check for foreign key violation (e.g., invalid courier code or user_id)
+      if (customerError.code === '23503') {
+        console.error('Foreign key violation:', customerError)
+        return NextResponse.json(
+          { message: `Unable to create customer: ${customerError.details || customerError.message}` },
+          { status: 400 }
+        )
+      }
       console.error('Customer insert error:', customerError)
       return NextResponse.json(
-        { message: 'Failed to create customer' },
+        { message: `Unable to create customer: ${customerError.message}` },
         { status: 500 }
       )
     }
@@ -82,7 +90,7 @@ export async function POST(request: NextRequest) {
         await supabase.from('customers').delete().eq('id', customerData.id)
         console.error('Addresses insert error:', addressesError)
         return NextResponse.json(
-          { message: 'Failed to create addresses' },
+          { message: `Unable to create customer: ${addressesError.message}` },
           { status: 500 }
         )
       }
