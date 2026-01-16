@@ -1,5 +1,43 @@
 # Change Logs
 
+## [2026-01-16] - Bug Fixes & Investigation
+
+### Changes
+- **Fixed email confirmation links** - Discovered `NEXT_PUBLIC_APP_URL` was incorrectly set to `customer-profile-collector` instead of `customer-profile-registration` in Vercel
+- **Tagged EPIC-9** - Created and pushed `epic-9-complete` tag
+- **Pushed unpushed commit** - Synced local main with origin
+- **Improved API error messages** - Customer creation now shows specific database error details instead of generic "Failed to create customer"
+- **Identified auth/customer deletion mismatch** - Root cause of registration FK errors found
+
+### Root Cause Analysis: Registration FK Violation
+
+**Problem:** When registering with an email that was previously used and deleted from admin, users get "Unable to create customer: Key is not present in table users"
+
+**Cause:**
+1. User registers with email → creates `auth.users` record + `customers` record
+2. Admin deletes customer → only deletes from `customers` table
+3. `auth.users` record remains (orphaned)
+4. User tries to register again with same email
+5. Browser has cached auth session with old `user_id`
+6. Customer insert fails because of FK constraint mismatch
+
+**Solution Needed:** When deleting a customer from admin, also delete their linked Supabase auth user (if `user_id` exists)
+
+### Files Modified
+- `src/app/api/customers/route.ts` - Improved error messages for FK violations and general errors
+
+### Git
+- **Commits:**
+  - `c0ef36e` - fix: Improve error messages in customer creation API
+  - `50901c6` - Revert "fix: Retry customer creation without user_id if FK violation"
+- **Tags:** `epic-9-complete` created and pushed
+
+### Known Issue (To Fix)
+- **Auth user not deleted with customer** - Admin delete only removes customer record, not the linked Supabase auth user
+- This causes registration issues when the same email is reused
+
+---
+
 ## [2026-01-15] - EPIC-9: Admin Email Notifications - DEPLOYED
 
 ### Changes

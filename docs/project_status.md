@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-15 (EPIC-9 Deployed)
+**Last Updated:** 2026-01-16
 
 ## Overview
 
@@ -11,19 +11,26 @@ Customer Profile Collector - A customer profile collection system for a small bu
 ## Current State
 
 **Branch:** `main`
-**Status:** EPIC-9 deployed, confirmation page 404 issue pending
+**Status:** EPIC-9 complete and tagged, one known issue pending fix
 
-### Known Issue (To Fix Next Session)
-The `/confirm/[token]` route returns 404 on production. This needs investigation:
-- Route file exists: `src/app/confirm/[token]/page.tsx`
-- Works locally
-- Build output shows the route
-- Other routes work fine
+### Known Issue (Priority: High)
 
-**Environment Variable Needed:**
-```
-NEXT_PUBLIC_APP_URL=https://customer-profile-registration.vercel.app
-```
+**Auth User Not Deleted With Customer**
+
+When admin deletes a customer, only the `customers` table record is removed. The linked Supabase `auth.users` record remains orphaned.
+
+**Impact:**
+- If the same email tries to register again, the browser may have a cached auth session
+- Customer insert fails with FK violation: "Key is not present in table users"
+- Users see: "Unable to create customer: Key is not present in table users"
+
+**Root Cause:**
+1. User registers → creates `auth.users` + `customers` records (linked via `user_id`)
+2. Admin deletes customer → only `customers` record deleted
+3. `auth.users` record remains
+4. Re-registration with same email causes session/FK mismatch
+
+**Solution:** When deleting a customer from admin, also delete their Supabase auth user if `user_id` exists.
 
 ## Completed Features
 
@@ -74,7 +81,7 @@ NEXT_PUBLIC_APP_URL=https://customer-profile-registration.vercel.app
 - Visual courier selection cards
 - "Copy from Profile" and "Use my profile name" features
 
-### EPIC 9: Admin Email Notifications (100% Complete - Deployed)
+### EPIC 9: Admin Email Notifications (100% Complete)
 
 #### 9.1 Email Template Management
 - Admin UI at `/admin/email-templates`
@@ -93,7 +100,7 @@ NEXT_PUBLIC_APP_URL=https://customer-profile-registration.vercel.app
 - Customers click button in email to confirm delivery address
 - Secure 32-byte confirmation tokens with 30-day expiry
 - Updates `delivery_confirmed_at` timestamp on customer record
-- Customer-facing thank you page at `/confirm/[token]` **(404 issue pending)**
+- Customer-facing thank you page at `/confirm/[token]` ✅ Working
 
 #### 9.4 Ready to Ship Status
 - New column in customer list showing "Ready" (green) or "Pending" (yellow)
@@ -124,16 +131,6 @@ NEXT_PUBLIC_APP_URL=https://customer-profile-registration.vercel.app
 - 006_split_name_and_profile_address.sql - Split name, profile address columns
 - 007_address_names_and_cop.sql - Address names, COP delivery method
 - 008_email_notifications.sql - Email templates, logs, confirmation tokens, delivery_confirmed_at
-
-**RLS Policies Added for Email Tables:**
-```sql
-CREATE POLICY "Allow all access to email_templates"
-  ON email_templates FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all access to email_logs"
-  ON email_logs FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all access to confirmation_tokens"
-  ON confirmation_tokens FOR ALL USING (true) WITH CHECK (true);
-```
 
 ## Current Schema
 
@@ -187,37 +184,24 @@ CREATE POLICY "Allow all access to confirmation_tokens"
 | Email Logs UI | `src/components/admin/email-log-list.tsx` |
 | Send Email Dialog | `src/components/admin/send-email-dialog.tsx` |
 | Confirmation Page | `src/app/confirm/[token]/page.tsx` |
-
-## Vercel Configuration
-
-**vercel.json:**
-```json
-{
-  "crons": [
-    { "path": "/api/health", "schedule": "0 0 * * 0" },
-    { "path": "/api/cron/send-scheduled-emails", "schedule": "0 8 * * *" }
-  ]
-}
-```
-
-Note: Vercel Hobby tier only supports daily crons (not hourly).
+| Customer Delete API | `src/app/api/customers/[id]/route.ts` |
 
 ## Environment Variables (Vercel)
 
 | Variable | Status |
 |----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Set |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Set |
-| `ADMIN_USERNAME` | Set |
-| `ADMIN_PASSWORD` | Set |
-| `RESEND_API_KEY` | Set |
-| `NEXT_PUBLIC_APP_URL` | **Needs to be set** to `https://customer-profile-registration.vercel.app` |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Set |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Set |
+| `ADMIN_USERNAME` | ✅ Set |
+| `ADMIN_PASSWORD` | ✅ Set |
+| `RESEND_API_KEY` | ✅ Set |
+| `NEXT_PUBLIC_APP_URL` | ✅ Set to `https://customer-profile-registration.vercel.app` |
 
 ## Git State
 
 - **Current Branch:** `main`
-- **Latest Commit:** PR #4 merged (EPIC-9)
-- **Tags:** `epic-1-complete` through `epic-8-complete` (need `epic-9-complete`)
+- **Latest Commits:** Bug fixes and error handling improvements
+- **Tags:** `epic-1-complete` through `epic-9-complete` ✅
 
 ## Test Status
 
@@ -228,12 +212,11 @@ Note: Vercel Hobby tier only supports daily crons (not hourly).
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings)
 
-## Next Steps (Next Session)
+## Next Steps
 
-1. **Fix confirmation page 404** - Investigate why `/confirm/[token]` returns 404 on production
-2. **Set NEXT_PUBLIC_APP_URL** in Vercel environment variables
-3. **Tag release** - `git tag -a epic-9-complete -m "EPIC 9: Admin Email Notifications"`
-4. **Test email flow end-to-end** after fixing 404
+1. **Fix auth user deletion** - When admin deletes a customer with `user_id`, also delete from `auth.users`
+   - Use Supabase Admin API to delete auth user
+   - Requires `SUPABASE_SERVICE_ROLE_KEY` for admin operations
 
 ## Future Enhancements (Ideas)
 
