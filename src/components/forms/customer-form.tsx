@@ -129,7 +129,7 @@ export function CustomerForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/register?auth=google`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
@@ -256,6 +256,63 @@ export function CustomerForm() {
       setCurrentStep(steps.findIndex((s) => s.id === 'delivery'))
     }
   }, [isPickup, currentStepId, steps])
+
+  // Handle form validation errors and show them to user
+  function handleSubmitWithValidation(e: React.FormEvent) {
+    e.preventDefault()
+
+    // Clear any previous error
+    setSubmitError(null)
+
+    // Use handleSubmit which validates before calling onSubmit
+    form.handleSubmit(onSubmit, (errors) => {
+      // This callback runs when validation fails
+      console.error('Form validation errors:', errors)
+
+      // Build a user-friendly error message from validation errors
+      const errorMessages: string[] = []
+
+      // Check for root-level errors (from refine validations)
+      if (errors.addresses?.root?.message) {
+        errorMessages.push(errors.addresses.root.message)
+      }
+      if (errors.addresses?.message) {
+        errorMessages.push(errors.addresses.message)
+      }
+      if (errors.customer?.courier?.message) {
+        errorMessages.push(errors.customer.courier.message)
+      }
+
+      // Check for field-level errors
+      if (errors.customer) {
+        Object.entries(errors.customer).forEach(([field, error]) => {
+          if (error && typeof error === 'object' && 'message' in error && field !== 'courier') {
+            errorMessages.push(`${field}: ${error.message}`)
+          }
+        })
+      }
+
+      // Check for address field errors
+      if (errors.addresses && Array.isArray(errors.addresses)) {
+        errors.addresses.forEach((addressError, index) => {
+          if (addressError) {
+            Object.entries(addressError).forEach(([field, error]) => {
+              if (error && typeof error === 'object' && 'message' in error) {
+                errorMessages.push(`Address ${index + 1} ${field}: ${error.message}`)
+              }
+            })
+          }
+        })
+      }
+
+      const errorMessage = errorMessages.length > 0
+        ? errorMessages.join('. ')
+        : 'Please fix the form errors before submitting'
+
+      setSubmitError(errorMessage)
+      toast.error('Please fix the form errors before submitting')
+    })(e)
+  }
 
   async function onSubmit(data: CustomerWithAddressesFormData) {
     setIsSubmitting(true)
