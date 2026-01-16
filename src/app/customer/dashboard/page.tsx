@@ -60,6 +60,7 @@ export default function CustomerDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [greeting, setGreeting] = useState('Welcome')
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
   // PSGC locations hook
   const { locations, isLoading: isLoadingLocations, getLocationByCode } = usePSGCLocations()
@@ -451,6 +452,27 @@ export default function CustomerDashboardPage() {
       toast.success('Default address updated')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to set default address')
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeletingAccount(true)
+    try {
+      const response = await fetch('/api/customer/delete-account', {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message)
+      }
+
+      toast.success('Account deleted successfully')
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete account')
+      setIsDeletingAccount(false)
     }
   }
 
@@ -1026,6 +1048,63 @@ export default function CustomerDashboardPage() {
             <p className="text-sm text-muted-foreground">
               Last updated: {new Date(customer.updated_at).toLocaleDateString()}
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            <CardDescription>Irreversible actions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Delete Account</p>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your account and all data
+                </p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={isDeletingAccount}>
+                    {isDeletingAccount ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete Account'
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <span className="block">
+                        This action cannot be undone. This will permanently delete your account
+                        and remove all your data including:
+                      </span>
+                      <ul className="list-disc list-inside text-sm">
+                        <li>Your profile information</li>
+                        <li>All saved addresses</li>
+                        <li>Order history and preferences</li>
+                      </ul>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, delete my account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
       </div>

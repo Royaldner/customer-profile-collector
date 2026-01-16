@@ -163,16 +163,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 }
 
-// DELETE - Delete a customer and their addresses
+// DELETE - Delete a customer and their addresses (and linked auth user if exists)
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
     const supabase = await createClient()
 
-    // Check if customer exists
+    // Check if customer exists and fetch user_id
     const { data: existingCustomer, error: fetchError } = await supabase
       .from('customers')
-      .select('id, first_name, last_name')
+      .select('id, first_name, last_name, user_id')
       .eq('id', id)
       .single()
 
@@ -181,6 +181,30 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         { message: 'Customer not found' },
         { status: 404 }
       )
+    }
+
+    // Track auth deletion status for response
+    let authDeleteWarning: string | undefined
+
+    // If customer has a linked auth user, attempt to delete it first
+    if (existingCustomer.user_id) {
+      try {
+        const { createAdminClient } = await import('@/lib/supabase/admin')
+        const adminClient = createAdminClient()
+
+        const { error: authError } = await adminClient.auth.admin.deleteUser(
+          existingCustomer.user_id
+        )
+
+        if (authError) {
+          console.error('Auth user delete error:', authError)
+          authDeleteWarning = `Customer deleted but auth user cleanup failed: ${authError.message}`
+        }
+      } catch (adminError) {
+        console.error('Admin client error:', adminError)
+        authDeleteWarning =
+          'Customer deleted but auth user cleanup failed: Admin client unavailable'
+      }
     }
 
     // Delete customer (addresses will cascade delete)
@@ -197,10 +221,25 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       )
     }
 
-    return NextResponse.json({
+    // Build response
+    const response: {
+      message: string
+      customer: { id: string; first_name: string; last_name: string }
+      warning?: string
+    } = {
       message: 'Customer deleted successfully',
-      customer: existingCustomer,
-    })
+      customer: {
+        id: existingCustomer.id,
+        first_name: existingCustomer.first_name,
+        last_name: existingCustomer.last_name,
+      },
+    }
+
+    if (authDeleteWarning) {
+      response.warning = authDeleteWarning
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
