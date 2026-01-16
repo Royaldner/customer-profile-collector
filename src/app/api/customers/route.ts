@@ -24,43 +24,28 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Build customer insert data
-    const customerInsertData = {
-      first_name: customer.first_name,
-      last_name: customer.last_name,
-      email: customer.email,
-      phone: customer.phone,
-      contact_preference: customer.contact_preference,
-      delivery_method: customer.delivery_method,
-      courier: customer.courier || null,
-      user_id: user_id,
-      // Profile address fields (optional)
-      profile_street_address: customer.profile_street_address || null,
-      profile_barangay: customer.profile_barangay || null,
-      profile_city: customer.profile_city || null,
-      profile_province: customer.profile_province || null,
-      profile_region: customer.profile_region || null,
-      profile_postal_code: customer.profile_postal_code || null,
-    }
-
     // Insert customer
-    let { data: customerData, error: customerError } = await supabase
+    const { data: customerData, error: customerError } = await supabase
       .from('customers')
-      .insert(customerInsertData)
+      .insert({
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        email: customer.email,
+        phone: customer.phone,
+        contact_preference: customer.contact_preference,
+        delivery_method: customer.delivery_method,
+        courier: customer.courier || null,
+        user_id: user_id,
+        // Profile address fields (optional)
+        profile_street_address: customer.profile_street_address || null,
+        profile_barangay: customer.profile_barangay || null,
+        profile_city: customer.profile_city || null,
+        profile_province: customer.profile_province || null,
+        profile_region: customer.profile_region || null,
+        profile_postal_code: customer.profile_postal_code || null,
+      })
       .select()
       .single()
-
-    // If user_id FK violation, retry without user_id
-    if (customerError?.code === '23503' && customerError.message?.includes('users')) {
-      console.warn('user_id not found in auth.users, retrying without user_id:', user_id)
-      const retryResult = await supabase
-        .from('customers')
-        .insert({ ...customerInsertData, user_id: null })
-        .select()
-        .single()
-      customerData = retryResult.data
-      customerError = retryResult.error
-    }
 
     if (customerError) {
       // Check for duplicate email
