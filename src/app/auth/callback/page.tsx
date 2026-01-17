@@ -15,7 +15,10 @@ function AuthCallbackContent() {
       const code = searchParams.get('code')
       const next = searchParams.get('next')
 
+      console.log('[Auth Callback] Starting callback handler', { code: code?.substring(0, 10) + '...', next })
+
       if (!code) {
+        console.log('[Auth Callback] No code provided')
         setStatus('error')
         setErrorMessage('No authorization code provided')
         setTimeout(() => router.push('/customer/login?error=no_code'), 2000)
@@ -25,35 +28,44 @@ function AuthCallbackContent() {
       try {
         const supabase = createClient()
 
+        console.log('[Auth Callback] Exchanging code for session...')
         // Exchange code for session - client-side has access to PKCE code_verifier
         const { error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (error) {
-          console.error('Code exchange error:', error)
+          console.error('[Auth Callback] Code exchange error:', error)
           setStatus('error')
           setErrorMessage(error.message)
           setTimeout(() => router.push('/customer/login?error=auth_callback_error'), 2000)
           return
         }
 
+        console.log('[Auth Callback] Code exchange successful, getting user...')
+
         // Check if user has a customer profile to decide where to redirect
         const { data: { user } } = await supabase.auth.getUser()
+        console.log('[Auth Callback] User:', user?.id, user?.email)
 
         if (user) {
-          const { data: customer } = await supabase
+          const { data: customer, error: customerError } = await supabase
             .from('customers')
             .select('id')
             .eq('user_id', user.id)
             .single()
 
+          console.log('[Auth Callback] Customer lookup:', { customer, customerError })
+
           if (customer) {
             // User has a profile, go to dashboard or specified next URL
+            console.log('[Auth Callback] Redirecting to:', next || '/customer/dashboard')
             router.push(next || '/customer/dashboard')
           } else {
             // User doesn't have a profile, go to register
+            console.log('[Auth Callback] No customer profile, redirecting to /register')
             router.push('/register')
           }
         } else {
+          console.log('[Auth Callback] No user found after auth')
           setStatus('error')
           setErrorMessage('No user found after authentication')
           setTimeout(() => router.push('/customer/login?error=no_user'), 2000)
