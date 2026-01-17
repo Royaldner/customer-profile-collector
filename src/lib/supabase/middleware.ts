@@ -53,52 +53,13 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Handle OAuth code exchange if code is present (from any URL)
+  // OAuth code exchange is handled client-side (code verifier stored in browser)
+  // Redirect code to /auth/callback for client-side processing
   const code = searchParams.get('code')
   if (code && pathname !== '/auth/callback') {
-    // Log cookies for debugging (check if code verifier exists)
-    const cookies = request.cookies.getAll()
-    console.log('OAuth code exchange attempt:', {
-      pathname,
-      hascode: !!code,
-      cookieNames: cookies.map(c => c.name),
-    })
-
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (error) {
-      console.error('Code exchange error:', error.message, error)
-    }
-
-    if (!error) {
-      // Get user to check if they have a customer profile
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data: customer } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-
-        // Create redirect response with updated cookies
-        const redirectUrl = customer
-          ? new URL('/customer/dashboard', origin)
-          : new URL('/register', origin)
-
-        const redirectResponse = NextResponse.redirect(redirectUrl)
-
-        // Copy cookies from supabaseResponse to redirectResponse
-        supabaseResponse.cookies.getAll().forEach(cookie => {
-          redirectResponse.cookies.set(cookie.name, cookie.value)
-        })
-
-        return redirectResponse
-      }
-    }
-
-    // If code exchange failed, redirect to login with error
-    return NextResponse.redirect(new URL('/customer/login?error=auth_callback_error', origin))
+    const callbackUrl = new URL('/auth/callback', origin)
+    callbackUrl.searchParams.set('code', code)
+    return NextResponse.redirect(callbackUrl)
   }
 
   // Refresh session if expired - required for Server Components
