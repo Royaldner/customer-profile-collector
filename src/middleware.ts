@@ -1,22 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl
-
-  // If there's an auth code at root or other pages, redirect to auth callback
-  const code = searchParams.get('code')
-  if (code && pathname !== '/auth/callback') {
-    const callbackUrl = new URL('/auth/callback', request.url)
-    callbackUrl.searchParams.set('code', code)
-    // Preserve the next parameter if it exists
-    const next = searchParams.get('next')
-    if (next) {
-      callbackUrl.searchParams.set('next', next)
-    }
-    return NextResponse.redirect(callbackUrl)
-  }
-
+  // Auth code handling is done in updateSession (supabase middleware)
   return await updateSession(request)
 }
 
