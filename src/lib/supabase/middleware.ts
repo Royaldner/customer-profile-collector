@@ -56,7 +56,19 @@ export async function updateSession(request: NextRequest) {
   // Handle OAuth code exchange if code is present (from any URL)
   const code = searchParams.get('code')
   if (code && pathname !== '/auth/callback') {
+    // Log cookies for debugging (check if code verifier exists)
+    const cookies = request.cookies.getAll()
+    console.log('OAuth code exchange attempt:', {
+      pathname,
+      hascode: !!code,
+      cookieNames: cookies.map(c => c.name),
+    })
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      console.error('Code exchange error:', error.message, error)
+    }
 
     if (!error) {
       // Get user to check if they have a customer profile
