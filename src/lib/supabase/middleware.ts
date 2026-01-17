@@ -53,52 +53,22 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Handle OAuth code exchange if code is present (from any URL)
+  // Handle OAuth code redirect - Supabase ignores redirectTo and sends to root URL
+  // We redirect to /auth/callback where client-side page handles the PKCE exchange
   const code = searchParams.get('code')
-  if (code && pathname !== '/auth/callback') {
-    // Log cookies for debugging (check if code verifier exists)
-    const cookies = request.cookies.getAll()
-    console.log('OAuth code exchange attempt:', {
-      pathname,
-      hascode: !!code,
-      cookieNames: cookies.map(c => c.name),
+  if (code && pathname === '/') {
+    // Preserve the code and any other params (like next) when redirecting
+    const callbackUrl = new URL('/auth/callback', origin)
+    callbackUrl.searchParams.set('code', code)
+
+    // Copy any other search params (e.g., next)
+    searchParams.forEach((value, key) => {
+      if (key !== 'code') {
+        callbackUrl.searchParams.set(key, value)
+      }
     })
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (error) {
-      console.error('Code exchange error:', error.message, error)
-    }
-
-    if (!error) {
-      // Get user to check if they have a customer profile
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        const { data: customer } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
-
-        // Create redirect response with updated cookies
-        const redirectUrl = customer
-          ? new URL('/customer/dashboard', origin)
-          : new URL('/register', origin)
-
-        const redirectResponse = NextResponse.redirect(redirectUrl)
-
-        // Copy cookies from supabaseResponse to redirectResponse
-        supabaseResponse.cookies.getAll().forEach(cookie => {
-          redirectResponse.cookies.set(cookie.name, cookie.value)
-        })
-
-        return redirectResponse
-      }
-    }
-
-    // If code exchange failed, redirect to login with error
-    return NextResponse.redirect(new URL('/customer/login?error=auth_callback_error', origin))
+    return NextResponse.redirect(callbackUrl)
   }
 
   // Refresh session if expired - required for Server Components
