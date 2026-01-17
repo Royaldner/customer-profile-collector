@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-16
+**Last Updated:** 2026-01-16 19:40
 
 ## Overview
 
@@ -11,9 +11,35 @@ Customer Profile Collector - A customer profile collection system for a small bu
 ## Current State
 
 **Branch:** `main`
-**Status:** EPIC-9 complete and tagged, one known issue pending fix
+**Status:** EPIC-9 complete, Google OAuth broken (in progress fix)
 
-### Known Issue (Priority: High)
+### Known Issue #1 (Priority: Critical)
+
+**Google OAuth Redirect Not Working**
+
+- **Status:** In Progress (documented, solution identified)
+- **Issue Doc:** `docs/issues/ISSUE-google-oauth-redirect.md`
+
+**Symptoms:**
+- Google login redirects to `/customer/login?error=auth_callback_error`
+- Google signup redirects to `/customer/login?error=auth_callback_error`
+- Email/password auth works fine
+
+**Root Cause:**
+1. Supabase ignores `redirectTo` parameter, redirects to root `/?code=xxx`
+2. PKCE code verifier stored in browser, not accessible server-side
+3. Server-side code exchange fails: "both auth code and code verifier should be non-empty"
+
+**Next Steps:**
+1. Create client-side `/auth/callback/page.tsx` with Suspense boundary
+2. Keep middleware redirect from `/?code=xxx` to `/auth/callback`
+3. Exchange code on client where verifier is accessible
+
+**Additional Notes:**
+- Next.js 16 shows deprecation warning: `middleware.ts` → `proxy`
+- May need to address middleware migration in future
+
+### Known Issue #2 (Priority: High)
 
 **Auth User Not Deleted With Customer**
 

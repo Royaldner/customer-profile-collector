@@ -1,5 +1,44 @@
 # Change Logs
 
+## [2026-01-16 19:40] - Google OAuth Redirect Issue Investigation
+
+### Problem
+Google OAuth login/signup redirects users to `/customer/login?error=auth_callback_error` instead of proper destination.
+
+### Root Cause Analysis
+1. **Supabase ignores `redirectTo` parameter** - Despite setting `redirectTo: /auth/callback`, Supabase redirects to root `/?code=xxx`
+2. **PKCE code verifier not accessible server-side** - The code verifier is stored in browser (localStorage/cookies set by client JS), server-side middleware cannot access it
+3. **Code exchange fails** - Error: "both auth code and code verifier should be non-empty"
+
+### Attempted Solutions
+
+| Commit | Approach | Result |
+|--------|----------|--------|
+| `be92293` | Standardize OAuth redirect URLs to `/auth/callback` | ❌ Supabase still redirects to root |
+| `4175128` | Middleware redirects `/?code=xxx` to `/auth/callback` | ❌ Loses PKCE context |
+| `cc0a36e` | Exchange code directly in middleware | ❌ Code verifier not accessible |
+| `3803209` | Add debug logging | Confirmed code verifier missing |
+| `052caf4` | Client-side callback page | ❌ Build error: `useSearchParams()` needs Suspense |
+| `71fcdcf` | Reverted client-side approach | Current state |
+
+### Next Plan (Option A Recommended)
+1. Fix client-side callback with Suspense boundary wrapper
+2. Keep middleware redirect to `/auth/callback`
+3. Handle code exchange on client where code verifier is accessible
+
+### Additional Issues Discovered
+- Next.js 16 deprecation warning: `middleware.ts` should migrate to `proxy`
+
+### Files Created
+- `docs/issues/ISSUE-google-oauth-redirect.md` - Detailed issue documentation
+
+### Current State
+- Google OAuth is **not working** - both login and signup fail with auth_callback_error
+- Email/password auth works fine
+- Issue documented, ready to fix in next session
+
+---
+
 ## [2026-01-16] - Bug Fixes & Investigation
 
 ### Changes
