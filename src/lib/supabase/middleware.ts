@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  const { pathname, searchParams, origin } = request.nextUrl
+  const { pathname } = request.nextUrl
 
   // Check if accessing protected admin routes (not login page)
   const isAdminRoute = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')
@@ -52,24 +52,6 @@ export async function updateSession(request: NextRequest) {
       },
     }
   )
-
-  // Handle OAuth code redirect - Supabase ignores redirectTo and sends to root URL
-  // We redirect to /auth/callback where client-side page handles the PKCE exchange
-  const code = searchParams.get('code')
-  if (code && pathname === '/') {
-    // Preserve the code and any other params (like next) when redirecting
-    const callbackUrl = new URL('/auth/callback', origin)
-    callbackUrl.searchParams.set('code', code)
-
-    // Copy any other search params (e.g., next)
-    searchParams.forEach((value, key) => {
-      if (key !== 'code') {
-        callbackUrl.searchParams.set(key, value)
-      }
-    })
-
-    return NextResponse.redirect(callbackUrl)
-  }
 
   // Refresh session if expired - required for Server Components
   await supabase.auth.getUser()
