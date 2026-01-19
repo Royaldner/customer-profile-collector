@@ -4,14 +4,14 @@
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-9 implemented and deployed to production.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-10 implemented and deployed to production.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `main`
-**Status:** All features complete, Google OAuth fixed ✅
+**Branch:** `feature/timezone-and-status-reset`
+**Status:** EPIC 10 implemented, pending merge
 
 ### Recent Fix: Google OAuth (2026-01-19)
 
@@ -77,6 +77,25 @@ When admin deletes a customer, only the `customers` table record is removed. The
 #### 7.4 Supabase Keep-Alive ✅
 - Health check API endpoint (`/api/health`)
 - Vercel Cron job (weekly ping on Sundays)
+
+### EPIC 10: Timezone & Status Reset (100% Complete)
+
+#### 10.1 Timezone Standardization ✅
+- All timestamps display in Montreal timezone (`America/Toronto`)
+- Uses `en-CA` locale format
+- Shared `formatDate()` utility in `src/lib/utils.ts`
+
+#### 10.2 Single Customer Status Reset ✅
+- "Reset to Pending" button on customer detail page
+- "Mark as Delivered" button on customer detail page
+- Buttons only visible when status is "Ready to Ship"
+- Confirmation dialogs before action
+
+#### 10.3 Bulk Status Operations ✅
+- Bulk "Reset to Pending" from customer list
+- Bulk "Mark as Delivered" from customer list
+- Uses existing checkbox selection pattern
+- Confirmation dialogs with customer count
 
 ### EPIC 8: Customer Profile Enhancements (100% Complete)
 

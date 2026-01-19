@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { EmailTemplateFormDialog } from './email-template-form-dialog'
 import { Plus, Pencil, Trash2, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatDate } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,14 +140,6 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-PH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
   }
 
   return (

@@ -44,7 +44,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { Pencil, Plus, Trash2, Star, Package, Truck, Copy, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { COURIER_OPTIONS } from '@/lib/validations/customer'
 import { LocationCombobox } from '@/components/ui/location-combobox'
 import { usePSGCLocations, locationToComboboxOption, barangayToComboboxOption } from '@/hooks/use-psgc-locations'
@@ -1042,11 +1042,11 @@ export default function CustomerDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Account</CardTitle>
-            <CardDescription>Member since {new Date(customer.created_at).toLocaleDateString()}</CardDescription>
+            <CardDescription>Member since {formatDate(customer.created_at)}</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Last updated: {new Date(customer.updated_at).toLocaleDateString()}
+              Last updated: {formatDate(customer.updated_at)}
             </p>
           </CardContent>
         </Card>

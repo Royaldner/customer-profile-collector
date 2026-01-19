@@ -3,6 +3,7 @@ import { Customer, Courier } from '@/lib/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Pencil, Check, Clock } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import { LogoutButton } from '@/components/admin/logout-button'
 import { DeleteCustomerDialog } from '@/components/admin/delete-customer-dialog'
 import { SetDefaultAddressButton } from '@/components/admin/set-default-address-button'
 import { SendSingleEmailButton } from '@/components/admin/send-single-email-button'
+import { StatusActionButtons } from '@/components/admin/status-action-buttons'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,16 +73,6 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
     ? couriers.find((c) => c.code === customer.courier)?.name || customer.courier.toUpperCase()
     : null
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-PH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
   const isReadyToShip = !!customer.delivery_confirmed_at
 
   return (
@@ -111,6 +103,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">Back to List</Link>
               </Button>
+              <StatusActionButtons customerId={id} isReadyToShip={isReadyToShip} />
               <SendSingleEmailButton customer={customer} />
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/admin/customers/${id}/edit`}>
@@ -183,11 +176,11 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="font-medium text-muted-foreground">Registered</label>
-                    <p>{formatDate(customer.created_at)}</p>
+                    <p>{formatDate(customer.created_at, true)}</p>
                   </div>
                   <div>
                     <label className="font-medium text-muted-foreground">Last Updated</label>
-                    <p>{formatDate(customer.updated_at)}</p>
+                    <p>{formatDate(customer.updated_at, true)}</p>
                   </div>
                 </div>
               </div>

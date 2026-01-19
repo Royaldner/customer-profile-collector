@@ -23,8 +23,11 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SendEmailDialog } from './send-email-dialog'
+import { BulkStatusDialog } from './bulk-status-dialog'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Mail, Check, Clock } from 'lucide-react'
+import { formatDate } from '@/lib/utils'
 
 interface CustomerListProps {
   initialCustomers: Customer[]
@@ -37,6 +40,7 @@ const contactPreferenceLabels: Record<ContactPreference, string> = {
 }
 
 export function CustomerList({ initialCustomers }: CustomerListProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [contactFilter, setContactFilter] = useState<ContactPreference | 'all'>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -63,14 +67,6 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
   const getDefaultAddress = (customer: Customer) => {
     if (!customer.addresses || customer.addresses.length === 0) return null
     return customer.addresses.find((a) => a.is_default) || customer.addresses[0]
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-PH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
   }
 
   const getReadyToShipStatus = (customer: Customer) => {
@@ -137,10 +133,20 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
               )
             </CardTitle>
             {selectedIds.size > 0 && (
-              <Button onClick={() => setIsSendEmailOpen(true)}>
-                <Mail className="mr-2 h-4 w-4" />
-                Send Email to Selected ({selectedIds.size})
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => setIsSendEmailOpen(true)}>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Email ({selectedIds.size})
+                </Button>
+                <BulkStatusDialog
+                  selectedCount={selectedIds.size}
+                  selectedIds={Array.from(selectedIds)}
+                  onSuccess={() => {
+                    setSelectedIds(new Set())
+                    router.refresh()
+                  }}
+                />
+              </div>
             )}
           </div>
 
