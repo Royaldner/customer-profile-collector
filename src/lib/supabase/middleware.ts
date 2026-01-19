@@ -2,7 +2,16 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, searchParams, origin } = request.nextUrl
+
+  // Handle OAuth code redirect - Supabase ignores redirectTo and sends to root URL
+  // Redirect /?code=xxx to /auth/callback?code=xxx so the callback handler processes it
+  const code = searchParams.get('code')
+  if (code && pathname === '/') {
+    const callbackUrl = new URL('/auth/callback', origin)
+    callbackUrl.searchParams.set('code', code)
+    return NextResponse.redirect(callbackUrl)
+  }
 
   // Check if accessing protected admin routes (not login page)
   const isAdminRoute = pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')
