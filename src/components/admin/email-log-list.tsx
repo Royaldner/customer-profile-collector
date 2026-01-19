@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { ChevronLeft, ChevronRight, Eye, Mail, AlertCircle, Clock, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { formatDate } from '@/lib/utils'
 
 interface EmailLogWithRelations {
   id: string
@@ -106,16 +107,6 @@ export function EmailLogList() {
     fetchLogs(1)
     fetchDailyCount()
   }, [statusFilter])
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-PH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
 
   const getStatusBadge = (status: EmailStatus) => {
     switch (status) {
@@ -210,7 +201,7 @@ export function EmailLogList() {
                       {log.subject}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {formatDate(log.created_at)}
+                      {formatDate(log.created_at, true)}
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setViewingLog(log)}>
                       <Eye className="mr-2 h-4 w-4" />
@@ -249,7 +240,7 @@ export function EmailLogList() {
                         <TableCell className="max-w-xs truncate">{log.subject}</TableCell>
                         <TableCell>{log.template?.display_name || '-'}</TableCell>
                         <TableCell>{getStatusBadge(log.status)}</TableCell>
-                        <TableCell>{formatDate(log.created_at)}</TableCell>
+                        <TableCell>{formatDate(log.created_at, true)}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -322,20 +313,20 @@ export function EmailLogList() {
               <div>
                 <h4 className="font-medium mb-1">Created</h4>
                 <p className="text-muted-foreground">
-                  {viewingLog && formatDate(viewingLog.created_at)}
+                  {viewingLog && formatDate(viewingLog.created_at, true)}
                 </p>
               </div>
               <div>
                 <h4 className="font-medium mb-1">Sent At</h4>
                 <p className="text-muted-foreground">
-                  {viewingLog?.sent_at ? formatDate(viewingLog.sent_at) : 'Not yet sent'}
+                  {viewingLog?.sent_at ? formatDate(viewingLog.sent_at, true) : 'Not yet sent'}
                 </p>
               </div>
             </div>
             {viewingLog?.scheduled_for && (
               <div>
                 <h4 className="font-medium mb-1">Scheduled For</h4>
-                <p className="text-muted-foreground">{formatDate(viewingLog.scheduled_for)}</p>
+                <p className="text-muted-foreground">{formatDate(viewingLog.scheduled_for, true)}</p>
               </div>
             )}
             {viewingLog?.error_message && (

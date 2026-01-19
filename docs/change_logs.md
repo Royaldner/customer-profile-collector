@@ -1,5 +1,54 @@
 # Change Logs
 
+## [2026-01-19] - EPIC 10: Timezone & Status Reset
+
+### Summary
+Implemented timezone standardization to Montreal (Eastern Time) and added admin ability to reset customer "Ready to Ship" status.
+
+### Changes
+
+#### Phase 1: Timezone (CP-76, CP-77)
+- Added shared `formatDate()` utility in `src/lib/utils.ts`
+- Uses `America/Toronto` timezone with `en-CA` locale
+- Updated 6 components to use shared function:
+  - `src/components/admin/customer-list.tsx`
+  - `src/components/admin/courier-list.tsx`
+  - `src/components/admin/email-log-list.tsx`
+  - `src/components/admin/email-template-list.tsx`
+  - `src/app/admin/customers/[id]/page.tsx`
+  - `src/app/customer/dashboard/page.tsx`
+
+#### Phase 2: Single Customer Status Reset (CP-78, CP-79, CP-80)
+- Created `POST /api/customers/[id]/reset-status` endpoint
+- Created `POST /api/customers/[id]/mark-delivered` endpoint
+- Added `StatusActionButtons` component to customer detail page
+- Buttons only visible when status is "Ready to Ship"
+- Confirmation dialogs before action
+
+#### Phase 3: Bulk Status Operations (CP-81, CP-82, CP-83, CP-84)
+- Created `POST /api/admin/bulk-reset-status` endpoint
+- Created `POST /api/admin/bulk-mark-delivered` endpoint
+- Created `BulkStatusDialog` component with confirmation dialogs
+- Added bulk action buttons to customer list (next to Send Email)
+
+#### Phase 4: Tests (CP-85)
+- Added `next/navigation` mock to test setup
+- Updated locale test description to reflect Montreal timezone
+
+### Files Created
+- `src/app/api/customers/[id]/reset-status/route.ts`
+- `src/app/api/customers/[id]/mark-delivered/route.ts`
+- `src/app/api/admin/bulk-reset-status/route.ts`
+- `src/app/api/admin/bulk-mark-delivered/route.ts`
+- `src/components/admin/status-action-buttons.tsx`
+- `src/components/admin/bulk-status-dialog.tsx`
+
+### Test Results
+- 94 passed / 10 failed (pre-existing DB connection tests)
+- Build passes
+
+---
+
 ## [2026-01-19] - Google OAuth Fix - RESOLVED
 
 ### Problem

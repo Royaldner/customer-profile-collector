@@ -363,13 +363,15 @@ describe('CustomerList Component', () => {
 
 describe('Helper Functions', () => {
   describe('formatDate', () => {
-    it('should format date in Philippine locale', () => {
+    it('should format date in Montreal timezone (en-CA locale)', () => {
       const customer = createMockCustomer({
         created_at: '2024-01-15T10:00:00Z',
       })
       render(<CustomerList initialCustomers={[customer]} />)
 
-      expect(screen.getAllByText(/Jan 15, 2024/).length).toBeGreaterThan(0)
+      // formatDate uses America/Toronto timezone with en-CA locale
+      // Format: "Jan 15, 2024" or "Jan. 15, 2024" depending on environment
+      expect(screen.getAllByText(/Jan\.? 15, 2024/).length).toBeGreaterThan(0)
     })
   })
 

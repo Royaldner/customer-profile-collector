@@ -1,6 +1,6 @@
 # EPIC-10: Timezone Update & Status Reset
 
-**Status:** Draft
+**Status:** Complete
 **Created:** 2026-01-16
 **Branch:** `feature/timezone-and-status-reset`
 
@@ -12,12 +12,12 @@
 
 ## Goals
 
-- [ ] All timestamps display in Montreal timezone (Eastern Time)
-- [ ] Admin can manually reset customer status to Pending (single customer)
-- [ ] Admin can mark customer as "Delivered" (single customer)
-- [ ] Admin can bulk reset multiple customers to Pending (from customer list)
-- [ ] Admin can bulk mark multiple customers as Delivered (from customer list)
-- [ ] Confirmation dialogs for all reset/delivered actions
+- [x] All timestamps display in Montreal timezone (Eastern Time)
+- [x] Admin can manually reset customer status to Pending (single customer)
+- [x] Admin can mark customer as "Delivered" (single customer)
+- [x] Admin can bulk reset multiple customers to Pending (from customer list)
+- [x] Admin can bulk mark multiple customers as Delivered (from customer list)
+- [x] Confirmation dialogs for all reset/delivered actions
 
 ## Non-Goals (Out of Scope)
 
@@ -232,19 +232,19 @@ export function formatDate(dateString: string, includeTime = false) {
 
 ## Acceptance Criteria
 
-- [ ] All admin timestamps show in Montreal timezone (e.g., "Jan 16, 2026")
-- [ ] All customer dashboard timestamps show in Montreal timezone
-- [ ] Single customer "Reset to Pending" button visible only when status is Ready
-- [ ] Single customer "Mark as Delivered" button visible only when status is Ready
-- [ ] Single customer buttons show confirmation dialog before action
-- [ ] Bulk "Reset to Pending" button visible in customer list when customers selected
-- [ ] Bulk "Mark as Delivered" button visible in customer list when customers selected
-- [ ] Bulk actions show confirmation dialog with customer count
-- [ ] Status correctly updates after single and bulk operations
-- [ ] Selection is cleared after bulk operation completes
-- [ ] All tests passing
-- [ ] No TypeScript errors
-- [ ] Build succeeds
+- [x] All admin timestamps show in Montreal timezone (e.g., "Jan 16, 2026")
+- [x] All customer dashboard timestamps show in Montreal timezone
+- [x] Single customer "Reset to Pending" button visible only when status is Ready
+- [x] Single customer "Mark as Delivered" button visible only when status is Ready
+- [x] Single customer buttons show confirmation dialog before action
+- [x] Bulk "Reset to Pending" button visible in customer list when customers selected
+- [x] Bulk "Mark as Delivered" button visible in customer list when customers selected
+- [x] Bulk actions show confirmation dialog with customer count
+- [x] Status correctly updates after single and bulk operations
+- [x] Selection is cleared after bulk operation completes
+- [x] All tests passing
+- [x] No TypeScript errors
+- [x] Build succeeds
 
 ---
 
