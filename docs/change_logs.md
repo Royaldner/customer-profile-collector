@@ -1,5 +1,45 @@
 # Change Logs
 
+## [2026-01-19] - Google OAuth Fix - RESOLVED
+
+### Problem
+Google OAuth was broken - both login and signup failed with `auth_callback_error`.
+
+### Root Cause Discovery
+After investigating commit history, discovered that:
+1. **Original server-side `route.ts` callback WAS working** on production
+2. The PKCE "fix" attempts (client-side `page.tsx` + `proxy.ts`) actually broke OAuth
+3. Supabase ignores `redirectTo` parameter and redirects to `/?code=xxx` instead of `/auth/callback`
+4. Browser caching (304 responses) caused first login attempts to fail
+
+### Solution Applied
+
+| Commit | Fix |
+|--------|-----|
+| `e3456a2` | Restored original server-side `route.ts` callback |
+| `0e9edcd` | Added middleware redirect: `/?code=xxx` → `/auth/callback?code=xxx` |
+| `fee1f31` | Added `Cache-Control: no-store` headers + `force-dynamic` export |
+
+### Files Modified
+- `src/app/auth/callback/route.ts` - Restored server-side callback with cache prevention
+- `src/app/auth/callback/page.tsx` - Deleted (broken client-side approach)
+- `src/middleware.ts` - Restored from `proxy.ts`
+- `src/proxy.ts` - Deleted
+- `src/lib/supabase/middleware.ts` - Added OAuth code redirect logic
+
+### Current State
+- ✅ Google OAuth working on production
+- ✅ Login flow: Google → `/?code=xxx` → middleware redirects → `/auth/callback` → dashboard
+- ⚠️ Browser caching may still cause issues on some browsers (cache headers should help)
+
+### Key Learnings
+1. The original implementation was working - don't "fix" what isn't broken
+2. PKCE code verifier IS accessible server-side through Supabase cookies
+3. The real issue was Supabase ignoring `redirectTo`, not PKCE
+4. Always add cache-control headers to auth callback routes
+
+---
+
 ## [2026-01-16 19:40] - Google OAuth Redirect Issue Investigation
 
 ### Problem

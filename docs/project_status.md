@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-16 19:40
+**Last Updated:** 2026-01-19
 
 ## Overview
 
@@ -11,35 +11,22 @@ Customer Profile Collector - A customer profile collection system for a small bu
 ## Current State
 
 **Branch:** `main`
-**Status:** EPIC-9 complete, Google OAuth broken (in progress fix)
+**Status:** All features complete, Google OAuth fixed ✅
 
-### Known Issue #1 (Priority: Critical)
+### Recent Fix: Google OAuth (2026-01-19)
 
-**Google OAuth Redirect Not Working**
+**Issue:** Google OAuth was broken - login/signup failed with `auth_callback_error`
 
-- **Status:** In Progress (documented, solution identified)
-- **Issue Doc:** `docs/issues/ISSUE-google-oauth-redirect.md`
+**Solution:**
+1. Restored original server-side `route.ts` callback (was working before)
+2. Added middleware redirect: `/?code=xxx` → `/auth/callback?code=xxx`
+3. Added cache-control headers to prevent 304 responses
 
-**Symptoms:**
-- Google login redirects to `/customer/login?error=auth_callback_error`
-- Google signup redirects to `/customer/login?error=auth_callback_error`
-- Email/password auth works fine
+**Commits:** `e3456a2`, `0e9edcd`, `fee1f31`
 
-**Root Cause:**
-1. Supabase ignores `redirectTo` parameter, redirects to root `/?code=xxx`
-2. PKCE code verifier stored in browser, not accessible server-side
-3. Server-side code exchange fails: "both auth code and code verifier should be non-empty"
+**Status:** ✅ Working on production
 
-**Next Steps:**
-1. Create client-side `/auth/callback/page.tsx` with Suspense boundary
-2. Keep middleware redirect from `/?code=xxx` to `/auth/callback`
-3. Exchange code on client where verifier is accessible
-
-**Additional Notes:**
-- Next.js 16 shows deprecation warning: `middleware.ts` → `proxy`
-- May need to address middleware migration in future
-
-### Known Issue #2 (Priority: High)
+### Known Issue (Priority: High)
 
 **Auth User Not Deleted With Customer**
 
@@ -48,15 +35,9 @@ When admin deletes a customer, only the `customers` table record is removed. The
 **Impact:**
 - If the same email tries to register again, the browser may have a cached auth session
 - Customer insert fails with FK violation: "Key is not present in table users"
-- Users see: "Unable to create customer: Key is not present in table users"
-
-**Root Cause:**
-1. User registers → creates `auth.users` + `customers` records (linked via `user_id`)
-2. Admin deletes customer → only `customers` record deleted
-3. `auth.users` record remains
-4. Re-registration with same email causes session/FK mismatch
 
 **Solution:** When deleting a customer from admin, also delete their Supabase auth user if `user_id` exists.
+- Requires `SUPABASE_SERVICE_ROLE_KEY` for admin operations
 
 ## Completed Features
 
@@ -71,14 +52,14 @@ When admin deletes a customer, only the `customers` table record is removed. The
 
 ### EPIC 7: Customer UX Enhancement (100% Complete)
 
-#### 7.1 Customer Authentication
+#### 7.1 Customer Authentication ✅
 - Google OAuth configured and working
 - Email/password signup (no email verification)
 - Customer login, signup, forgot/reset password pages
-- OAuth callback handler
+- OAuth callback handler with cache prevention
 - Customer dashboard with profile editing
 
-#### 7.2 Multi-Step Registration Form
+#### 7.2 Multi-Step Registration Form ✅
 - Stepper UI component with visual progress
 - Step 1: Personal Info (first name, last name, email, phone, contact preference)
 - Step 2: Delivery Method (pickup, delivered, cod, cop) with visual cards
@@ -86,14 +67,14 @@ When admin deletes a customer, only the `customers` table record is removed. The
 - Step 4: Review & Submit
 - Step-by-step validation before proceeding
 
-#### 7.3 Philippine Address Autocomplete
+#### 7.3 Philippine Address Autocomplete ✅
 - LocationCombobox component for city/barangay search
 - **PSGC GitLab API integration** (1,820 cities/municipalities from official source)
 - Runtime API calls with memory + localStorage caching (7-day duration)
 - Barangays API route (dynamic loading per city)
 - Auto-fill province and region on city selection
 
-#### 7.4 Supabase Keep-Alive
+#### 7.4 Supabase Keep-Alive ✅
 - Health check API endpoint (`/api/health`)
 - Vercel Cron job (weekly ping on Sundays)
 
@@ -158,47 +139,12 @@ When admin deletes a customer, only the `customers` table record is removed. The
 - 007_address_names_and_cop.sql - Address names, COP delivery method
 - 008_email_notifications.sql - Email templates, logs, confirmation tokens, delivery_confirmed_at
 
-## Current Schema
-
-**customers table:**
-- `id`, `first_name`, `last_name`, `email`, `phone`
-- `contact_preference` (email/phone/sms)
-- `delivery_method` (pickup/delivered/cod/cop)
-- `courier` (lbc/jrs/null)
-- `user_id` (FK to auth.users, optional)
-- `profile_street_address`, `profile_barangay`, `profile_city`, `profile_province`, `profile_region`, `profile_postal_code` (all optional)
-- `delivery_confirmed_at` (timestamp, null until confirmed)
-- `created_at`, `updated_at`
-
-**addresses table:**
-- `id`, `customer_id` (FK)
-- `first_name`, `last_name` (recipient name)
-- `label`, `street_address`, `barangay`, `city`, `province`, `region`, `postal_code`
-- `is_default`
-- `created_at`, `updated_at`
-
-**couriers table:**
-- `id`, `name`, `code`, `is_active`
-- `created_at`, `updated_at`
-
-**email_templates table:**
-- `id`, `name`, `display_name`, `subject`, `body`, `variables`, `is_active`
-- `created_at`, `updated_at`
-
-**email_logs table:**
-- `id`, `template_id`, `customer_id`, `recipient_email`, `recipient_name`
-- `subject`, `body`, `status` (pending/scheduled/sent/failed)
-- `scheduled_for`, `sent_at`, `error_message`
-- `created_at`
-
-**confirmation_tokens table:**
-- `id`, `customer_id`, `token`, `expires_at`, `used_at`
-- `created_at`
-
 ## Key Files
 
 | Feature | File |
 |---------|------|
+| OAuth Callback | `src/app/auth/callback/route.ts` |
+| Supabase Middleware | `src/lib/supabase/middleware.ts` |
 | Types & Interfaces | `src/lib/types/index.ts` |
 | Validation Schemas | `src/lib/validations/customer.ts`, `src/lib/validations/email.ts` |
 | PSGC API Client | `src/lib/services/psgc.ts` |
@@ -210,7 +156,6 @@ When admin deletes a customer, only the `customers` table record is removed. The
 | Email Logs UI | `src/components/admin/email-log-list.tsx` |
 | Send Email Dialog | `src/components/admin/send-email-dialog.tsx` |
 | Confirmation Page | `src/app/confirm/[token]/page.tsx` |
-| Customer Delete API | `src/app/api/customers/[id]/route.ts` |
 
 ## Environment Variables (Vercel)
 
@@ -226,7 +171,10 @@ When admin deletes a customer, only the `customers` table record is removed. The
 ## Git State
 
 - **Current Branch:** `main`
-- **Latest Commits:** Bug fixes and error handling improvements
+- **Latest Commits:**
+  - `fee1f31` - fix(auth): Prevent caching of OAuth callback route
+  - `0e9edcd` - fix(auth): Redirect OAuth code from root to callback handler
+  - `e3456a2` - fix(auth): Revert to original working Google OAuth setup
 - **Tags:** `epic-1-complete` through `epic-9-complete` ✅
 
 ## Test Status
@@ -250,3 +198,4 @@ When admin deletes a customer, only the `customers` table record is removed. The
 - Additional email providers (SendGrid, Mailgun fallback)
 - Email open/click tracking
 - Customer notification preferences
+- Timezone-based status reset (see `docs/post-mvp-features/EPIC-10-timezone-and-status-reset.md`)
