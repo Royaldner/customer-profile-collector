@@ -1,5 +1,49 @@
 # Change Logs
 
+## [2026-01-20] - Delivery Status Enhancement
+
+### Summary
+Enhanced delivery status from two-state (Pending/Ready) to three-state (Pending/Ready/Delivered) with full audit trail via delivery logs.
+
+### Changes
+
+#### Database (Migration 009)
+- Added `delivered_at` column to customers table
+- Created `delivery_logs` table for tracking all status changes
+- Created `delivery_action` enum: `confirmed`, `delivered`, `reset`
+- Added RLS policies for delivery logs
+
+#### API Updates
+- `POST /api/customers/[id]/mark-delivered` - Now sets `delivered_at` timestamp instead of resetting to pending
+- `POST /api/customers/[id]/reset-status` - Clears both `delivery_confirmed_at` and `delivered_at`
+- `POST /api/admin/bulk-mark-delivered` - Bulk sets `delivered_at` timestamp
+- `POST /api/admin/bulk-reset-status` - Bulk clears both status fields
+- All endpoints create entries in `delivery_logs` table
+
+#### UI Updates
+- Three-state status badges: Pending (gray) → Ready (blue) → Delivered (green)
+- "Mark as Delivered" button visible when status is "Ready to Ship"
+- "Reset to Pending" button visible when status is "Ready" or "Delivered"
+- Added "Delivery History" card to customer detail page showing all status changes with timestamps
+
+### Files Created
+- `supabase/migrations/009_delivery_status_logs.sql`
+
+### Files Modified
+- `src/lib/types/index.ts` - Added `DeliveryAction`, `DeliveryLog` types
+- `src/app/api/customers/[id]/mark-delivered/route.ts`
+- `src/app/api/customers/[id]/reset-status/route.ts`
+- `src/app/api/admin/bulk-mark-delivered/route.ts`
+- `src/app/api/admin/bulk-reset-status/route.ts`
+- `src/components/admin/customer-list.tsx` - Three-state badges
+- `src/components/admin/status-action-buttons.tsx` - Updated button visibility logic
+- `src/app/admin/customers/[id]/page.tsx` - Added delivery history display
+
+### Test Results
+- Build passes
+
+---
+
 ## [2026-01-19] - EPIC 10: Timezone & Status Reset
 
 ### Summary

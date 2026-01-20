@@ -21,7 +21,7 @@
 
 ## Non-Goals (Out of Scope)
 
-- Delivery history tracking (not storing when each delivery happened)
+- ~~Delivery history tracking (not storing when each delivery happened)~~ → **ADDED in enhancement (2026-01-20)**
 - Automatic courier API integration for delivery tracking
 - User-configurable timezone selection
 
@@ -259,6 +259,29 @@ export function formatDate(dateString: string, includeTime = false) {
 
 ## Open Questions
 
-- [x] ~~Should we track delivery history?~~ → No, just reset status
+- [x] ~~Should we track delivery history?~~ → Initially no, **later added via enhancement (2026-01-20)**
 - [x] ~~Manual or automatic reset?~~ → Manual only
 - [x] ~~User's timezone?~~ → Montreal, Quebec (America/Toronto)
+
+---
+
+## Enhancement: Delivery Status Logs (2026-01-20)
+
+After initial implementation, added:
+
+### Database Changes
+- Added `delivered_at` column to customers table
+- Created `delivery_logs` table with `delivery_action` enum (`confirmed`, `delivered`, `reset`)
+- Migration: `009_delivery_status_logs.sql`
+
+### Three-State Status
+| Status | Badge | Condition |
+|--------|-------|-----------|
+| Pending | Gray | `delivery_confirmed_at = NULL` |
+| Ready to Ship | Blue | `delivery_confirmed_at != NULL` AND `delivered_at = NULL` |
+| Delivered | Green | `delivered_at != NULL` |
+
+### Delivery History
+- All status changes logged with timestamps
+- Viewable in customer detail page under "Delivery History" card
+- Actions tracked: Confirmed Ready to Ship, Marked as Delivered, Reset to Pending

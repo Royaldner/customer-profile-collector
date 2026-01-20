@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-19
+**Last Updated:** 2026-01-20
 
 ## Overview
 
@@ -10,8 +10,8 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Current State
 
-**Branch:** `feature/timezone-and-status-reset`
-**Status:** EPIC 10 implemented, pending merge
+**Branch:** `main`
+**Status:** All features complete, delivery status enhancement merged
 
 ### Recent Fix: Google OAuth (2026-01-19)
 
@@ -85,17 +85,29 @@ When admin deletes a customer, only the `customers` table record is removed. The
 - Uses `en-CA` locale format
 - Shared `formatDate()` utility in `src/lib/utils.ts`
 
-#### 10.2 Single Customer Status Reset ✅
-- "Reset to Pending" button on customer detail page
-- "Mark as Delivered" button on customer detail page
-- Buttons only visible when status is "Ready to Ship"
+#### 10.2 Three-State Delivery Status ✅
+- **Pending** (gray) - Customer has not confirmed delivery address
+- **Ready to Ship** (blue) - Customer confirmed, awaiting delivery
+- **Delivered** (green) - Order has been delivered
+- Status tracked via `delivery_confirmed_at` and `delivered_at` columns
+
+#### 10.3 Single Customer Status Actions ✅
+- "Reset to Pending" button on customer detail page (visible for Ready/Delivered)
+- "Mark as Delivered" button on customer detail page (visible for Ready only)
 - Confirmation dialogs before action
 
-#### 10.3 Bulk Status Operations ✅
+#### 10.4 Bulk Status Operations ✅
 - Bulk "Reset to Pending" from customer list
 - Bulk "Mark as Delivered" from customer list
 - Uses existing checkbox selection pattern
 - Confirmation dialogs with customer count
+
+#### 10.5 Delivery Logs ✅
+- `delivery_logs` table tracks all status changes
+- Actions: `confirmed`, `delivered`, `reset`
+- Optional notes field for each action
+- "Delivery History" section on customer detail page
+- Timestamps for each status change
 
 ### EPIC 8: Customer Profile Enhancements (100% Complete)
 
@@ -148,7 +160,7 @@ When admin deletes a customer, only the `customers` table record is removed. The
 
 ## Database State
 
-**All Migrations Applied (001-008):**
+**Migrations (001-009):**
 - 001_create_tables.sql - Base schema
 - 002_enable_rls.sql - RLS policies
 - 003_add_customer_fields.sql - Added `user_id` and `delivery_method`
@@ -157,6 +169,7 @@ When admin deletes a customer, only the `customers` table record is removed. The
 - 006_split_name_and_profile_address.sql - Split name, profile address columns
 - 007_address_names_and_cop.sql - Address names, COP delivery method
 - 008_email_notifications.sql - Email templates, logs, confirmation tokens, delivery_confirmed_at
+- 009_delivery_status_logs.sql - `delivered_at` column, `delivery_logs` table ⚠️ **PENDING**
 
 ## Key Files
 
@@ -191,10 +204,10 @@ When admin deletes a customer, only the `customers` table record is removed. The
 
 - **Current Branch:** `main`
 - **Latest Commits:**
-  - `fee1f31` - fix(auth): Prevent caching of OAuth callback route
-  - `0e9edcd` - fix(auth): Redirect OAuth code from root to callback handler
-  - `e3456a2` - fix(auth): Revert to original working Google OAuth setup
-- **Tags:** `epic-1-complete` through `epic-9-complete` ✅
+  - `5756e7e` - feat(admin): Add three-state delivery status and delivery logs (#7)
+  - `acae505` - feat(admin): EPIC 10 - Timezone and Status Reset (#6)
+  - `58e5cb5` - docs: Update change_logs and project_status for Google OAuth fix
+- **Tags:** `epic-1-complete` through `epic-10-complete` ✅
 
 ## Test Status
 
