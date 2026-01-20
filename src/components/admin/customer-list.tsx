@@ -26,7 +26,7 @@ import { SendEmailDialog } from './send-email-dialog'
 import { BulkStatusDialog } from './bulk-status-dialog'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mail, Check, Clock } from 'lucide-react'
+import { Mail, Check, Clock, PackageCheck } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 interface CustomerListProps {
@@ -69,18 +69,28 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
     return customer.addresses.find((a) => a.is_default) || customer.addresses[0]
   }
 
-  const getReadyToShipStatus = (customer: Customer) => {
+  const getDeliveryStatus = (customer: Customer) => {
+    if (customer.delivered_at) {
+      return {
+        label: 'Delivered',
+        variant: 'outline' as const,
+        icon: <PackageCheck className="h-3 w-3 mr-1" />,
+        className: 'border-green-600 text-green-600',
+      }
+    }
     if (customer.delivery_confirmed_at) {
       return {
         label: 'Ready',
         variant: 'default' as const,
         icon: <Check className="h-3 w-3 mr-1" />,
+        className: '',
       }
     }
     return {
       label: 'Pending',
       variant: 'secondary' as const,
       icon: <Clock className="h-3 w-3 mr-1" />,
+      className: '',
     }
   }
 
@@ -203,7 +213,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
               <div className="space-y-4 md:hidden">
                 {filteredCustomers.map((customer) => {
                   const defaultAddress = getDefaultAddress(customer)
-                  const readyStatus = getReadyToShipStatus(customer)
+                  const readyStatus = getDeliveryStatus(customer)
                   return (
                     <div key={customer.id} className="rounded-lg border p-4 space-y-3">
                       <div className="flex items-start gap-3">
@@ -221,7 +231,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                                 {customer.email}
                               </p>
                             </div>
-                            <Badge variant={readyStatus.variant} className="shrink-0">
+                            <Badge variant={readyStatus.variant} className={`shrink-0 ${readyStatus.className}`}>
                               {readyStatus.icon}
                               {readyStatus.label}
                             </Badge>
@@ -282,7 +292,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                   <TableBody>
                     {filteredCustomers.map((customer) => {
                       const defaultAddress = getDefaultAddress(customer)
-                      const readyStatus = getReadyToShipStatus(customer)
+                      const readyStatus = getDeliveryStatus(customer)
                       return (
                         <TableRow
                           key={customer.id}
@@ -300,7 +310,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                           <TableCell>{customer.email}</TableCell>
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell>
-                            <Badge variant={readyStatus.variant}>
+                            <Badge variant={readyStatus.variant} className={readyStatus.className}>
                               {readyStatus.icon}
                               {readyStatus.label}
                             </Badge>

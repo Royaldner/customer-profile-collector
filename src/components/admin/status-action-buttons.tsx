@@ -20,9 +20,10 @@ import { toast } from 'sonner'
 interface StatusActionButtonsProps {
   customerId: string
   isReadyToShip: boolean
+  isDelivered: boolean
 }
 
-export function StatusActionButtons({ customerId, isReadyToShip }: StatusActionButtonsProps) {
+export function StatusActionButtons({ customerId, isReadyToShip, isDelivered }: StatusActionButtonsProps) {
   const router = useRouter()
   const [isResetting, setIsResetting] = useState(false)
   const [isMarkingDelivered, setIsMarkingDelivered] = useState(false)
@@ -60,7 +61,7 @@ export function StatusActionButtons({ customerId, isReadyToShip }: StatusActionB
         throw new Error(error.message || 'Failed to mark as delivered')
       }
 
-      toast.success('Marked as delivered, status reset to Pending')
+      toast.success('Customer marked as Delivered')
       router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to mark as delivered')
@@ -69,13 +70,14 @@ export function StatusActionButtons({ customerId, isReadyToShip }: StatusActionB
     }
   }
 
-  // Only show buttons when status is Ready to Ship
-  if (!isReadyToShip) {
+  // Show nothing when status is Pending
+  if (!isReadyToShip && !isDelivered) {
     return null
   }
 
   return (
     <>
+      {/* Reset to Pending - show for Ready to Ship or Delivered */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button variant="outline" size="sm" disabled={isResetting}>
@@ -87,8 +89,10 @@ export function StatusActionButtons({ customerId, isReadyToShip }: StatusActionB
           <AlertDialogHeader>
             <AlertDialogTitle>Reset Status to Pending?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will reset the customer&apos;s status from &quot;Ready to Ship&quot; back to
-              &quot;Pending&quot;. The customer will need to confirm their delivery address again.
+              This will reset the customer&apos;s status back to &quot;Pending&quot;.
+              {isDelivered
+                ? ' The customer will need to confirm their delivery address for the next order.'
+                : ' The customer will need to confirm their delivery address again.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -100,29 +104,32 @@ export function StatusActionButtons({ customerId, isReadyToShip }: StatusActionB
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="outline" size="sm" disabled={isMarkingDelivered}>
-            <PackageCheck className="mr-2 h-4 w-4" />
-            {isMarkingDelivered ? 'Processing...' : 'Mark as Delivered'}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Mark as Delivered?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will mark the order as delivered and reset the status to &quot;Pending&quot; for
-              the next order cycle. Use this after the customer has received their order.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkDelivered} disabled={isMarkingDelivered}>
+      {/* Mark as Delivered - only show for Ready to Ship */}
+      {isReadyToShip && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" size="sm" disabled={isMarkingDelivered}>
+              <PackageCheck className="mr-2 h-4 w-4" />
               {isMarkingDelivered ? 'Processing...' : 'Mark as Delivered'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mark as Delivered?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will mark the order as &quot;Delivered&quot;. Use this after the customer
+                has received their order.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleMarkDelivered} disabled={isMarkingDelivered}>
+                {isMarkingDelivered ? 'Processing...' : 'Mark as Delivered'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   )
 }

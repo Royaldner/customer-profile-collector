@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { Customer, Courier } from '@/lib/types'
+import { Customer, Courier, DeliveryLog } from '@/lib/types'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Pencil, Check, Clock } from 'lucide-react'
+import { Pencil, Check, Clock, PackageCheck } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -60,9 +60,29 @@ async function getCouriers(): Promise<Courier[]> {
   return couriers || []
 }
 
+async function getDeliveryLogs(customerId: string): Promise<DeliveryLog[]> {
+  const supabase = await createClient()
+  const { data: logs } = await supabase
+    .from('delivery_logs')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false })
+  return logs || []
+}
+
+const deliveryActionLabels = {
+  confirmed: 'Confirmed Ready to Ship',
+  delivered: 'Marked as Delivered',
+  reset: 'Reset to Pending',
+}
+
 export default async function CustomerDetailPage({ params }: CustomerDetailPageProps) {
   const { id } = await params
-  const [customer, couriers] = await Promise.all([getCustomer(id), getCouriers()])
+  const [customer, couriers, deliveryLogs] = await Promise.all([
+    getCustomer(id),
+    getCouriers(),
+    getDeliveryLogs(id)
+  ])
 
   if (!customer) {
     notFound()
@@ -73,7 +93,35 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
     ? couriers.find((c) => c.code === customer.courier)?.name || customer.courier.toUpperCase()
     : null
 
-  const isReadyToShip = !!customer.delivery_confirmed_at
+  // Determine delivery status
+  const isDelivered = !!customer.delivered_at
+  const isReadyToShip = !!customer.delivery_confirmed_at && !isDelivered
+  const isPending = !customer.delivery_confirmed_at
+
+  const getStatusBadge = () => {
+    if (isDelivered) {
+      return (
+        <Badge variant="outline" className="border-green-600 text-green-600">
+          <PackageCheck className="mr-1 h-3 w-3" />
+          Delivered
+        </Badge>
+      )
+    }
+    if (isReadyToShip) {
+      return (
+        <Badge variant="default">
+          <Check className="mr-1 h-3 w-3" />
+          Ready to Ship
+        </Badge>
+      )
+    }
+    return (
+      <Badge variant="secondary">
+        <Clock className="mr-1 h-3 w-3" />
+        Pending
+      </Badge>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,19 +131,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-primary">Customer Details</h1>
-                <Badge variant={isReadyToShip ? 'default' : 'secondary'}>
-                  {isReadyToShip ? (
-                    <>
-                      <Check className="mr-1 h-3 w-3" />
-                      Ready to Ship
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="mr-1 h-3 w-3" />
-                      Pending
-                    </>
-                  )}
-                </Badge>
+                {getStatusBadge()}
               </div>
               <p className="text-sm text-muted-foreground">{customer.first_name} {customer.last_name}</p>
             </div>
@@ -103,7 +139,11 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">Back to List</Link>
               </Button>
-              <StatusActionButtons customerId={id} isReadyToShip={isReadyToShip} />
+              <StatusActionButtons
+                customerId={id}
+                isReadyToShip={isReadyToShip}
+                isDelivered={isDelivered}
+              />
               <SendSingleEmailButton customer={customer} />
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/admin/customers/${id}/edit`}>
@@ -273,6 +313,39 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               </CardContent>
             </Card>
           )}
+
+          {/* Delivery Logs Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Delivery History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {deliveryLogs.length > 0 ? (
+                <div className="space-y-3">
+                  {deliveryLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start justify-between border-b pb-3 last:border-0 last:pb-0"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {deliveryActionLabels[log.action]}
+                        </p>
+                        {log.notes && (
+                          <p className="text-sm text-muted-foreground">{log.notes}</p>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(log.created_at, true)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No delivery history yet.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

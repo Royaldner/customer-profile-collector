@@ -20,13 +20,21 @@ export async function POST(
     return NextResponse.json({ message: 'Customer ID is required' }, { status: 400 })
   }
 
+  // Parse optional notes from request body
+  let notes: string | undefined
+  try {
+    const body = await request.json()
+    notes = body.notes
+  } catch {
+    // No body or invalid JSON is fine
+  }
+
   const supabase = await createClient()
 
-  // Mark as delivered by resetting delivery_confirmed_at to NULL
-  // (Ready for next order cycle)
+  // Mark as delivered by setting delivered_at timestamp
   const { data: customer, error } = await supabase
     .from('customers')
-    .update({ delivery_confirmed_at: null })
+    .update({ delivered_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
@@ -43,8 +51,22 @@ export async function POST(
     return NextResponse.json({ message: 'Customer not found' }, { status: 404 })
   }
 
+  // Create delivery log entry
+  const { error: logError } = await supabase
+    .from('delivery_logs')
+    .insert({
+      customer_id: id,
+      action: 'delivered',
+      notes,
+    })
+
+  if (logError) {
+    console.error('Error creating delivery log:', logError)
+    // Don't fail the request, just log the error
+  }
+
   return NextResponse.json({
-    message: 'Customer marked as delivered, status reset to Pending',
+    message: 'Customer marked as Delivered',
     customer,
   })
 }

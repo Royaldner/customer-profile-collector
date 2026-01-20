@@ -20,12 +20,24 @@ export async function POST(
     return NextResponse.json({ message: 'Customer ID is required' }, { status: 400 })
   }
 
+  // Parse optional notes from request body
+  let notes: string | undefined
+  try {
+    const body = await request.json()
+    notes = body.notes
+  } catch {
+    // No body or invalid JSON is fine
+  }
+
   const supabase = await createClient()
 
-  // Reset delivery_confirmed_at to NULL
+  // Reset both delivery_confirmed_at and delivered_at to NULL
   const { data: customer, error } = await supabase
     .from('customers')
-    .update({ delivery_confirmed_at: null })
+    .update({
+      delivery_confirmed_at: null,
+      delivered_at: null
+    })
     .eq('id', id)
     .select()
     .single()
@@ -40,6 +52,20 @@ export async function POST(
 
   if (!customer) {
     return NextResponse.json({ message: 'Customer not found' }, { status: 404 })
+  }
+
+  // Create delivery log entry
+  const { error: logError } = await supabase
+    .from('delivery_logs')
+    .insert({
+      customer_id: id,
+      action: 'reset',
+      notes,
+    })
+
+  if (logError) {
+    console.error('Error creating delivery log:', logError)
+    // Don't fail the request, just log the error
   }
 
   return NextResponse.json({

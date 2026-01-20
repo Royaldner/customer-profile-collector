@@ -7,6 +7,8 @@ export type ContactPreference = 'email' | 'phone' | 'sms'
 
 export type DeliveryMethod = 'pickup' | 'delivered' | 'cod' | 'cop'
 
+export type DeliveryAction = 'confirmed' | 'delivered' | 'reset'
+
 export interface Courier {
   id: string
   code: string
@@ -35,9 +37,11 @@ export interface Customer {
   profile_postal_code?: string
   // Delivery confirmation
   delivery_confirmed_at?: string
+  delivered_at?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
+  delivery_logs?: DeliveryLog[]
 }
 
 export interface Address {
@@ -160,4 +164,22 @@ export interface SendEmailInput {
   customer_ids: string[]
   template_id: string
   scheduled_for?: string
+}
+
+// ============================================
+// DELIVERY LOG TYPES
+// ============================================
+
+export interface DeliveryLog {
+  id: string
+  customer_id: string
+  action: DeliveryAction
+  notes?: string
+  created_at: string
+}
+
+export interface DeliveryLogInput {
+  customer_id: string
+  action: DeliveryAction
+  notes?: string
 }
