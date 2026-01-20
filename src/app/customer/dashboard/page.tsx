@@ -50,6 +50,7 @@ import { LocationCombobox } from '@/components/ui/location-combobox'
 import { usePSGCLocations, locationToComboboxOption, barangayToComboboxOption } from '@/hooks/use-psgc-locations'
 import { getBarangays } from '@/lib/services/psgc'
 import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
+import { CustomerOrdersSection } from '@/components/orders/customer-orders-section'
 
 export default function CustomerDashboardPage() {
   const router = useRouter()
@@ -1107,6 +1108,9 @@ export default function CustomerDashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* My Orders Section */}
+        <CustomerOrdersSection />
       </div>
 
       {/* Address Dialog */}
