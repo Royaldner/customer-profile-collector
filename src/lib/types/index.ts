@@ -38,6 +38,8 @@ export interface Customer {
   // Delivery confirmation
   delivery_confirmed_at?: string
   delivered_at?: string
+  // Zoho Books integration
+  zoho_contact_id?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
