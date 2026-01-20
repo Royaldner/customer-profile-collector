@@ -1,5 +1,59 @@
 # Change Logs
 
+## [2026-01-20] - Infrastructure Updates
+
+### Summary
+Applied pending migration and resolved known issue.
+
+### Changes
+- ✅ **Migration 009 Applied** - `delivery_status_logs.sql` now live in Supabase
+  - `delivered_at` column on customers table
+  - `delivery_logs` table for audit trail
+- ✅ **Auth User Deletion Fixed** - Admin delete now properly removes linked Supabase auth user
+
+### Notes
+- Three-state delivery status fully operational
+- No more FK violations when re-registering with previously deleted email
+
+---
+
+## [2026-01-20] - EPIC 11: Zoho Books Integration - Planning
+
+### Summary
+Planned and documented EPIC 11 feature for integrating Zoho Books to display customer orders/invoices in the application. This enables customers to view their order history and payment status directly in their dashboard, and admins to see customer orders when viewing profiles.
+
+### Planning Completed
+- Discussed integration approach and OAuth 2.0 flow
+- Confirmed Zoho Books free tier API limits (1,000 calls/day) are sufficient
+- Created comprehensive feature specification
+- Set up Zoho API credentials in `.env.local`
+
+### Feature Overview
+- **Customer Dashboard**: View own invoices (Recent + Completed tabs)
+- **Admin Customer Detail**: View any customer's invoices
+- **Customer Linking**: Admin links app customers to Zoho Books contacts
+- **Caching**: 10-min memory + 1-hour database cache to minimize API calls
+
+### Files Created
+- `docs/post-mvp-features/EPIC-11-zoho-books-integration.md` - Feature specification
+
+### Files Modified
+- `.env.local` - Added Zoho API credentials (ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI)
+
+### Next Steps
+1. Create database migration (010_zoho_integration.sql)
+2. Build OAuth callback route
+3. Create Zoho Books API service
+4. Implement customer linking UI
+5. Build orders display components
+
+### Notes
+- Zoho region: Canada (uses `.com` API domain)
+- Read-only integration (no writes to Zoho in MVP)
+- Payment processing deferred to future feature
+
+---
+
 ## [2026-01-20] - Delivery Status Enhancement
 
 ### Summary
