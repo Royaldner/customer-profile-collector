@@ -4,16 +4,16 @@
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-10 implemented and deployed to production. EPIC 11 (Zoho Books Integration) in planning.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-11 implemented. EPIC 11 pending deployment.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `main`
-**Status:** EPIC 11 planning complete, ready for implementation
+**Branch:** `feature/zoho-books-integration`
+**Status:** EPIC 11 implementation complete, pending PR merge and deployment
 
-### In Progress: EPIC 11 - Zoho Books Integration
+### EPIC 11 - Zoho Books Integration (Implementation Complete)
 
 **Feature Spec:** `docs/post-mvp-features/EPIC-11-zoho-books-integration.md`
 
@@ -21,18 +21,17 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - Customer dashboard (self-service order tracking)
 - Admin customer detail page (full customer context)
 
-**Planning Complete:**
-- [x] OAuth 2.0 flow documented
-- [x] API limits confirmed (1,000 calls/day free tier - sufficient)
-- [x] Feature spec created
-- [x] Zoho API credentials configured in `.env.local`
+**Implementation Complete:**
+- [x] Phase 1: Foundation - Database migration, OAuth callback, Zoho service
+- [x] Phase 2: Customer Linking - Admin UI to link customers to Zoho contacts
+- [x] Phase 3: Admin Orders View - Display invoices in admin customer detail
+- [x] Phase 4: Customer Orders View - Display invoices in customer dashboard
+- [x] Phase 5: Documentation and PR
 
-**Implementation Phases:**
-1. Foundation - Database migration, OAuth callback, Zoho service
-2. Customer Linking - Admin UI to link customers to Zoho contacts
-3. Admin Orders View - Display invoices in admin customer detail
-4. Customer Orders View - Display invoices in customer dashboard
-5. Polish - Testing, error handling, documentation
+**Deployment Steps (After PR Merge):**
+1. Run migration `010_zoho_integration.sql` in Supabase SQL Editor
+2. Add environment variables to Vercel (ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI)
+3. Complete OAuth flow to connect Zoho Books
 
 ## Completed Features
 
@@ -73,7 +72,7 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Database State
 
-**Migrations (001-009):**
+**Migrations (001-010):**
 - 001_create_tables.sql - Base schema
 - 002_enable_rls.sql - RLS policies
 - 003_add_customer_fields.sql - `user_id` and `delivery_method`
@@ -83,8 +82,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - 007_address_names_and_cop.sql - Address names, COP delivery method
 - 008_email_notifications.sql - Email templates, logs, tokens
 - 009_delivery_status_logs.sql - `delivered_at`, `delivery_logs` table ✅
+- 010_zoho_integration.sql - `zoho_contact_id`, `zoho_tokens`, `zoho_cache` (pending)
 
-**Next Migration:** 010_zoho_integration.sql (EPIC 11)
+**Next Migration:** Apply 010_zoho_integration.sql after PR merge
 
 ## Environment Variables
 
@@ -111,12 +111,14 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Git State
 
-- **Current Branch:** `main`
-- **Latest Commits:**
-  - `a49da7d` - docs: Update documentation for delivery status enhancement
-  - `5756e7e` - feat(admin): Add three-state delivery status and delivery logs (#7)
-  - `acae505` - feat(admin): EPIC 10 - Timezone and Status Reset (#6)
-- **Tags:** `epic-1-complete` through `epic-10-complete` ✅
+- **Current Branch:** `feature/zoho-books-integration`
+- **Latest Commits (on feature branch):**
+  - `dc0d465` - feat(zoho): add Phase 4 customer orders display in dashboard
+  - `c8b55aa` - feat(zoho): add Phase 3 admin orders display from Zoho Books
+  - `c28e643` - feat(zoho): add Phase 2 customer linking to Zoho Books
+  - `9a498f5` - feat(zoho): add Phase 1 foundation for Zoho Books integration
+  - `f0c572a` - docs(zoho): add EPIC 11 Zoho Books integration planning
+- **Tags:** `epic-1-complete` through `epic-10-complete` ✅ (epic-11-complete pending)
 
 ## Test Status
 
@@ -144,12 +146,13 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Next Steps
 
-1. **Start EPIC 11 Phase 1** - Database migration and OAuth flow
-2. **EPIC 11 Phase 2** - Customer linking UI
-3. **EPIC 11 Phase 3-4** - Orders display in admin and customer views
+1. **Merge EPIC 11 PR** - Review and merge to main
+2. **Apply Migration 010** - Run in Supabase SQL Editor
+3. **Add Zoho Env Vars to Vercel** - ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI
+4. **Complete OAuth Flow** - Connect to Zoho Books via admin
+5. **Tag epic-11-complete** - After successful deployment
 
 ## Future Enhancements
 
-- **EPIC 11:** Zoho Books Integration (in progress)
 - **EPIC 12:** Payment processing (PayMongo integration)
 - **EPIC 13:** Product catalog and order creation
