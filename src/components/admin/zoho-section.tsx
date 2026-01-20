@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ZohoLinkDialog } from './zoho-link-dialog'
+import { OrdersDisplay } from '@/components/orders/orders-display'
 import { toast } from 'sonner'
 import { Link as LinkIcon, Unlink, Loader2, ExternalLink } from 'lucide-react'
 
@@ -210,6 +211,15 @@ export function ZohoSection({
           )}
         </CardContent>
       </Card>
+
+      {/* Orders Display - only show when linked */}
+      {zohoContactId && (
+        <OrdersDisplay
+          customerId={customerId}
+          zohoContactId={zohoContactId}
+          apiBasePath="/api/admin/customers/[id]/orders"
+        />
+      )}
 
       <ZohoLinkDialog
         open={linkDialogOpen}
