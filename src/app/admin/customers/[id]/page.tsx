@@ -12,6 +12,7 @@ import { DeleteCustomerDialog } from '@/components/admin/delete-customer-dialog'
 import { SetDefaultAddressButton } from '@/components/admin/set-default-address-button'
 import { SendSingleEmailButton } from '@/components/admin/send-single-email-button'
 import { StatusActionButtons } from '@/components/admin/status-action-buttons'
+import { ZohoSection } from '@/components/admin/zoho-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -313,6 +314,14 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               </CardContent>
             </Card>
           )}
+
+          {/* Zoho Books Section */}
+          <ZohoSection
+            customerId={id}
+            customerName={`${customer.first_name} ${customer.last_name}`}
+            customerEmail={customer.email}
+            zohoContactId={customer.zoho_contact_id || null}
+          />
 
           {/* Delivery Logs Card */}
           <Card className="md:col-span-2">
