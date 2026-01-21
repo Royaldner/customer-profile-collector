@@ -39,14 +39,19 @@ export function OrderCard({ order }: OrderCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Line items */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {(order.items || []).map((item, index) => (
-            <div key={index} className="flex items-center justify-between text-sm">
-              <div className="flex-1">
-                <span>{item.name}</span>
-                <span className="text-muted-foreground"> x{item.quantity}</span>
+            <div key={index} className="text-sm">
+              <div className="flex items-start justify-between">
+                <span className="font-medium flex-1">{item.name}</span>
+                <span className="font-medium">{formatCurrency(item.total)}</span>
               </div>
-              <span>{formatCurrency(item.total)}</span>
+              {item.description && (
+                <p className="text-muted-foreground text-xs mt-0.5">{item.description}</p>
+              )}
+              <div className="text-muted-foreground text-xs mt-0.5">
+                {item.quantity}{item.unit ? ` ${item.unit}` : ''} × {formatCurrency(item.rate)}
+              </div>
             </div>
           ))}
         </div>

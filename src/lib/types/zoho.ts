@@ -148,7 +148,9 @@ export interface OrderDisplay {
   statusLabel: string
   items: {
     name: string
+    description?: string
     quantity: number
+    unit?: string
     rate: number
     total: number
   }[]
@@ -172,7 +174,9 @@ export function transformInvoiceToOrder(invoice: ZohoInvoice): OrderDisplay {
     statusLabel: getStatusLabel(invoice.status),
     items: lineItems.map((item) => ({
       name: item.name,
+      description: item.description,
       quantity: item.quantity,
+      unit: item.unit,
       rate: item.rate,
       total: item.item_total,
     })),
