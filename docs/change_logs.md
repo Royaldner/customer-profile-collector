@@ -1,5 +1,98 @@
 # Change Logs
 
+## [2026-01-21] - Zoho Orders Display Enhancement
+
+### Summary
+Enhanced order line items display to show description, unit, and rate information from Zoho Books invoices.
+
+### Changes
+
+#### Line Item Display Enhancement
+- Added `description` field to show item/product descriptions
+- Added `unit` field to show unit of measurement (e.g., "pcs", "kg")
+- Now displays rate (unit price) with quantity breakdown
+- New format: `Name` → `Description` → `2 pcs × ₱100.00` → `₱200.00`
+
+#### Full Invoice Details Fetch
+- **Issue:** Zoho Books list endpoint (`/invoices`) doesn't return `description` and `unit` in line items
+- **Fix:** Created `getInvoicesWithDetails()` that fetches full invoice details for each invoice
+- Fetches list first (for filtering), then enriches with detail endpoint data
+- Results are cached (10-min memory, 1-hour DB) to minimize API calls
+
+### Files Modified
+- `src/lib/types/zoho.ts` - Added `description` and `unit` to `OrderDisplay.items`
+- `src/lib/services/zoho-books.ts` - Added `getInvoicesWithDetails()` function
+- `src/components/orders/order-card.tsx` - Updated display layout for line items
+- `src/app/api/customer/orders/route.ts` - Uses `getInvoicesWithDetails`
+- `src/app/api/admin/customers/[id]/orders/route.ts` - Uses `getInvoicesWithDetails`
+
+### Commits
+- `991f470` - feat(zoho): add description, unit, and rate to order line items
+- `8198f53` - fix(zoho): fetch full invoice details for line item data
+
+---
+
+## [2026-01-21] - EPIC 11: Zoho Books Integration - Production Debugging
+
+### Summary
+Debugged and fixed multiple issues discovered after deploying EPIC 11 (Zoho Books integration) to production. All issues have been resolved and logged to the debug knowledge base.
+
+### Issues Resolved
+
+#### 1. Zoho OAuth "invalid client" Error
+- **Root Cause:** API client was created in Zoho API Console under a different Zoho account than the one with Zoho Books access
+- **Fix:** Create API client under the SAME Zoho account that owns the Zoho Books organization
+- **Prevention:** Document in setup instructions that the API client must be created under the same account
+
+#### 2. Contact Search Returns Same 25 Results Regardless of Query
+- **Root Cause:** Aggressive caching (10-min memory + 1-hr DB) and generic `search_text` parameter
+- **Fix:**
+  - Removed caching from `searchContacts` function
+  - Changed from `search_text` to `contact_name_contains` parameter
+  - Added Cache-Control headers to prevent browser caching
+
+#### 3. Invoice Status Error (400 - "Invalid value passed for status")
+- **Root Cause:** Zoho Books API doesn't accept comma-separated status values
+- **Fix:** Removed status parameter from API call, filter client-side based on `INVOICE_FILTER_STATUSES` mapping
+
+#### 4. Multiple "Cannot read properties of undefined" Errors
+- **Root Cause:** Zoho Books list endpoints return minimal data - invoices don't include `line_items` array, and numeric fields may be undefined
+- **Fixes Applied:**
+  - `result.invoices || []` in API routes
+  - `data.invoices || []` in getInvoices service
+  - `invoice.line_items || []` in transformInvoiceToOrder
+  - `amount ?? 0` in formatCurrency function
+  - `(order.balance ?? 0) > 0` in balance comparisons
+  - `(order.items || []).map()` in rendering
+
+### Files Modified
+- `src/lib/services/zoho-books.ts` - Removed search caching, removed status filter, added defensive checks
+- `src/app/api/zoho/contacts/route.ts` - Added Cache-Control headers
+- `src/lib/types/zoho.ts` - Added defensive check for line_items
+- `src/components/orders/order-card.tsx` - Added null coalescing for undefined values
+- `src/app/api/admin/customers/[id]/orders/route.ts` - Added defensive checks
+- `src/app/api/customer/orders/route.ts` - Added defensive checks
+
+### Commits
+- `69da7bc` - docs: update documentation for EPIC 11 Zoho Books integration
+- (debugging fixes committed during session)
+
+### Issue Logs
+All issues have been logged to `~/.claude/issuelogs/index.jsonl` for future reference:
+- Zoho OAuth "invalid client" error (auth issue)
+- Zoho contact search caching (api issue)
+- Zoho invoice status filter (api issue)
+- Multiple undefined property errors (error issue)
+
+### Key Learnings
+1. **Same Account Rule:** Zoho API client must be under the same account as Zoho Books organization
+2. **No Search Caching:** Search endpoints should not be cached - users need real-time results
+3. **Specific Filters:** Use specific filter parameters (`contact_name_contains`) instead of generic search (`search_text`)
+4. **Defensive Coding:** External APIs often return incomplete data - always use defensive checks (`|| []`, `?? 0`, `?.`)
+5. **List vs Detail Endpoints:** Zoho list endpoints return less data than detail endpoints - test with real production data
+
+---
+
 ## [2026-01-20] - EPIC 11: Zoho Books Integration - Implementation
 
 ### Summary

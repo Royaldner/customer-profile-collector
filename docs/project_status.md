@@ -1,19 +1,19 @@
 # Project Status
 
-**Last Updated:** 2026-01-20
+**Last Updated:** 2026-01-21
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-11 implemented. EPIC 11 pending deployment.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-11 implemented and deployed. Zoho Books integration is fully operational.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
 **Branch:** `feature/zoho-books-integration`
-**Status:** EPIC 11 implementation complete, pending PR merge and deployment
+**Status:** EPIC 11 deployed and operational (debugging complete)
 
-### EPIC 11 - Zoho Books Integration (Implementation Complete)
+### EPIC 11 - Zoho Books Integration (✅ DEPLOYED)
 
 **Feature Spec:** `docs/post-mvp-features/EPIC-11-zoho-books-integration.md`
 
@@ -27,11 +27,15 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - [x] Phase 3: Admin Orders View - Display invoices in admin customer detail
 - [x] Phase 4: Customer Orders View - Display invoices in customer dashboard
 - [x] Phase 5: Documentation and PR
+- [x] Phase 6: Production Debugging - Fixed OAuth, search, and display issues
 
-**Deployment Steps (After PR Merge):**
-1. Run migration `010_zoho_integration.sql` in Supabase SQL Editor
-2. Add environment variables to Vercel (ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI)
-3. Complete OAuth flow to connect Zoho Books
+**Post-Deployment Fixes (2026-01-21):**
+- Fixed OAuth "invalid client" error (account mismatch)
+- Fixed contact search caching issues
+- Fixed invoice status filter (Zoho API limitation)
+- Fixed multiple undefined property errors in order display
+- Enhanced order line items to show description, unit, and rate
+- Fixed Zoho list endpoint limitation by fetching full invoice details
 
 ## Completed Features
 
@@ -73,18 +77,18 @@ Customer Profile Collector - A customer profile collection system for a small bu
 ## Database State
 
 **Migrations (001-010):**
-- 001_create_tables.sql - Base schema
-- 002_enable_rls.sql - RLS policies
-- 003_add_customer_fields.sql - `user_id` and `delivery_method`
-- 004_customer_auth_rls.sql - Customer self-access policies
-- 005_add_courier.sql - Couriers table
-- 006_split_name_and_profile_address.sql - Split name, profile address
-- 007_address_names_and_cop.sql - Address names, COP delivery method
-- 008_email_notifications.sql - Email templates, logs, tokens
+- 001_create_tables.sql - Base schema ✅
+- 002_enable_rls.sql - RLS policies ✅
+- 003_add_customer_fields.sql - `user_id` and `delivery_method` ✅
+- 004_customer_auth_rls.sql - Customer self-access policies ✅
+- 005_add_courier.sql - Couriers table ✅
+- 006_split_name_and_profile_address.sql - Split name, profile address ✅
+- 007_address_names_and_cop.sql - Address names, COP delivery method ✅
+- 008_email_notifications.sql - Email templates, logs, tokens ✅
 - 009_delivery_status_logs.sql - `delivered_at`, `delivery_logs` table ✅
-- 010_zoho_integration.sql - `zoho_contact_id`, `zoho_tokens`, `zoho_cache` (pending)
+- 010_zoho_integration.sql - `zoho_contact_id`, `zoho_tokens`, `zoho_cache` ✅
 
-**Next Migration:** Apply 010_zoho_integration.sql after PR merge
+**All migrations applied.** Database is up to date.
 
 ## Environment Variables
 
@@ -99,26 +103,24 @@ Customer Profile Collector - A customer profile collection system for a small bu
 | `ADMIN_PASSWORD` | ✅ Set |
 | `RESEND_API_KEY` | ✅ Set |
 | `NEXT_PUBLIC_APP_URL` | ✅ Set |
+| `ZOHO_CLIENT_ID` | ✅ Set |
+| `ZOHO_CLIENT_SECRET` | ✅ Set |
+| `ZOHO_ORG_ID` | ✅ Set |
+| `ZOHO_REDIRECT_URI` | ✅ Set |
 
-### Needed for EPIC 11 (Local Only - Not Yet in Vercel)
-
-| Variable | Status |
-|----------|--------|
-| `ZOHO_CLIENT_ID` | ✅ Set locally |
-| `ZOHO_CLIENT_SECRET` | ✅ Set locally |
-| `ZOHO_ORG_ID` | ✅ Set locally |
-| `ZOHO_REDIRECT_URI` | ✅ Set locally |
+**All environment variables configured.** Zoho Books integration is operational.
 
 ## Git State
 
-- **Current Branch:** `feature/zoho-books-integration`
-- **Latest Commits (on feature branch):**
-  - `dc0d465` - feat(zoho): add Phase 4 customer orders display in dashboard
-  - `c8b55aa` - feat(zoho): add Phase 3 admin orders display from Zoho Books
-  - `c28e643` - feat(zoho): add Phase 2 customer linking to Zoho Books
-  - `9a498f5` - feat(zoho): add Phase 1 foundation for Zoho Books integration
-  - `f0c572a` - docs(zoho): add EPIC 11 Zoho Books integration planning
-- **Tags:** `epic-1-complete` through `epic-10-complete` ✅ (epic-11-complete pending)
+- **Current Branch:** `main`
+- **Latest Commits:**
+  - `8198f53` - fix(zoho): fetch full invoice details for line item data
+  - `991f470` - feat(zoho): add description, unit, and rate to order line items
+  - `73d161a` - fix(zoho): handle undefined values in order card display
+  - `4aeaa5b` - fix(zoho): handle missing line_items in invoice transform
+  - `58dba30` - fix(zoho): add defensive checks for undefined invoices array
+- **Tags:** `epic-1-complete` through `epic-10-complete` ✅
+- **PR #8:** Merged to main
 
 ## Test Status
 
