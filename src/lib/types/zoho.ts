@@ -160,6 +160,9 @@ export interface OrderDisplay {
 
 // Transform Zoho invoice to display format
 export function transformInvoiceToOrder(invoice: ZohoInvoice): OrderDisplay {
+  // Defensive check for line_items (Zoho may omit in list responses)
+  const lineItems = invoice.line_items || []
+
   return {
     id: invoice.invoice_id,
     invoiceNumber: invoice.invoice_number,
@@ -167,7 +170,7 @@ export function transformInvoiceToOrder(invoice: ZohoInvoice): OrderDisplay {
     dueDate: invoice.due_date,
     status: invoice.status,
     statusLabel: getStatusLabel(invoice.status),
-    items: invoice.line_items.map((item) => ({
+    items: lineItems.map((item) => ({
       name: item.name,
       quantity: item.quantity,
       rate: item.rate,
