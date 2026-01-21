@@ -1,5 +1,132 @@
 # Change Logs
 
+## [2026-01-20] - EPIC 11: Zoho Books Integration - Implementation
+
+### Summary
+Implemented Zoho Books integration to display customer orders/invoices in both the customer dashboard and admin customer detail page. Customers can now view their order history, and admins can see customer orders when viewing profiles.
+
+### Implementation Phases
+
+**Phase 1: Foundation**
+- Created migration `010_zoho_integration.sql` (zoho_contact_id, zoho_tokens, zoho_cache tables)
+- Created Zoho TypeScript types (`src/lib/types/zoho.ts`)
+- Built Zoho Books service with OAuth token management and caching (`src/lib/services/zoho-books.ts`)
+- Created OAuth callback route (`/api/zoho/callback`)
+- Created auth status endpoint (`/api/zoho/auth`)
+
+**Phase 2: Customer Linking**
+- Created contacts search endpoint (`/api/zoho/contacts`)
+- Created link/unlink endpoints (`/api/admin/customers/[id]/zoho-link`)
+- Built ZohoLinkDialog component for searching and selecting Zoho contacts
+- Built ZohoSection component for admin customer detail page
+
+**Phase 3: Admin Orders Display**
+- Created admin orders endpoint (`/api/admin/customers/[id]/orders`)
+- Built OrderCard component for invoice display
+- Built OrdersDisplay component with Recent/Completed tabs
+- Integrated orders into admin customer detail page
+
+**Phase 4: Customer Orders Display**
+- Created customer orders endpoint (`/api/customer/orders`)
+- Built CustomerOrdersSection component for dashboard
+- Integrated orders into customer dashboard
+
+### Files Created
+- `supabase/migrations/010_zoho_integration.sql`
+- `src/lib/types/zoho.ts`
+- `src/lib/services/zoho-books.ts`
+- `src/app/api/zoho/auth/route.ts`
+- `src/app/api/zoho/callback/route.ts`
+- `src/app/api/zoho/contacts/route.ts`
+- `src/app/api/admin/customers/[id]/zoho-link/route.ts`
+- `src/app/api/admin/customers/[id]/orders/route.ts`
+- `src/app/api/customer/orders/route.ts`
+- `src/components/admin/zoho-link-dialog.tsx`
+- `src/components/admin/zoho-section.tsx`
+- `src/components/orders/order-card.tsx`
+- `src/components/orders/orders-display.tsx`
+- `src/components/orders/customer-orders-section.tsx`
+
+### Files Modified
+- `src/lib/types/index.ts` - Added `zoho_contact_id` to Customer interface
+- `src/app/admin/customers/[id]/page.tsx` - Added ZohoSection
+- `src/app/customer/dashboard/page.tsx` - Added CustomerOrdersSection
+
+### Test Results
+- 94/104 tests passing (10 db-schema tests require live database)
+- Build passes
+
+### Deployment Steps
+1. Run migration `010_zoho_integration.sql` in Supabase SQL Editor
+2. Add environment variables to Vercel:
+   - `ZOHO_CLIENT_ID`
+   - `ZOHO_CLIENT_SECRET`
+   - `ZOHO_ORG_ID`
+   - `ZOHO_REDIRECT_URI`
+3. Complete OAuth flow by visiting `/api/zoho/auth` (POST) to get authorization URL
+
+### Notes
+- Zoho region: Canada (uses `.com` API domain)
+- Read-only integration (no writes to Zoho)
+- Caching: 10-min memory + 1-hour database to stay under API limits
+- Customers see "not linked" message until admin links them to Zoho contact
+
+---
+
+## [2026-01-20] - Infrastructure Updates
+
+### Summary
+Applied pending migration and resolved known issue.
+
+### Changes
+- ✅ **Migration 009 Applied** - `delivery_status_logs.sql` now live in Supabase
+  - `delivered_at` column on customers table
+  - `delivery_logs` table for audit trail
+- ✅ **Auth User Deletion Fixed** - Admin delete now properly removes linked Supabase auth user
+
+### Notes
+- Three-state delivery status fully operational
+- No more FK violations when re-registering with previously deleted email
+
+---
+
+## [2026-01-20] - EPIC 11: Zoho Books Integration - Planning
+
+### Summary
+Planned and documented EPIC 11 feature for integrating Zoho Books to display customer orders/invoices in the application. This enables customers to view their order history and payment status directly in their dashboard, and admins to see customer orders when viewing profiles.
+
+### Planning Completed
+- Discussed integration approach and OAuth 2.0 flow
+- Confirmed Zoho Books free tier API limits (1,000 calls/day) are sufficient
+- Created comprehensive feature specification
+- Set up Zoho API credentials in `.env.local`
+
+### Feature Overview
+- **Customer Dashboard**: View own invoices (Recent + Completed tabs)
+- **Admin Customer Detail**: View any customer's invoices
+- **Customer Linking**: Admin links app customers to Zoho Books contacts
+- **Caching**: 10-min memory + 1-hour database cache to minimize API calls
+
+### Files Created
+- `docs/post-mvp-features/EPIC-11-zoho-books-integration.md` - Feature specification
+
+### Files Modified
+- `.env.local` - Added Zoho API credentials (ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI)
+
+### Next Steps
+1. Create database migration (010_zoho_integration.sql)
+2. Build OAuth callback route
+3. Create Zoho Books API service
+4. Implement customer linking UI
+5. Build orders display components
+
+### Notes
+- Zoho region: Canada (uses `.com` API domain)
+- Read-only integration (no writes to Zoho in MVP)
+- Payment processing deferred to future feature
+
+---
+
 ## [2026-01-20] - Delivery Status Enhancement
 
 ### Summary
