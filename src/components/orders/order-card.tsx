@@ -10,8 +10,9 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order }: OrderCardProps) {
-  const formatCurrency = (amount: number) => {
-    return `${order.currencySymbol}${amount.toLocaleString('en-PH', {
+  const formatCurrency = (amount: number | undefined | null) => {
+    const value = amount ?? 0
+    return `${order.currencySymbol || '₱'}${value.toLocaleString('en-PH', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`
@@ -39,7 +40,7 @@ export function OrderCard({ order }: OrderCardProps) {
       <CardContent className="space-y-4">
         {/* Line items */}
         <div className="space-y-2">
-          {order.items.map((item, index) => (
+          {(order.items || []).map((item, index) => (
             <div key={index} className="flex items-center justify-between text-sm">
               <div className="flex-1">
                 <span>{item.name}</span>
@@ -60,7 +61,7 @@ export function OrderCard({ order }: OrderCardProps) {
             <span className="text-muted-foreground">Paid</span>
             <span className="text-green-600">{formatCurrency(order.paid)}</span>
           </div>
-          {order.balance > 0 && (
+          {(order.balance ?? 0) > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Balance</span>
               <span className="text-orange-600 font-medium">{formatCurrency(order.balance)}</span>
@@ -69,7 +70,7 @@ export function OrderCard({ order }: OrderCardProps) {
         </div>
 
         {/* Due date for unpaid orders */}
-        {order.balance > 0 && order.dueDate && (
+        {(order.balance ?? 0) > 0 && order.dueDate && (
           <div className="text-xs text-muted-foreground">
             Due: {formatDate(order.dueDate)}
           </div>
