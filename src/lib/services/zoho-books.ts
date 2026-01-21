@@ -474,7 +474,7 @@ export async function getAllInvoices(
 }
 
 /**
- * Get a single invoice by ID
+ * Get a single invoice by ID (full details including line item descriptions)
  */
 export async function getInvoice(invoiceId: string): Promise<ZohoInvoice | null> {
   const cacheKey = `invoice:${invoiceId}`
@@ -487,5 +487,37 @@ export async function getInvoice(invoiceId: string): Promise<ZohoInvoice | null>
     return data
   } catch {
     return null
+  }
+}
+
+/**
+ * Get invoices with full details (including line item descriptions and units)
+ * Fetches list first, then enriches each invoice with full details
+ */
+export async function getInvoicesWithDetails(
+  contactId: string,
+  filter: InvoiceFilter = 'recent',
+  page: number = 1
+): Promise<{ invoices: ZohoInvoice[]; hasMore: boolean; total: number; cachedAt: string | null }> {
+  // First get the filtered list
+  const listResult = await getInvoices(contactId, filter, page)
+
+  if (listResult.invoices.length === 0) {
+    return listResult
+  }
+
+  // Fetch full details for each invoice (in parallel)
+  const detailedInvoices = await Promise.all(
+    listResult.invoices.map(async (inv) => {
+      const detailed = await getInvoice(inv.invoice_id)
+      return detailed || inv // Fall back to list data if detail fetch fails
+    })
+  )
+
+  return {
+    invoices: detailedInvoices,
+    hasMore: listResult.hasMore,
+    total: listResult.total,
+    cachedAt: listResult.cachedAt,
   }
 }

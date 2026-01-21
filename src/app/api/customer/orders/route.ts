@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getInvoices, isZohoConnected } from '@/lib/services/zoho-books'
+import { getInvoicesWithDetails, isZohoConnected } from '@/lib/services/zoho-books'
 import { transformInvoiceToOrder } from '@/lib/types/zoho'
 import type { InvoiceFilter } from '@/lib/types/zoho'
 
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await getInvoices(customer.zoho_contact_id, filter, page)
+    const result = await getInvoicesWithDetails(customer.zoho_contact_id, filter, page)
 
     // Transform invoices to display format (with defensive check)
     const invoices = result.invoices || []
