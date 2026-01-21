@@ -380,20 +380,16 @@ async function zohoRequest<T>(
 
 /**
  * Search contacts by name or email
+ * Note: No caching for search to ensure real-time results
  */
 export async function searchContacts(query: string): Promise<ZohoContact[]> {
-  const cacheKey = `contacts:search:${query.toLowerCase()}`
-
-  const { data } = await getCached(cacheKey, async () => {
-    const response = await zohoRequest<ZohoContactsResponse>('/contacts', {
-      search_text: query,
-      contact_type: 'customer',
-      per_page: '25',
-    })
-    return response.contacts || []
+  // No caching for search - admins need real-time results
+  const response = await zohoRequest<ZohoContactsResponse>('/contacts', {
+    search_text: query,
+    contact_type: 'customer',
+    per_page: '25',
   })
-
-  return data
+  return response.contacts || []
 }
 
 /**
@@ -419,22 +415,21 @@ export async function getContact(contactId: string): Promise<ZohoContact | null>
 
 /**
  * Get invoices for a contact with filtering
+ * Note: Zoho API doesn't accept multiple statuses, so we fetch all and filter client-side
  */
 export async function getInvoices(
   contactId: string,
   filter: InvoiceFilter = 'recent',
   page: number = 1
 ): Promise<{ invoices: ZohoInvoice[]; hasMore: boolean; total: number; cachedAt: string | null }> {
-  const statuses = INVOICE_FILTER_STATUSES[filter]
-  const statusParam = statuses.join(',')
-  const cacheKey = `invoices:${contactId}:${filter}:page${page}`
+  const cacheKey = `invoices:${contactId}:page${page}`
 
   const { data, cachedAt } = await getCached(cacheKey, async () => {
+    // Fetch all invoices for this contact (no status filter - Zoho API limitation)
     const response = await zohoRequest<ZohoInvoicesResponse>('/invoices', {
       customer_id: contactId,
-      status: statusParam,
       page: page.toString(),
-      per_page: '10',
+      per_page: '50', // Fetch more to allow client-side filtering
       sort_column: 'date',
       sort_order: 'D', // Descending
     })
@@ -446,7 +441,16 @@ export async function getInvoices(
     }
   })
 
-  return { ...data, cachedAt }
+  // Filter client-side based on the requested filter
+  const statuses = INVOICE_FILTER_STATUSES[filter]
+  const filteredInvoices = data.invoices.filter((inv) => statuses.includes(inv.status))
+
+  return {
+    invoices: filteredInvoices,
+    hasMore: data.hasMore,
+    total: filteredInvoices.length,
+    cachedAt,
+  }
 }
 
 /**
