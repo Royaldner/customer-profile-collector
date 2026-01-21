@@ -442,13 +442,14 @@ export async function getInvoices(
     }
   })
 
-  // Filter client-side based on the requested filter
+  // Filter client-side based on the requested filter (with defensive check)
   const statuses = INVOICE_FILTER_STATUSES[filter]
-  const filteredInvoices = data.invoices.filter((inv) => statuses.includes(inv.status))
+  const invoices = data.invoices || []
+  const filteredInvoices = invoices.filter((inv) => statuses.includes(inv.status))
 
   return {
     invoices: filteredInvoices,
-    hasMore: data.hasMore,
+    hasMore: data.hasMore || false,
     total: filteredInvoices.length,
     cachedAt,
   }

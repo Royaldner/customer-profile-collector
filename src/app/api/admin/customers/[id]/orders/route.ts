@@ -81,13 +81,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const result = await getInvoices(customer.zoho_contact_id, filter, page)
 
-    // Transform invoices to display format
-    const orders = result.invoices.map(transformInvoiceToOrder)
+    // Transform invoices to display format (with defensive check)
+    const invoices = result.invoices || []
+    const orders = invoices.map(transformInvoiceToOrder)
 
     return NextResponse.json({
       orders,
-      hasMore: result.hasMore,
-      total: result.total,
+      hasMore: result.hasMore || false,
+      total: result.total || 0,
       cachedAt: result.cachedAt,
       filter,
       page,
