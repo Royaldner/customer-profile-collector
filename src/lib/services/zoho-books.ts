@@ -384,8 +384,9 @@ async function zohoRequest<T>(
  */
 export async function searchContacts(query: string): Promise<ZohoContact[]> {
   // No caching for search - admins need real-time results
+  // Use contact_name_contains for more accurate name search
   const response = await zohoRequest<ZohoContactsResponse>('/contacts', {
-    search_text: query,
+    contact_name_contains: query,
     contact_type: 'customer',
     per_page: '25',
   })

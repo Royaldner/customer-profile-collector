@@ -48,7 +48,16 @@ export async function GET(request: NextRequest) {
   try {
     const contacts = await searchContacts(query)
 
-    return NextResponse.json({ contacts })
+    // Add cache-control headers to prevent browser caching
+    return NextResponse.json(
+      { contacts, query, timestamp: Date.now() },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      }
+    )
   } catch (err) {
     console.error('Failed to search Zoho contacts:', err)
     const message = err instanceof Error ? err.message : 'Unknown error'
