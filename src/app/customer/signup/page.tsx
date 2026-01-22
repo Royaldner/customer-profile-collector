@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -16,10 +15,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 export default function CustomerSignupPage() {
-  const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -27,10 +26,19 @@ export default function CustomerSignupPage() {
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   async function handleEmailSignup(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Validate email format first
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -49,7 +57,7 @@ export default function CustomerSignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
@@ -62,6 +70,32 @@ export default function CustomerSignupPage() {
       setError(err instanceof Error ? err.message : 'Signup failed')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setIsResending(true)
+    setResendSuccess(false)
+    setError('')
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
+        },
+      })
+
+      if (error) {
+        throw error
+      }
+
+      setResendSuccess(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend confirmation email')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -91,18 +125,58 @@ export default function CustomerSignupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary">Check Your Email</CardTitle>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl text-primary">Confirmation Email Sent!</CardTitle>
             <CardDescription>
-              We&apos;ve sent a confirmation link to <strong>{email}</strong>
+              We&apos;ve sent a confirmation link to:
             </CardDescription>
+            <p className="mt-2 font-medium text-foreground">{email}</p>
           </CardHeader>
-          <CardContent className="text-center text-muted-foreground">
-            <p>Please click the link in the email to verify your account.</p>
-            <p className="mt-2">After verification, you can log in to your account.</p>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted p-4 text-sm">
+              <p className="font-medium mb-2">Next steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Check your email inbox</li>
+                <li>Click the confirmation link</li>
+                <li>Complete your customer registration</li>
+              </ol>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <p className="text-amber-800 dark:text-amber-200">
+                <strong>Don&apos;t see the email?</strong> Check your spam or junk folder. The email is sent from Supabase.
+              </p>
+            </div>
+
+            {resendSuccess && (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm dark:border-green-900 dark:bg-green-950">
+                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <p className="text-green-800 dark:text-green-200">
+                  Confirmation email resent successfully!
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <Link href="/customer/login">
-              <Button variant="outline">Back to Login</Button>
+          <CardFooter className="flex flex-col gap-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleResendConfirmation}
+              disabled={isResending}
+            >
+              {isResending ? 'Resending...' : 'Resend Confirmation Email'}
+            </Button>
+            <Link href="/customer/login" className="w-full">
+              <Button variant="ghost" className="w-full">Back to Login</Button>
             </Link>
           </CardFooter>
         </Card>

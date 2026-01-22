@@ -1,5 +1,42 @@
 # Change Logs
 
+## [2026-01-22] - Email Confirmation Flow Improvements
+
+### Changes
+- **CP-60**: Improved email/password signup flow with proper confirmation handling
+
+### Features Implemented
+
+#### Email Confirmation UI (CustomerForm)
+- Added "Confirmation Email Sent!" screen with mail icon
+- Shows email address and next steps checklist
+- Spam folder warning (amber alert box)
+- "Resend Confirmation Email" button with success feedback
+- "I've confirmed my email" button (tries to sign in to verify)
+- "Use a different email" button to restart
+
+#### Signup Page Updates
+- Added explicit email regex validation before Supabase call
+- Memoized Supabase client to prevent re-creation
+- Improved success screen matching CustomerForm design
+- Redirect now goes to `/auth/callback?next=/register`
+
+#### Email Confirmation Detection
+- Checks `data.session` to determine if confirmation is required
+- If session exists → user auto-confirmed (disabled in Supabase)
+- If no session → email confirmation pending
+
+### Files Modified
+- `src/components/forms/customer-form.tsx` - Added email confirmation flow
+- `src/app/customer/signup/page.tsx` - Improved validation and success UI
+
+### Configuration Required
+- Supabase Dashboard → Authentication → URL Configuration
+- Site URL: `https://customer-profile-registration.vercel.app`
+- Redirect URLs: Add `/auth/callback` paths for production and localhost
+
+---
+
 ## [2026-01-12] - Address Validation Error Display Fix
 
 ### Changes

@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-22
 
 ## Overview
 
@@ -21,7 +21,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 #### 7.1 Customer Authentication
 - Google OAuth configured and working
-- Email/password signup (no email verification)
+- Email/password signup with email confirmation flow
+- Confirmation email UI with resend option and spam folder warning
+- "I've confirmed my email" button for cross-device verification
 - Customer login, signup, forgot/reset password pages
 - OAuth callback handler
 - Customer dashboard with profile editing
