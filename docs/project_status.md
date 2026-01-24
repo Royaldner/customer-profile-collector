@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-01-21
+**Last Updated:** 2026-01-24
 
 ## Overview
 
@@ -114,11 +114,11 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 - **Current Branch:** `main`
 - **Latest Commits:**
-  - `8198f53` - fix(zoho): fetch full invoice details for line item data
-  - `991f470` - feat(zoho): add description, unit, and rate to order line items
-  - `73d161a` - fix(zoho): handle undefined values in order card display
-  - `4aeaa5b` - fix(zoho): handle missing line_items in invoice transform
-  - `58dba30` - fix(zoho): add defensive checks for undefined invoices array
+  - `c423a3b` - fix(auth): resolve pickup registration freeze and password reset issues
+  - `13e3dea` - Merge fix/customer-login-issues: Refactor customer auth and migrate to proxy.ts (CP-61)
+  - `baa117b` - CP-61: UI tweaks - move forgot password link, hide contact preference
+  - `3ad9bba` - CP-61: Refactor customer auth and migrate middleware to proxy
+  - `c395ce0` - CP-60: Improve email confirmation flow for signup
 - **Tags:** `epic-1-complete` through `epic-10-complete` ✅
 - **PR #8:** Merged to main
 
@@ -148,11 +148,9 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Next Steps
 
-1. **Merge EPIC 11 PR** - Review and merge to main
-2. **Apply Migration 010** - Run in Supabase SQL Editor
-3. **Add Zoho Env Vars to Vercel** - ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_ORG_ID, ZOHO_REDIRECT_URI
-4. **Complete OAuth Flow** - Connect to Zoho Books via admin
-5. **Tag epic-11-complete** - After successful deployment
+1. **Test password reset flow** - Verify the fix works in production
+2. **Tag epic-11-complete** - After verifying all fixes are stable
+3. **Plan EPIC 12** - Payment processing (PayMongo integration)
 
 ## Future Enhancements
 

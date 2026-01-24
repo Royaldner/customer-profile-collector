@@ -1,5 +1,44 @@
 # Change Logs
 
+## [2026-01-24] - Customer Login Bug Fixes
+
+### Summary
+Fixed three critical bugs affecting customer registration and password reset flows.
+
+### Issues Resolved
+
+#### 1. Pickup Order Registration Freeze
+- **Symptom:** Registration form froze when selecting "Pickup" delivery method
+- **Root Cause:** Zod validates address fields before running refine function - empty address objects failed field validation
+- **Fix:** Clear addresses array completely when pickup is selected (`form.setValue('addresses', [])`)
+- **File:** `src/components/forms/customer-form.tsx`
+
+#### 2. Form Auto-Submit on Step Navigation
+- **Symptom:** Clicking "Next" from address step immediately submitted the form
+- **Root Cause:** Conditional button rendering (submit vs next) caused React to preserve button state
+- **Fix:** Single `type="button"` with explicit `onClick` handler that calls `form.trigger()` and `onSubmit()` manually
+- **File:** `src/components/forms/customer-form.tsx`
+
+#### 3. Password Reset Link "Expired" Error
+- **Symptom:** Clicking password reset link from email showed "Link expired" error
+- **Root Cause:** `redirectTo` went directly to `/customer/reset-password` without going through auth callback to establish session
+- **Fix:** Changed redirect to `/auth/callback?next=/customer/reset-password`
+- **File:** `src/app/customer/forgot-password/page.tsx`
+
+### Files Modified
+- `src/components/forms/customer-form.tsx` - Pickup address clearing + auto-submit prevention
+- `src/app/customer/forgot-password/page.tsx` - Password reset redirect fix
+
+### Commits
+- `c423a3b` - fix(auth): resolve pickup registration freeze and password reset issues
+
+### Key Learnings
+1. **Zod field validation runs before refine:** When using conditional validation (like addresses optional for pickup), clear the array entirely rather than leaving empty objects
+2. **React button type matters:** Use `type="button"` with explicit onClick for multi-step forms to prevent accidental submissions
+3. **Supabase password reset flow:** Reset tokens need to go through auth callback to establish session before reaching the reset page
+
+---
+
 ## [2026-01-21] - Zoho Orders Display Enhancement
 
 ### Summary
