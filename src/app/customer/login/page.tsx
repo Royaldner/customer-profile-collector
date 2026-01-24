@@ -168,15 +168,7 @@ function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href="/customer/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
+            <Label htmlFor="password">Password</Label>
             <PasswordInput
               id="password"
               value={password}
@@ -185,6 +177,12 @@ function LoginForm() {
               required
               disabled={isLoading || isGoogleLoading}
             />
+            <Link
+              href="/customer/forgot-password"
+              className="text-sm text-primary hover:underline inline-block"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           {error && (
