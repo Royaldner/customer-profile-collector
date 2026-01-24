@@ -288,13 +288,34 @@ export function CustomerForm() {
     setCurrentStep((prev) => Math.max(prev - 1, 0))
   }
 
-  // Handle delivery method change - reset step if changing from pickup to delivery
+  // Handle delivery method change
   useEffect(() => {
     // If on address step and switch to pickup, go back to delivery step
     if (isPickup && currentStepId === 'address') {
       setCurrentStep(steps.findIndex((s) => s.id === 'delivery'))
     }
-  }, [isPickup, currentStepId, steps])
+
+    // Clear addresses when pickup is selected (to pass validation)
+    if (isPickup) {
+      form.setValue('addresses', [])
+    } else if (form.getValues('addresses').length === 0) {
+      // Restore default address when switching back to delivery
+      form.setValue('addresses', [
+        {
+          first_name: '',
+          last_name: '',
+          label: '',
+          street_address: '',
+          barangay: '',
+          city: '',
+          province: '',
+          region: '',
+          postal_code: '',
+          is_default: true,
+        },
+      ])
+    }
+  }, [isPickup, currentStepId, steps, form])
 
   // Handle form validation errors and show them to user
   function handleSubmitWithValidation(e: React.FormEvent) {
@@ -646,7 +667,7 @@ export function CustomerForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* Show authenticated user info */}
         {authUser && (
           <Card className="border-primary/20 bg-primary/5">
@@ -708,15 +729,28 @@ export function CustomerForm() {
             Back
           </Button>
 
-          {isLastStep ? (
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Registration'}
-            </Button>
-          ) : (
-            <Button type="button" onClick={handleNext}>
-              Next
-            </Button>
-          )}
+          <Button
+            type="button"
+            disabled={isSubmitting}
+            onClick={async (e) => {
+              e.preventDefault()
+              if (isLastStep) {
+                // Trigger form submission manually
+                const isValid = await form.trigger()
+                if (isValid) {
+                  onSubmit(form.getValues())
+                }
+              } else {
+                handleNext()
+              }
+            }}
+          >
+            {isLastStep
+              ? isSubmitting
+                ? 'Submitting...'
+                : 'Submit Registration'
+              : 'Next'}
+          </Button>
         </div>
 
         {/* Already registered link */}
