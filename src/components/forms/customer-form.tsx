@@ -88,6 +88,9 @@ export function CustomerForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [emailConfirmationPending, setEmailConfirmationPending] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   const form = useForm<CustomerWithAddressesFormData>({
     resolver: zodResolver(customerWithAddressesSchema),
@@ -143,6 +146,13 @@ export function CustomerForm() {
   async function handleEmailSignup() {
     setAuthError('')
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(signupEmail)) {
+      setAuthError('Please enter a valid email address')
+      return
+    }
+
     if (signupPassword !== confirmPassword) {
       setAuthError('Passwords do not match')
       return
@@ -160,13 +170,18 @@ export function CustomerForm() {
         email: signupEmail,
         password: signupPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/register`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
       if (error) throw error
 
-      if (data.user) {
+      // Check if email confirmation is required (no session means confirmation needed)
+      if (data.user && !data.session) {
+        // Email confirmation is enabled - show confirmation pending UI
+        setEmailConfirmationPending(true)
+      } else if (data.user && data.session) {
+        // Email confirmation is disabled - user is immediately confirmed
         setAuthUser({ id: data.user.id, email: signupEmail })
         setShowAuthOptions(false)
         form.setValue('customer.email', signupEmail)
@@ -176,6 +191,30 @@ export function CustomerForm() {
       setAuthError(err instanceof Error ? err.message : 'Signup failed')
     } finally {
       setIsAuthLoading(false)
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setIsResending(true)
+    setResendSuccess(false)
+    setAuthError('')
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: signupEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
+        },
+      })
+
+      if (error) throw error
+
+      setResendSuccess(true)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to resend confirmation email')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -354,6 +393,112 @@ export function CustomerForm() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Email confirmation pending UI
+  if (emailConfirmationPending) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <CardTitle className="text-2xl text-primary">Confirmation Email Sent!</CardTitle>
+            <CardDescription>
+              We&apos;ve sent a confirmation link to:
+            </CardDescription>
+            <p className="mt-2 font-medium text-foreground">{signupEmail}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted p-4 text-sm">
+              <p className="font-medium mb-2">Next steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Check your email inbox</li>
+                <li>Click the confirmation link</li>
+                <li>Return here to complete your registration</li>
+              </ol>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-amber-800 dark:text-amber-200">
+                <strong>Don&apos;t see the email?</strong> Check your spam or junk folder. The email is sent from Supabase.
+              </p>
+            </div>
+
+            {resendSuccess && (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm dark:border-green-900 dark:bg-green-950">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-green-800 dark:text-green-200">
+                  Confirmation email resent successfully!
+                </p>
+              </div>
+            )}
+
+            {authError && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {authError}
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleResendConfirmation}
+              disabled={isResending}
+            >
+              {isResending ? 'Resending...' : 'Resend Confirmation Email'}
+            </Button>
+
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={async () => {
+                // Try to sign in with the credentials they entered
+                const { data, error } = await supabase.auth.signInWithPassword({
+                  email: signupEmail,
+                  password: signupPassword,
+                })
+                if (data?.user && !error) {
+                  setAuthUser({ id: data.user.id, email: signupEmail })
+                  setEmailConfirmationPending(false)
+                  setShowAuthOptions(false)
+                  form.setValue('customer.email', signupEmail)
+                  toast.success('Email confirmed! Continue with your registration.')
+                } else if (error?.message?.includes('Email not confirmed')) {
+                  toast.error('Email not yet confirmed. Please check your inbox and click the confirmation link.')
+                } else {
+                  toast.error(error?.message || 'Unable to verify. Please try again.')
+                }
+              }}
+            >
+              I&apos;ve confirmed my email
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setEmailConfirmationPending(false)
+                setSignupEmail('')
+                setSignupPassword('')
+                setConfirmPassword('')
+                setIsEmailSignup(false)
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Auth options UI (shown first before form)

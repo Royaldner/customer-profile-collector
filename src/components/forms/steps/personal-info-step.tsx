@@ -166,6 +166,7 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
           )}
         />
 
+        {/* Hidden: restore when SMS system is available
         <FormField
           control={form.control}
           name="customer.contact_preference"
@@ -187,6 +188,7 @@ export function PersonalInfoStep({ isEmailReadOnly = false }: PersonalInfoStepPr
             </FormItem>
           )}
         />
+        */}
       </CardContent>
     </Card>
 

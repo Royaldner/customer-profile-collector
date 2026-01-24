@@ -16,15 +16,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
 
 export default function CustomerSignupPage() {
   const router = useRouter()
   const supabase = createClient()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
@@ -32,11 +33,13 @@ export default function CustomerSignupPage() {
     e.preventDefault()
     setError('')
 
+    // Validate passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
     }
 
+    // Validate password length
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
       return
@@ -45,19 +48,27 @@ export default function CustomerSignupPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       })
 
       if (error) {
+        // Handle specific errors
+        if (error.message.includes('already registered')) {
+          throw new Error('An account with this email already exists. Please sign in instead.')
+        }
         throw error
       }
 
-      setSuccess(true)
+      // With email confirmation disabled, user is immediately logged in
+      if (data.session) {
+        router.push('/customer/dashboard')
+        router.refresh()
+      } else {
+        // Fallback: redirect to login if no session (shouldn't happen with auto-confirm)
+        router.push('/customer/login')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed')
     } finally {
@@ -77,37 +88,11 @@ export default function CustomerSignupPage() {
         },
       })
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google signup failed')
       setIsGoogleLoading(false)
     }
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary">Check Your Email</CardTitle>
-            <CardDescription>
-              We&apos;ve sent a confirmation link to <strong>{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center text-muted-foreground">
-            <p>Please click the link in the email to verify your account.</p>
-            <p className="mt-2">After verification, you can log in to your account.</p>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <Link href="/customer/login">
-              <Button variant="outline">Back to Login</Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    )
   }
 
   return (
@@ -120,6 +105,7 @@ export default function CustomerSignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Google Sign Up */}
           <Button
             type="button"
             variant="outline"
@@ -128,7 +114,10 @@ export default function CustomerSignupPage() {
             disabled={isGoogleLoading || isLoading}
           >
             {isGoogleLoading ? (
-              'Connecting...'
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Connecting...
+              </>
             ) : (
               <>
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -165,6 +154,7 @@ export default function CustomerSignupPage() {
             </div>
           </div>
 
+          {/* Email/Password Form */}
           <form onSubmit={handleEmailSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -175,8 +165,10 @@ export default function CustomerSignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <PasswordInput
@@ -185,8 +177,10 @@ export default function CustomerSignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password (min. 6 characters)"
                 required
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <PasswordInput
@@ -195,6 +189,7 @@ export default function CustomerSignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
                 required
+                disabled={isLoading || isGoogleLoading}
               />
             </div>
 
@@ -204,13 +199,25 @@ export default function CustomerSignupPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-              {isLoading ? 'Creating account...' : 'Create Account'}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || isGoogleLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create Account'
+              )}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-muted-foreground text-center">
+
+        <CardFooter>
+          <div className="text-sm text-muted-foreground text-center w-full">
             Already have an account?{' '}
             <Link href="/customer/login" className="text-primary hover:underline">
               Sign in
