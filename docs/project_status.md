@@ -1,58 +1,52 @@
 # Project Status
 
-**Last Updated:** 2026-01-26
+**Last Updated:** 2026-01-26 16:00
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-12 implemented. Dashboard UI restructuring complete.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-12 implemented, deployed, and live.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `feature/dashboard-ui-restructure`
-**Status:** EPIC 12 implementation complete, ready for PR/merge
+**Branch:** `main`
+**Status:** All features deployed and working
 
-### EPIC 12 - Customer Dashboard UI Restructuring (✅ COMPLETE)
+### Recent Work - EPIC 12 UI Redesign
 
-**Feature Spec:** `docs/post-mvp-features/EPIC-12-dashboard-ui-restructuring.md`
+Based on user feedback, the settings UI was redesigned from a collapsible drawer to a menu + full-screen views pattern:
 
-**Goal:** Restructure customer dashboard from 1,286-line monolith into focused main view with slide-out settings drawer.
+**New UX Flow:**
+1. **Dashboard** - Main view with orders, delivery preference, default address
+2. **Hamburger menu (☰)** → Slide-in drawer with menu items
+3. **Click menu item** → Full-screen view opens (like navigating to a new page)
+4. **Back arrow (←)** → Returns to dashboard
 
-**Implementation Complete:**
-- [x] CP-86: Install shadcn Sheet and Collapsible components
-- [x] CP-87: Create DashboardHeader component
-- [x] CP-88: Create SettingsDrawer component
-- [x] CP-89: Create DeliveryPreferenceCard component
-- [x] CP-90: Create DefaultAddressCard component
-- [x] CP-91: Refactor dashboard page to use new components
-- [x] CP-92: Test all functionality and verify build
-
-**Results:**
-- Dashboard page reduced from 1,286 lines to 322 lines (75% reduction)
-- 6 new customer components created
-- All functionality preserved
-- Build passes
-- 94/104 tests passing (pre-existing db-schema tests require live database)
-
-**New Dashboard Layout:**
+**New Layout:**
 ```
-Main View                    Settings Drawer (slide from right)
+Dashboard                    Settings Menu (slides in)
 ┌─────────────────────┐     ┌─────────────────────────────┐
 │ Greeting        ☰   │     │ Settings                  ✕ │
 ├─────────────────────┤     ├─────────────────────────────┤
-│ My Orders           │     │ ▼ Personal Information      │
-│ [Recent] [Completed]│     │   Name, Email, Phone...     │
-│                     │     │   [Edit]                    │
-├─────────────────────┤     │ ▼ Delivery Addresses        │
-│ Delivery Preference │     │   Address cards with CRUD   │
-│ [Delivery] • LBC    │     │   [+ Add Address]           │
-│ [Edit]              │     │ ▶ Account                   │
-├─────────────────────┤     │ ▶ Danger Zone               │
-│ Default Address     │     │ [Sign Out]                  │
-│ Home - Juan Dela... │     └─────────────────────────────┘
-│ [Manage Addresses→] │
-└─────────────────────┘
+│ My Orders           │     │ 👤 Personal Information   → │
+│ [Recent] [Completed]│     │ 📍 Delivery Addresses     → │
+├─────────────────────┤     │ ℹ️  Account               → │
+│ Delivery Preference │     │ ⚠️ Danger Zone           → │
+│ [Delivery] • LBC    │     ├─────────────────────────────┤
+├─────────────────────┤     │ [Sign Out]                  │
+│ Default Address     │     └─────────────────────────────┘
+│ Home - Juan Dela... │
+│ [Manage Addresses→] │     Full-Screen View (when item clicked)
+└─────────────────────┘     ┌─────────────────────────────┐
+                            │ ← Personal Information      │
+                            ├─────────────────────────────┤
+                            │ First Name: Juan            │
+                            │ Last Name: Dela Cruz        │
+                            │ Email: juan@example.com     │
+                            │ ... (full content)          │
+                            │ [Edit] [Save]               │
+                            └─────────────────────────────┘
 ```
 
 ## Completed Features
@@ -99,11 +93,11 @@ Main View                    Settings Drawer (slide from right)
 - Invoice display with line item details
 
 ### EPIC 12: Dashboard UI Restructuring (100% Complete)
-- Slide-out settings drawer with hamburger menu
-- Collapsible sections (Personal Info, Addresses, Account, Danger Zone)
-- Main view shows Orders, Delivery Preference, Default Address only
-- Full address CRUD moved to drawer
-- Dashboard page reduced from 1,286 to 322 lines
+- Hamburger menu with slide-in drawer
+- Menu items open full-screen views
+- Main view shows Orders, Delivery Preference, Default Address
+- Full settings editing in full-screen views
+- Dashboard page reduced from 1,286 to ~425 lines
 
 ## Database State
 
@@ -123,15 +117,13 @@ Main View                    Settings Drawer (slide from right)
 
 ## Git State
 
-- **Current Branch:** `feature/dashboard-ui-restructure`
+- **Current Branch:** `main`
 - **Latest Commits:**
-  - `b1e3316` - CP-91: Refactor dashboard page to use new components
-  - `7eecb0c` - CP-90: Create DefaultAddressCard component
-  - `341cde7` - CP-89: Create DeliveryPreferenceCard component
-  - `7c1aa43` - CP-88: Create SettingsDrawer component
-  - `6234da6` - CP-87: Create DashboardHeader component
-  - `41358d1` - CP-86: Install shadcn Sheet and Collapsible components
-- **Tags:** `epic-1-complete` through `epic-10-complete` ✅
+  - `4384e16` - chore: remove unused settings-drawer component
+  - `4649563` - fix: redesign settings as slide-in menu + full-screen views
+  - `fbbe00d` - fix: add missing @radix-ui/react-collapsible dependency
+  - `fb39db9` - EPIC 12: Customer Dashboard UI Restructuring (#9)
+- **Tags:** `epic-1-complete` through `epic-12-complete` ✅
 
 ## Test Status
 
@@ -147,20 +139,12 @@ Main View                    Settings Drawer (slide from right)
 | Feature | File |
 |---------|------|
 | Dashboard Header | `src/components/customer/dashboard-header.tsx` |
-| Settings Drawer | `src/components/customer/settings-drawer.tsx` |
+| Settings Menu | `src/components/customer/settings-menu.tsx` |
+| Settings Full-Screen Views | `src/components/customer/settings-view.tsx` |
 | Delivery Preference Card | `src/components/customer/delivery-preference-card.tsx` |
 | Default Address Card | `src/components/customer/default-address-card.tsx` |
 | Address Dialog | `src/components/customer/address-dialog.tsx` |
 | Customer Dashboard | `src/app/customer/dashboard/page.tsx` |
-| Sheet Component | `src/components/ui/sheet.tsx` |
-| Collapsible Component | `src/components/ui/collapsible.tsx` |
-
-## Next Steps
-
-1. **Create PR** - `feature/dashboard-ui-restructure` → `main`
-2. **Merge and deploy** - Vercel auto-deploys on merge
-3. **Tag release** - `epic-12-complete`
-4. **Manual testing** - Verify all flows work in production
 
 ## Future Enhancements
 

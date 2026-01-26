@@ -1,5 +1,74 @@
 # Change Logs
 
+## [2026-01-26 16:00] - EPIC 12 UI Redesign: Menu + Full-Screen Views
+
+### Summary
+Based on user feedback, redesigned the settings UI from a collapsible drawer to a slide-in menu with full-screen views for each section.
+
+### Changes
+
+#### New UX Pattern
+1. **Hamburger menu** → Opens slide-in drawer with menu items
+2. **Click menu item** → Drawer closes, full-screen view opens (like navigating to a new page)
+3. **Back arrow** → Returns to dashboard
+
+#### New Components Created
+- `src/components/customer/settings-menu.tsx` - Slide-in drawer with menu items (Personal Info, Addresses, Account, Danger Zone, Sign Out)
+- `src/components/customer/settings-view.tsx` - Full-screen views for each settings section
+
+#### Deleted Files
+- `src/components/customer/settings-drawer.tsx` - Replaced by new menu + view pattern
+
+#### Dashboard Changes
+- Added `activeView` state to track which full-screen view is showing
+- When `activeView` is set, renders `SettingsViewComponent` instead of dashboard
+- When `activeView` is null, shows normal dashboard with `SettingsMenu` drawer
+
+### Files Created
+- `src/components/customer/settings-menu.tsx`
+- `src/components/customer/settings-view.tsx`
+
+### Files Modified
+- `src/app/customer/dashboard/page.tsx` - Uses new components, manages view state
+
+### Files Deleted
+- `src/components/customer/settings-drawer.tsx`
+
+### Commits
+- `fbbe00d` - fix: add missing @radix-ui/react-collapsible dependency
+- `47571f6` - fix: change settings drawer to full-screen view for better UX
+- `302489d` - fix: force full-screen styles on settings view
+- `4649563` - fix: redesign settings as slide-in menu + full-screen views
+- `4384e16` - chore: remove unused settings-drawer component
+
+### Notes
+- User feedback: original collapsible drawer was cramped and didn't look good
+- New pattern: menu for navigation, full-screen for content editing
+- All functionality preserved with better UX
+
+---
+
+## [2026-01-26 12:00] - EPIC 12 Complete: PR Merged & Tagged
+
+### Summary
+EPIC 12 PR #9 merged to main and tagged `epic-12-complete`. Fixed Vercel deployment issue with missing dependency.
+
+### Changes
+- Merged PR #9 via squash merge
+- Tagged release `epic-12-complete`
+- Deleted feature branch `feature/dashboard-ui-restructure`
+- Fixed missing `@radix-ui/react-collapsible` dependency that blocked Vercel deployment
+
+### Commits
+- `fb39db9` - EPIC 12: Customer Dashboard UI Restructuring (#9)
+- `fbbe00d` - fix: add missing @radix-ui/react-collapsible dependency
+
+### Notes
+- Package was installed locally but package.json changes weren't included in PR
+- Vercel deployment failed until dependency was committed
+
+---
+
 ## [2026-01-26] - EPIC 12: Customer Dashboard UI Restructuring
 
 ### Summary
