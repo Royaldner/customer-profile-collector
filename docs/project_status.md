@@ -1,41 +1,59 @@
 # Project Status
 
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-01-26
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-11 implemented and deployed. Zoho Books integration is fully operational.
+Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-12 implemented. Dashboard UI restructuring complete.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `feature/zoho-books-integration`
-**Status:** EPIC 11 deployed and operational (debugging complete)
+**Branch:** `feature/dashboard-ui-restructure`
+**Status:** EPIC 12 implementation complete, ready for PR/merge
 
-### EPIC 11 - Zoho Books Integration (✅ DEPLOYED)
+### EPIC 12 - Customer Dashboard UI Restructuring (✅ COMPLETE)
 
-**Feature Spec:** `docs/post-mvp-features/EPIC-11-zoho-books-integration.md`
+**Feature Spec:** `docs/post-mvp-features/EPIC-12-dashboard-ui-restructuring.md`
 
-**Goal:** Display customer orders/invoices from Zoho Books in:
-- Customer dashboard (self-service order tracking)
-- Admin customer detail page (full customer context)
+**Goal:** Restructure customer dashboard from 1,286-line monolith into focused main view with slide-out settings drawer.
 
 **Implementation Complete:**
-- [x] Phase 1: Foundation - Database migration, OAuth callback, Zoho service
-- [x] Phase 2: Customer Linking - Admin UI to link customers to Zoho contacts
-- [x] Phase 3: Admin Orders View - Display invoices in admin customer detail
-- [x] Phase 4: Customer Orders View - Display invoices in customer dashboard
-- [x] Phase 5: Documentation and PR
-- [x] Phase 6: Production Debugging - Fixed OAuth, search, and display issues
+- [x] CP-86: Install shadcn Sheet and Collapsible components
+- [x] CP-87: Create DashboardHeader component
+- [x] CP-88: Create SettingsDrawer component
+- [x] CP-89: Create DeliveryPreferenceCard component
+- [x] CP-90: Create DefaultAddressCard component
+- [x] CP-91: Refactor dashboard page to use new components
+- [x] CP-92: Test all functionality and verify build
 
-**Post-Deployment Fixes (2026-01-21):**
-- Fixed OAuth "invalid client" error (account mismatch)
-- Fixed contact search caching issues
-- Fixed invoice status filter (Zoho API limitation)
-- Fixed multiple undefined property errors in order display
-- Enhanced order line items to show description, unit, and rate
-- Fixed Zoho list endpoint limitation by fetching full invoice details
+**Results:**
+- Dashboard page reduced from 1,286 lines to 322 lines (75% reduction)
+- 6 new customer components created
+- All functionality preserved
+- Build passes
+- 94/104 tests passing (pre-existing db-schema tests require live database)
+
+**New Dashboard Layout:**
+```
+Main View                    Settings Drawer (slide from right)
+┌─────────────────────┐     ┌─────────────────────────────┐
+│ Greeting        ☰   │     │ Settings                  ✕ │
+├─────────────────────┤     ├─────────────────────────────┤
+│ My Orders           │     │ ▼ Personal Information      │
+│ [Recent] [Completed]│     │   Name, Email, Phone...     │
+│                     │     │   [Edit]                    │
+├─────────────────────┤     │ ▼ Delivery Addresses        │
+│ Delivery Preference │     │   Address cards with CRUD   │
+│ [Delivery] • LBC    │     │   [+ Add Address]           │
+│ [Edit]              │     │ ▶ Account                   │
+├─────────────────────┤     │ ▶ Danger Zone               │
+│ Default Address     │     │ [Sign Out]                  │
+│ Home - Juan Dela... │     └─────────────────────────────┘
+│ [Manage Addresses→] │
+└─────────────────────┘
+```
 
 ## Completed Features
 
@@ -74,6 +92,19 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - Single and bulk status actions
 - Delivery logs audit trail
 
+### EPIC 11: Zoho Books Integration (100% Complete)
+- Customer orders display from Zoho Books
+- Admin customer linking to Zoho contacts
+- OAuth token management with caching
+- Invoice display with line item details
+
+### EPIC 12: Dashboard UI Restructuring (100% Complete)
+- Slide-out settings drawer with hamburger menu
+- Collapsible sections (Personal Info, Addresses, Account, Danger Zone)
+- Main view shows Orders, Delivery Preference, Default Address only
+- Full address CRUD moved to drawer
+- Dashboard page reduced from 1,286 to 322 lines
+
 ## Database State
 
 **Migrations (001-010):**
@@ -90,37 +121,17 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 **All migrations applied.** Database is up to date.
 
-## Environment Variables
-
-### Currently Set (Vercel)
-
-| Variable | Status |
-|----------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Set |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Set |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Set |
-| `ADMIN_USERNAME` | ✅ Set |
-| `ADMIN_PASSWORD` | ✅ Set |
-| `RESEND_API_KEY` | ✅ Set |
-| `NEXT_PUBLIC_APP_URL` | ✅ Set |
-| `ZOHO_CLIENT_ID` | ✅ Set |
-| `ZOHO_CLIENT_SECRET` | ✅ Set |
-| `ZOHO_ORG_ID` | ✅ Set |
-| `ZOHO_REDIRECT_URI` | ✅ Set |
-
-**All environment variables configured.** Zoho Books integration is operational.
-
 ## Git State
 
-- **Current Branch:** `main`
+- **Current Branch:** `feature/dashboard-ui-restructure`
 - **Latest Commits:**
-  - `c423a3b` - fix(auth): resolve pickup registration freeze and password reset issues
-  - `13e3dea` - Merge fix/customer-login-issues: Refactor customer auth and migrate to proxy.ts (CP-61)
-  - `baa117b` - CP-61: UI tweaks - move forgot password link, hide contact preference
-  - `3ad9bba` - CP-61: Refactor customer auth and migrate middleware to proxy
-  - `c395ce0` - CP-60: Improve email confirmation flow for signup
+  - `b1e3316` - CP-91: Refactor dashboard page to use new components
+  - `7eecb0c` - CP-90: Create DefaultAddressCard component
+  - `341cde7` - CP-89: Create DeliveryPreferenceCard component
+  - `7c1aa43` - CP-88: Create SettingsDrawer component
+  - `6234da6` - CP-87: Create DashboardHeader component
+  - `41358d1` - CP-86: Install shadcn Sheet and Collapsible components
 - **Tags:** `epic-1-complete` through `epic-10-complete` ✅
-- **PR #8:** Merged to main
 
 ## Test Status
 
@@ -135,24 +146,23 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 | Feature | File |
 |---------|------|
-| OAuth Callback | `src/app/auth/callback/route.ts` |
-| Supabase Middleware | `src/lib/supabase/middleware.ts` |
-| Types & Interfaces | `src/lib/types/index.ts` |
-| Validation Schemas | `src/lib/validations/customer.ts` |
-| PSGC API Client | `src/lib/services/psgc.ts` |
-| Resend Email Service | `src/lib/services/resend.ts` |
-| Multi-Step Form | `src/components/forms/customer-form.tsx` |
+| Dashboard Header | `src/components/customer/dashboard-header.tsx` |
+| Settings Drawer | `src/components/customer/settings-drawer.tsx` |
+| Delivery Preference Card | `src/components/customer/delivery-preference-card.tsx` |
+| Default Address Card | `src/components/customer/default-address-card.tsx` |
+| Address Dialog | `src/components/customer/address-dialog.tsx` |
 | Customer Dashboard | `src/app/customer/dashboard/page.tsx` |
-| Admin Customer List | `src/components/admin/customer-list.tsx` |
-| Admin Customer Detail | `src/app/admin/customers/[id]/page.tsx` |
+| Sheet Component | `src/components/ui/sheet.tsx` |
+| Collapsible Component | `src/components/ui/collapsible.tsx` |
 
 ## Next Steps
 
-1. **Test password reset flow** - Verify the fix works in production
-2. **Tag epic-11-complete** - After verifying all fixes are stable
-3. **Plan EPIC 12** - Payment processing (PayMongo integration)
+1. **Create PR** - `feature/dashboard-ui-restructure` → `main`
+2. **Merge and deploy** - Vercel auto-deploys on merge
+3. **Tag release** - `epic-12-complete`
+4. **Manual testing** - Verify all flows work in production
 
 ## Future Enhancements
 
-- **EPIC 12:** Payment processing (PayMongo integration)
-- **EPIC 13:** Product catalog and order creation
+- **EPIC 13:** Payment processing (PayMongo integration)
+- **EPIC 14:** Product catalog and order creation
