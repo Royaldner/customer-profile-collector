@@ -13,7 +13,8 @@ import { getBarangays } from '@/lib/services/psgc'
 import type { Customer, Address, DeliveryMethod, Courier } from '@/lib/types'
 import { CustomerOrdersSection } from '@/components/orders/customer-orders-section'
 import { DashboardHeader } from '@/components/customer/dashboard-header'
-import { SettingsDrawer } from '@/components/customer/settings-drawer'
+import { SettingsMenu, type SettingsView } from '@/components/customer/settings-menu'
+import { SettingsViewComponent } from '@/components/customer/settings-view'
 import { DeliveryPreferenceCard } from '@/components/customer/delivery-preference-card'
 import { DefaultAddressCard } from '@/components/customer/default-address-card'
 import { AddressDialog, type AddressFormData } from '@/components/customer/address-dialog'
@@ -29,9 +30,11 @@ export default function CustomerDashboardPage() {
   const [greeting, setGreeting] = useState('Welcome')
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
-  // Drawer state
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [drawerInitialSection, setDrawerInitialSection] = useState<'addresses' | null>(null)
+  // Menu drawer state
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // Active view state (null = dashboard, otherwise full-screen settings view)
+  const [activeView, setActiveView] = useState<SettingsView>(null)
 
   // PSGC locations
   const { locations, isLoading: isLoadingLocations, getLocationByCode } = usePSGCLocations()
@@ -269,7 +272,14 @@ export default function CustomerDashboardPage() {
     }
   }
 
-  function handleManageAddresses() { setDrawerInitialSection('addresses'); setDrawerOpen(true) }
+  function handleManageAddresses() {
+    setActiveView('addresses')
+  }
+
+  function handleBackFromSettings() {
+    setActiveView(null)
+    setIsEditingProfile(false)
+  }
 
   const defaultAddress = addresses.find(a => a.is_default)
 
@@ -305,18 +315,110 @@ export default function CustomerDashboardPage() {
 
   if (!customer) return null
 
+  // Show full-screen settings view if activeView is set
+  if (activeView) {
+    return (
+      <>
+        <SettingsViewComponent
+          view={activeView}
+          onBack={handleBackFromSettings}
+          customer={customer}
+          addresses={addresses}
+          isEditingProfile={isEditingProfile}
+          setIsEditingProfile={setIsEditingProfile}
+          editedProfile={editedProfile}
+          setEditedProfile={setEditedProfile}
+          onSaveProfile={handleSaveProfile}
+          isSaving={isSaving}
+          cityOptions={cityOptions}
+          isLoadingLocations={isLoadingLocations}
+          selectedProfileCity={selectedProfileCity}
+          profileBarangays={profileBarangays}
+          loadingProfileBarangays={loadingProfileBarangays}
+          onProfileCitySelect={handleProfileCitySelect}
+          onProfileBarangaySelect={handleProfileBarangaySelect}
+          onOpenAddressDialog={openAddressDialog}
+          onDeleteAddress={handleDeleteAddress}
+          onSetDefaultAddress={handleSetDefaultAddress}
+          onDeleteAccount={handleDeleteAccount}
+          isDeletingAccount={isDeletingAccount}
+        />
+        <AddressDialog
+          open={addressDialogOpen}
+          onOpenChange={setAddressDialogOpen}
+          editingAddress={editingAddress}
+          addressForm={addressForm}
+          setAddressForm={setAddressForm}
+          onSave={handleSaveAddress}
+          isSaving={isSaving}
+          cityOptions={cityOptions}
+          isLoadingLocations={isLoadingLocations}
+          selectedAddressCity={selectedAddressCity}
+          addressBarangays={addressBarangays}
+          loadingAddressBarangays={loadingAddressBarangays}
+          onAddressCitySelect={handleAddressCitySelect}
+          hasProfileAddress={hasProfileAddress}
+          onCopyFromProfile={handleCopyFromProfile}
+        />
+      </>
+    )
+  }
+
+  // Main dashboard view
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
-        <DashboardHeader greeting={greeting} customerName={customer.first_name} onMenuClick={() => { setDrawerInitialSection(null); setDrawerOpen(true) }} />
+        <DashboardHeader
+          greeting={greeting}
+          customerName={customer.first_name}
+          onMenuClick={() => setMenuOpen(true)}
+        />
         <CustomerOrdersSection />
-        <DeliveryPreferenceCard customer={customer} couriers={couriers} isEditing={isEditingDelivery} setIsEditing={setIsEditingDelivery} editedDelivery={editedDelivery} editedCourier={editedCourier} onDeliveryMethodChange={handleDeliveryMethodChange} onCourierChange={setEditedCourier} onSave={handleSaveDelivery} isSaving={isSaving} />
-        {customer.delivery_method !== 'pickup' && <DefaultAddressCard defaultAddress={defaultAddress} onManageAddresses={handleManageAddresses} />}
+        <DeliveryPreferenceCard
+          customer={customer}
+          couriers={couriers}
+          isEditing={isEditingDelivery}
+          setIsEditing={setIsEditingDelivery}
+          editedDelivery={editedDelivery}
+          editedCourier={editedCourier}
+          onDeliveryMethodChange={handleDeliveryMethodChange}
+          onCourierChange={setEditedCourier}
+          onSave={handleSaveDelivery}
+          isSaving={isSaving}
+        />
+        {customer.delivery_method !== 'pickup' && (
+          <DefaultAddressCard
+            defaultAddress={defaultAddress}
+            onManageAddresses={handleManageAddresses}
+          />
+        )}
       </div>
 
-      <SettingsDrawer open={drawerOpen} onOpenChange={setDrawerOpen} customer={customer} addresses={addresses} couriers={couriers} isEditingProfile={isEditingProfile} setIsEditingProfile={setIsEditingProfile} editedProfile={editedProfile} setEditedProfile={setEditedProfile} onSaveProfile={handleSaveProfile} isSaving={isSaving} cityOptions={cityOptions} isLoadingLocations={isLoadingLocations} selectedProfileCity={selectedProfileCity} profileBarangays={profileBarangays} loadingProfileBarangays={loadingProfileBarangays} onProfileCitySelect={handleProfileCitySelect} onProfileBarangaySelect={handleProfileBarangaySelect} onOpenAddressDialog={openAddressDialog} onDeleteAddress={handleDeleteAddress} onSetDefaultAddress={handleSetDefaultAddress} onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} isDeletingAccount={isDeletingAccount} initialSection={drawerInitialSection} />
+      <SettingsMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        customer={customer}
+        onSelectView={setActiveView}
+        onLogout={handleLogout}
+      />
 
-      <AddressDialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen} editingAddress={editingAddress} addressForm={addressForm} setAddressForm={setAddressForm} onSave={handleSaveAddress} isSaving={isSaving} cityOptions={cityOptions} isLoadingLocations={isLoadingLocations} selectedAddressCity={selectedAddressCity} addressBarangays={addressBarangays} loadingAddressBarangays={loadingAddressBarangays} onAddressCitySelect={handleAddressCitySelect} hasProfileAddress={hasProfileAddress} onCopyFromProfile={handleCopyFromProfile} />
+      <AddressDialog
+        open={addressDialogOpen}
+        onOpenChange={setAddressDialogOpen}
+        editingAddress={editingAddress}
+        addressForm={addressForm}
+        setAddressForm={setAddressForm}
+        onSave={handleSaveAddress}
+        isSaving={isSaving}
+        cityOptions={cityOptions}
+        isLoadingLocations={isLoadingLocations}
+        selectedAddressCity={selectedAddressCity}
+        addressBarangays={addressBarangays}
+        loadingAddressBarangays={loadingAddressBarangays}
+        onAddressCitySelect={handleAddressCitySelect}
+        hasProfileAddress={hasProfileAddress}
+        onCopyFromProfile={handleCopyFromProfile}
+      />
     </div>
   )
 }
