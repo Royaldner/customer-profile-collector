@@ -147,7 +147,10 @@ export function SettingsDrawer({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-none w-full h-full max-h-none m-0 p-0 rounded-none border-0 flex flex-col">
+      <DialogContent
+        showCloseButton={false}
+        className="!fixed !inset-0 !translate-x-0 !translate-y-0 !max-w-none !w-full !h-full !max-h-none !m-0 !p-0 !rounded-none !border-0 flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b bg-background sticky top-0 z-10">
           <Button
