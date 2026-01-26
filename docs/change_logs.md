@@ -1,5 +1,71 @@
 # Change Logs
 
+## [2026-01-26] - EPIC 12: Customer Dashboard UI Restructuring
+
+### Summary
+Restructured the customer dashboard from a 1,286-line monolith into focused main view with slide-out settings drawer. Dashboard reduced to 322 lines with all functionality preserved.
+
+### Changes
+
+#### New Components Created
+- `src/components/customer/dashboard-header.tsx` - Header with greeting and hamburger menu
+- `src/components/customer/settings-drawer.tsx` - Slide-out drawer with collapsible sections
+- `src/components/customer/delivery-preference-card.tsx` - Delivery method/courier card with inline edit
+- `src/components/customer/default-address-card.tsx` - Shows only default address
+- `src/components/customer/address-dialog.tsx` - Address add/edit modal extracted from page
+
+#### UI Changes Installed
+- `src/components/ui/sheet.tsx` - shadcn Sheet component for drawer
+- `src/components/ui/collapsible.tsx` - shadcn Collapsible for expandable sections
+
+#### Dashboard Restructuring
+**Main Dashboard (visible on load):**
+- Header with greeting + hamburger menu (☰)
+- Orders section (CustomerOrdersSection)
+- Delivery Preference card with inline editing
+- Default Address card with "Manage Addresses" link
+
+**Settings Drawer (slides from right):**
+- Personal Information (collapsible, editable)
+- Delivery Addresses (collapsible, full CRUD)
+- Account Info (collapsible)
+- Danger Zone (collapsible)
+- Sign Out button
+
+### Files Created
+- `src/components/ui/sheet.tsx`
+- `src/components/ui/collapsible.tsx`
+- `src/components/customer/dashboard-header.tsx`
+- `src/components/customer/settings-drawer.tsx`
+- `src/components/customer/delivery-preference-card.tsx`
+- `src/components/customer/default-address-card.tsx`
+- `src/components/customer/address-dialog.tsx`
+
+### Files Modified
+- `src/app/customer/dashboard/page.tsx` - Refactored from 1,286 to 322 lines
+
+### Commits
+- `41358d1` - CP-86: Install shadcn Sheet and Collapsible components
+- `6234da6` - CP-87: Create DashboardHeader component
+- `7c1aa43` - CP-88: Create SettingsDrawer component
+- `341cde7` - CP-89: Create DeliveryPreferenceCard component
+- `7eecb0c` - CP-90: Create DefaultAddressCard component
+- `b1e3316` - CP-91: Refactor dashboard page to use new components
+
+### Test Results
+- Build passes
+- 94/104 tests passing (10 db-schema tests require live database - pre-existing)
+- All functionality preserved
+
+### Notes
+- Dashboard page reduced from 1,286 lines to 322 lines (75% reduction)
+- All edit/save flows preserved (profile, delivery, addresses)
+- "Manage Addresses" on main view opens drawer to addresses section
+- Address dialog still works as modal (used from drawer context)
+- Mobile responsive with hamburger menu pattern
+
+---
+
 ## [2026-01-24] - Customer Login Bug Fixes
 
 ### Summary
