@@ -12,26 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { LocationCombobox } from '@/components/ui/location-combobox'
 import {
+  ArrowLeft,
   ChevronDown,
   ChevronRight,
   Pencil,
@@ -159,14 +146,26 @@ export function SettingsDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Settings</SheetTitle>
-          <SheetDescription>Manage your profile and preferences</SheetDescription>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-none w-full h-full max-h-none m-0 p-0 rounded-none border-0 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b bg-background sticky top-0 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close settings"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
+            <p className="text-sm text-muted-foreground">Manage your profile and preferences</p>
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-4 py-4">
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-lg mx-auto flex flex-col gap-4">
           {/* Personal Information Section */}
           <Collapsible
             open={openSections.personal}
@@ -282,9 +281,10 @@ export function SettingsDrawer({
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>
+          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
 
