@@ -1,0 +1,5 @@
+export * from './brands'
+export * from './how-it-works'
+export * from './delivery-options'
+export * from './faq'
+export * from './payment-methods'
