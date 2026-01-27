@@ -63,7 +63,8 @@ export default function CustomerSignupPage() {
 
       // With email confirmation disabled, user is immediately logged in
       if (data.session) {
-        router.push('/customer/dashboard')
+        // Redirect to registration to complete profile
+        router.push('/register')
         router.refresh()
       } else {
         // Fallback: redirect to login if no session (shouldn't happen with auto-confirm)
@@ -84,7 +85,7 @@ export default function CustomerSignupPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
