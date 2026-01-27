@@ -1,5 +1,33 @@
 # Change Logs
 
+## [2026-01-27 00:15] - Apply Cinnabar Theme to Entire App
+
+### Summary
+Extended the cinnabar color theme from marketing section to customer and admin sections for consistent branding across the entire application.
+
+### Changes
+- Updated `:root` CSS variables to use cinnabar palette
+- Updated `.dark` mode to use cinnabar colors
+- Consolidated color definitions (removed duplicate declarations)
+- All sections now share the same visual identity
+
+### Theme Applied
+- **Primary**: Cinnabar-600 (#c40808)
+- **Accent**: Cinnabar-500 (#f50a0a)
+- **Borders**: Cinnabar-100 (subtle red tint)
+- **Text**: Cinnabar-950 (dark red-black)
+- **Backgrounds**: White with bright-snow accents
+
+### Files Modified
+- `src/app/globals.css` - Unified cinnabar theme for entire app
+
+### Notes
+- Customer login, signup, dashboard now match landing page aesthetic
+- Admin pages also updated with consistent branding
+- Dark mode updated with cinnabar accents
+
+---
+
 ## [2026-01-26 23:45] - EPIC 13 Implementation: App Structure & Landing Page
 
 ### Summary
