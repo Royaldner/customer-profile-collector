@@ -44,7 +44,7 @@ export default function AboutSection() {
             About Cangoods
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--cinnabar-950)] tracking-tight">
-            Bringing Canada's Best to You
+            Bringing Canada&apos;s Best to You
           </h2>
           <p className="mt-6 text-lg text-[var(--graphite)]/70 leading-relaxed">
             Cangoods was born from a simple idea: everyone deserves access to premium

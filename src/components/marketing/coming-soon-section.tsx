@@ -51,7 +51,7 @@ export default function ComingSoonSection() {
             More Features on the Way
           </h2>
           <p className="mt-4 text-lg text-[var(--graphite)]/60">
-            We're constantly improving to serve you better
+            We&apos;re constantly improving to serve you better
           </p>
         </div>
 

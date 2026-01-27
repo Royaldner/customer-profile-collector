@@ -81,7 +81,7 @@ export default function AuthenticitySection() {
             </h2>
             <p className="mt-4 text-lg text-[var(--graphite)]/60 leading-relaxed">
               Every product goes through our rigorous quality control process.
-              We don't just sell brands — we guarantee authenticity.
+              We don&apos;t just sell brands — we guarantee authenticity.
             </p>
 
             {/* Feature Grid */}
