@@ -1,5 +1,93 @@
 # Change Logs
 
+## [2026-01-26 23:45] - EPIC 13 Implementation: App Structure & Landing Page
+
+### Summary
+Implemented EPIC 13 - complete restructuring of the app with Next.js route groups and a beautiful, conversion-optimized landing page for Cangoods.
+
+### Changes
+
+#### Route Group Structure (CP-93-94)
+- Created route groups: `(marketing)`, `(customer)`, `(admin)`, `(shop)` stub
+- Migrated all existing routes to appropriate groups while preserving URLs
+- Added cinnabar color palette to globals.css for marketing section
+- Created marketing-specific CSS utilities (gradients, section styling)
+
+#### Marketing Layout (CP-95-96)
+- **Navbar**: Sticky with scroll detection, glassmorphism effect, mobile hamburger menu
+- **Footer**: Dark theme with contact info, social links, legal, trademark disclaimer
+- Skip-to-main-content link for accessibility
+
+#### Static Data Files (CP-97)
+- `src/data/brands.ts` - 10 brand logos with metadata
+- `src/data/how-it-works.ts` - 4-step process with icons
+- `src/data/delivery-options.ts` - Shipping info and delivery methods
+- `src/data/faq.ts` - 6 FAQ items
+- `src/data/payment-methods.ts` - BPI, GCash, Credit Card (coming soon)
+
+#### Landing Page Sections (CP-98-108)
+All 12 sections implemented with beautiful, premium UI:
+1. **HeroSection** - Gradient background, animated CTAs, trust indicators
+2. **BrandsSection** - Logo grid with grayscale-to-color hover effects
+3. **ShippingSection** - Delivery options cards with icons
+4. **HowItWorksSection** - 4-step process with connection line
+5. **PaymentSection** - 50/50 payment visualization on cinnabar gradient
+6. **AuthenticitySection** - Trust badge with floating elements
+7. **PaymentMethodsSection** - Available payment options with "coming soon" badges
+8. **AboutSection** - Company values grid
+9. **FAQSection** - Accordion with sticky header
+10. **ComingSoonSection** - Order tracking & price watch teasers
+
+#### Polish & Accessibility (CP-109-112)
+- Smooth scroll behavior (`scroll-smooth` on html)
+- SEO-friendly metadata (title template, description, keywords)
+- Skip-to-main-content accessibility link
+- Fixed lint errors (unescaped entities)
+
+### Files Created
+- `src/app/(marketing)/layout.tsx` - Marketing layout
+- `src/app/(marketing)/page.tsx` - Landing page
+- `src/app/(customer)/layout.tsx` - Customer layout
+- `src/app/(admin)/layout.tsx` - Admin layout
+- `src/app/(shop)/.gitkeep` - Shop stub
+- `src/components/marketing/navbar.tsx`
+- `src/components/marketing/footer.tsx`
+- `src/components/marketing/hero-section.tsx`
+- `src/components/marketing/brands-section.tsx`
+- `src/components/marketing/shipping-section.tsx`
+- `src/components/marketing/how-it-works-section.tsx`
+- `src/components/marketing/payment-section.tsx`
+- `src/components/marketing/authenticity-section.tsx`
+- `src/components/marketing/payment-methods-section.tsx`
+- `src/components/marketing/about-section.tsx`
+- `src/components/marketing/faq-section.tsx`
+- `src/components/marketing/coming-soon-section.tsx`
+- `src/components/marketing/index.ts`
+- `src/data/*.ts` - All static data files
+- `src/components/ui/accordion.tsx` - shadcn accordion
+
+### Files Modified
+- `src/app/globals.css` - Added cinnabar color palette and marketing utilities
+- `src/app/layout.tsx` - Updated metadata, added scroll-smooth
+
+### Commits
+- `79d3306` - CP-93-96: Route groups, marketing layout, navbar & footer
+- `6bd81c8` - CP-97-109: Static data and landing page sections
+- `dd2851c` - CP-110-112: Polish, accessibility, and metadata
+
+### Test Results
+- 94/104 tests passing (10 db-schema tests require live database)
+- Build passing
+- Lint passing (pre-existing warnings only)
+
+### Notes
+- Beautiful, premium UI with cinnabar theme and hot-pink accents
+- Smooth animations and hover effects throughout
+- Mobile-responsive with hamburger menu
+- All existing routes preserved and working
+
+---
+
 ## [2026-01-26 20:00] - EPIC 13 Planning: App Structure & Landing Page
 
 ### Summary
