@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Customer, ContactPreference, EmailTemplate } from '@/lib/types'
+import { Customer, ContactPreference, ZohoSyncStatus } from '@/lib/types'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,7 +26,7 @@ import { SendEmailDialog } from './send-email-dialog'
 import { BulkStatusDialog } from './bulk-status-dialog'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mail, Check, Clock, PackageCheck } from 'lucide-react'
+import { Mail, Check, Clock, PackageCheck, CheckCircle2, AlertCircle, HelpCircle, UserPlus, RotateCcw, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 interface CustomerListProps {
@@ -43,8 +43,29 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [contactFilter, setContactFilter] = useState<ContactPreference | 'all'>('all')
+  const [syncFilter, setSyncFilter] = useState<ZohoSyncStatus | 'all'>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isSendEmailOpen, setIsSendEmailOpen] = useState(false)
+
+  // EPIC-14: Sync status display helper
+  const getSyncStatusDisplay = (status?: ZohoSyncStatus) => {
+    switch (status) {
+      case 'synced':
+        return { icon: CheckCircle2, label: 'Synced', className: 'text-green-600' }
+      case 'pending':
+        return { icon: Clock, label: 'Pending', className: 'text-yellow-600' }
+      case 'syncing':
+        return { icon: Loader2, label: 'Syncing', className: 'text-blue-600 animate-spin' }
+      case 'failed':
+        return { icon: AlertCircle, label: 'Failed', className: 'text-red-600' }
+      case 'skipped':
+        return { icon: HelpCircle, label: 'Review', className: 'text-orange-600' }
+      case 'manual':
+        return { icon: CheckCircle2, label: 'Manual', className: 'text-gray-600' }
+      default:
+        return null
+    }
+  }
 
   const filteredCustomers = useMemo(() => {
     return initialCustomers.filter((customer) => {
@@ -60,9 +81,13 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
       const matchesContact =
         contactFilter === 'all' || customer.contact_preference === contactFilter
 
-      return matchesSearch && matchesContact
+      // EPIC-14: Sync status filter
+      const matchesSync =
+        syncFilter === 'all' || customer.zoho_sync_status === syncFilter
+
+      return matchesSearch && matchesContact && matchesSync
     })
-  }, [initialCustomers, searchQuery, contactFilter])
+  }, [initialCustomers, searchQuery, contactFilter, syncFilter])
 
   const getDefaultAddress = (customer: Customer) => {
     if (!customer.addresses || customer.addresses.length === 0) return null
@@ -184,12 +209,29 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                 <SelectItem value="sms">SMS</SelectItem>
               </SelectContent>
             </Select>
-            {(searchQuery || contactFilter !== 'all') && (
+            <Select
+              value={syncFilter}
+              onValueChange={(value) => setSyncFilter(value as ZohoSyncStatus | 'all')}
+            >
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Zoho sync" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sync status</SelectItem>
+                <SelectItem value="synced">Synced</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="skipped">Review</SelectItem>
+                <SelectItem value="manual">Manual</SelectItem>
+              </SelectContent>
+            </Select>
+            {(searchQuery || contactFilter !== 'all' || syncFilter !== 'all') && (
               <Button
                 variant="ghost"
                 onClick={() => {
                   setSearchQuery('')
                   setContactFilter('all')
+                  setSyncFilter('all')
                 }}
               >
                 Clear filters
@@ -284,6 +326,7 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                       <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Ready to Ship</TableHead>
+                      <TableHead>Zoho Sync</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Registered</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -314,6 +357,30 @@ export function CustomerList({ initialCustomers }: CustomerListProps) {
                               {readyStatus.icon}
                               {readyStatus.label}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {(() => {
+                              const syncDisplay = getSyncStatusDisplay(customer.zoho_sync_status)
+                              if (!syncDisplay) return '-'
+                              const SyncIcon = syncDisplay.icon
+                              return (
+                                <div className="flex items-center gap-1">
+                                  <SyncIcon className={`h-4 w-4 ${syncDisplay.className}`} />
+                                  <span className={`text-xs ${syncDisplay.className}`}>
+                                    {syncDisplay.label}
+                                  </span>
+                                  {customer.is_returning_customer !== undefined && (
+                                    <span className="ml-1" title={customer.is_returning_customer ? 'Returning' : 'New'}>
+                                      {customer.is_returning_customer ? (
+                                        <RotateCcw className="h-3 w-3 text-muted-foreground" />
+                                      ) : (
+                                        <UserPlus className="h-3 w-3 text-muted-foreground" />
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })()}
                           </TableCell>
                           <TableCell className="max-w-[200px] truncate">
                             {defaultAddress

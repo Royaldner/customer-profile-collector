@@ -66,7 +66,7 @@ export function isZohoConfigured(): boolean {
  */
 export function getAuthorizationUrl(): string {
   const config = getZohoConfig()
-  const scopes = 'ZohoBooks.invoices.READ,ZohoBooks.contacts.READ'
+  const scopes = 'ZohoBooks.invoices.READ,ZohoBooks.contacts.READ,ZohoBooks.contacts.CREATE'
 
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -345,10 +345,15 @@ export async function invalidateCache(pattern: string): Promise<void> {
  */
 async function zohoRequest<T>(
   endpoint: string,
-  params?: Record<string, string>
+  options?: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    params?: Record<string, string>
+    body?: Record<string, unknown>
+  }
 ): Promise<T> {
   const config = getZohoConfig()
   const accessToken = await getAccessToken()
+  const { method = 'GET', params, body } = options || {}
 
   const url = new URL(`${ZOHO_API_URL}${endpoint}`)
   url.searchParams.set('organization_id', config.orgId)
@@ -359,12 +364,19 @@ async function zohoRequest<T>(
     }
   }
 
-  const response = await fetch(url.toString(), {
+  const fetchOptions: RequestInit = {
+    method,
     headers: {
       Authorization: `Zoho-oauthtoken ${accessToken}`,
       'Content-Type': 'application/json',
     },
-  })
+  }
+
+  if (body && (method === 'POST' || method === 'PUT')) {
+    fetchOptions.body = JSON.stringify(body)
+  }
+
+  const response = await fetch(url.toString(), fetchOptions)
 
   if (!response.ok) {
     const error = await response.text()
@@ -386,9 +398,11 @@ export async function searchContacts(query: string): Promise<ZohoContact[]> {
   // No caching for search - admins need real-time results
   // Use contact_name_contains for more accurate name search
   const response = await zohoRequest<ZohoContactsResponse>('/contacts', {
-    contact_name_contains: query,
-    contact_type: 'customer',
-    per_page: '25',
+    params: {
+      contact_name_contains: query,
+      contact_type: 'customer',
+      per_page: '25',
+    },
   })
   return response.contacts || []
 }
@@ -428,11 +442,13 @@ export async function getInvoices(
   const { data, cachedAt } = await getCached(cacheKey, async () => {
     // Fetch all invoices for this contact (no status filter - Zoho API limitation)
     const response = await zohoRequest<ZohoInvoicesResponse>('/invoices', {
-      customer_id: contactId,
-      page: page.toString(),
-      per_page: '50', // Fetch more to allow client-side filtering
-      sort_column: 'date',
-      sort_order: 'D', // Descending
+      params: {
+        customer_id: contactId,
+        page: page.toString(),
+        per_page: '50', // Fetch more to allow client-side filtering
+        sort_column: 'date',
+        sort_order: 'D', // Descending
+      },
     })
 
     return {
@@ -519,5 +535,179 @@ export async function getInvoicesWithDetails(
     hasMore: listResult.hasMore,
     total: listResult.total,
     cachedAt: listResult.cachedAt,
+  }
+}
+
+// ============================================
+// CONTACT SYNC (EPIC-14)
+// ============================================
+
+/**
+ * Search contacts by email (exact match)
+ * Used for finding returning customers
+ */
+export async function searchContactByEmail(email: string): Promise<ZohoContact[]> {
+  // No caching for search - need real-time results for sync
+  const response = await zohoRequest<ZohoContactsResponse>('/contacts', {
+    params: {
+      email: email,
+      contact_type: 'customer',
+      per_page: '10',
+    },
+  })
+  return response.contacts || []
+}
+
+/**
+ * Create a new contact in Zoho Books
+ * Used for new customers during sync
+ *
+ * contact_type: 'customer' = people you sell to (receive invoices)
+ *               'vendor' = people you buy from (receive bills)
+ */
+export async function createContact(input: {
+  contact_name: string
+  email?: string
+  phone?: string
+  // Profile address (optional)
+  billing_address?: {
+    address?: string    // Street + Barangay
+    city?: string       // City/Municipality
+    state?: string      // Province
+    zip?: string        // Postal code
+    country?: string    // Country (defaults to Philippines)
+  }
+}): Promise<ZohoContact> {
+  const body: Record<string, unknown> = {
+    contact_name: input.contact_name,
+    email: input.email,
+    phone: input.phone,
+    contact_type: 'customer',
+  }
+
+  // Add billing address if provided
+  if (input.billing_address) {
+    body.billing_address = {
+      ...input.billing_address,
+      country: input.billing_address.country || 'Philippines',
+    }
+  }
+
+  const response = await zohoRequest<{ contact: ZohoContact }>('/contacts', {
+    method: 'POST',
+    body,
+  })
+  return response.contact
+}
+
+/**
+ * Update an existing contact in Zoho Books
+ * Used by admin to sync customer profile data to Zoho
+ */
+export async function updateContact(
+  contactId: string,
+  input: {
+    contact_name?: string
+    email?: string
+    phone?: string
+    billing_address?: {
+      address?: string
+      city?: string
+      state?: string
+      zip?: string
+      country?: string
+    }
+  }
+): Promise<ZohoContact> {
+  const body: Record<string, unknown> = {}
+
+  if (input.contact_name) body.contact_name = input.contact_name
+  if (input.email) body.email = input.email
+  if (input.phone) body.phone = input.phone
+
+  if (input.billing_address) {
+    body.billing_address = {
+      ...input.billing_address,
+      country: input.billing_address.country || 'Philippines',
+    }
+  }
+
+  const response = await zohoRequest<{ contact: ZohoContact }>(`/contacts/${contactId}`, {
+    method: 'PUT',
+    body,
+  })
+
+  // Invalidate cache for this contact
+  await invalidateCache(`contact:${contactId}`)
+
+  return response.contact
+}
+
+/**
+ * Match result from findMatchingContact
+ */
+export interface MatchResult {
+  contact: ZohoContact | null
+  matchType: 'email' | 'name' | 'none' | 'ambiguous'
+  allMatches: ZohoContact[]
+  error?: string
+}
+
+/**
+ * Find matching contact for a returning customer
+ * Searches by email first (exact), then by name (fuzzy)
+ */
+export async function findMatchingContact(
+  email: string,
+  name: string
+): Promise<MatchResult> {
+  try {
+    // Step 1: Search by email (exact match - most reliable)
+    const emailMatches = await searchContactByEmail(email)
+    if (emailMatches.length === 1 && emailMatches[0]) {
+      return {
+        contact: emailMatches[0],
+        matchType: 'email',
+        allMatches: emailMatches,
+      }
+    }
+    if (emailMatches.length > 1) {
+      return {
+        contact: null,
+        matchType: 'ambiguous',
+        allMatches: emailMatches,
+      }
+    }
+
+    // Step 2: Search by name (fuzzy match - less reliable)
+    const nameMatches = await searchContacts(name)
+    if (nameMatches.length === 1 && nameMatches[0]) {
+      return {
+        contact: nameMatches[0],
+        matchType: 'name',
+        allMatches: nameMatches,
+      }
+    }
+    if (nameMatches.length > 1) {
+      return {
+        contact: null,
+        matchType: 'ambiguous',
+        allMatches: nameMatches,
+      }
+    }
+
+    // No matches found
+    return {
+      contact: null,
+      matchType: 'none',
+      allMatches: [],
+    }
+  } catch (error) {
+    return {
+      contact: null,
+      matchType: 'none',
+      allMatches: [],
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }

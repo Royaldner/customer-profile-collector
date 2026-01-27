@@ -18,6 +18,8 @@ export interface Courier {
   updated_at: string
 }
 
+export type ZohoSyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'skipped' | 'manual'
+
 export interface Customer {
   id: string
   first_name: string
@@ -40,6 +42,12 @@ export interface Customer {
   delivered_at?: string
   // Zoho Books integration
   zoho_contact_id?: string
+  // Zoho sync (EPIC-14)
+  is_returning_customer?: boolean
+  zoho_sync_status?: ZohoSyncStatus
+  zoho_sync_error?: string
+  zoho_sync_attempts?: number
+  zoho_last_sync_at?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
@@ -79,6 +87,8 @@ export interface CustomerInput {
   profile_province?: string
   profile_region?: string
   profile_postal_code?: string
+  // Zoho sync (EPIC-14)
+  is_returning_customer?: boolean
 }
 
 // Input type for courier management

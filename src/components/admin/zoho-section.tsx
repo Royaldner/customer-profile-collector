@@ -7,13 +7,18 @@ import { Badge } from '@/components/ui/badge'
 import { ZohoLinkDialog } from './zoho-link-dialog'
 import { OrdersDisplay } from '@/components/orders/orders-display'
 import { toast } from 'sonner'
-import { Link as LinkIcon, Unlink, Loader2, ExternalLink } from 'lucide-react'
+import { Link as LinkIcon, Unlink, Loader2, ExternalLink, RefreshCw, UserPlus, RotateCcw, AlertCircle, CheckCircle2, Clock, HelpCircle, Upload } from 'lucide-react'
+import type { ZohoSyncStatus } from '@/lib/types'
 
 interface ZohoSectionProps {
   customerId: string
   customerName: string
   customerEmail: string
   zohoContactId: string | null
+  // EPIC-14: Sync status props
+  zohoSyncStatus?: ZohoSyncStatus
+  isReturningCustomer?: boolean
+  zohoSyncError?: string
 }
 
 interface ZohoStatus {
@@ -26,12 +31,19 @@ export function ZohoSection({
   customerName,
   customerEmail,
   zohoContactId: initialZohoContactId,
+  zohoSyncStatus,
+  isReturningCustomer,
+  zohoSyncError,
 }: ZohoSectionProps) {
   const [zohoStatus, setZohoStatus] = useState<ZohoStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUnlinking, setIsUnlinking] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [linkDialogOpen, setLinkDialogOpen] = useState(false)
   const [zohoContactId, setZohoContactId] = useState(initialZohoContactId)
+  const [syncStatus, setSyncStatus] = useState(zohoSyncStatus)
+  const [syncError, setSyncError] = useState(zohoSyncError)
 
   // Check Zoho connection status
   useEffect(() => {
@@ -97,6 +109,87 @@ export function ZohoSection({
     }
   }
 
+  // EPIC-14: Handle sync retry
+  const handleRetrySync = async () => {
+    setIsSyncing(true)
+    setSyncError(undefined)
+
+    try {
+      const response = await fetch(`/api/admin/customers/${customerId}/zoho-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: isReturningCustomer ? 'match' : 'create' }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Sync failed')
+      }
+
+      toast.success('Sync completed successfully')
+      setSyncStatus('synced')
+      // Refresh to get updated zoho_contact_id
+      window.location.reload()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Sync failed'
+      toast.error(errorMessage)
+      setSyncError(errorMessage)
+      setSyncStatus('failed')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  // Handle sync profile to Zoho (for linked customers)
+  const handleSyncProfileToZoho = async () => {
+    if (!confirm('This will update the Zoho contact with the customer profile data from this app. Continue?')) {
+      return
+    }
+
+    setIsUpdatingProfile(true)
+
+    try {
+      const response = await fetch(`/api/admin/customers/${customerId}/zoho-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-profile' }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to sync profile')
+      }
+
+      toast.success('Profile synced to Zoho successfully')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to sync profile to Zoho')
+    } finally {
+      setIsUpdatingProfile(false)
+    }
+  }
+
+  // Helper to get sync status display info
+  const getSyncStatusInfo = (status?: ZohoSyncStatus) => {
+    switch (status) {
+      case 'synced':
+        return { icon: CheckCircle2, label: 'Synced', color: 'text-green-600', bgColor: 'bg-green-50' }
+      case 'pending':
+        return { icon: Clock, label: 'Pending', color: 'text-yellow-600', bgColor: 'bg-yellow-50' }
+      case 'syncing':
+        return { icon: Loader2, label: 'Syncing', color: 'text-blue-600', bgColor: 'bg-blue-50' }
+      case 'failed':
+        return { icon: AlertCircle, label: 'Failed', color: 'text-red-600', bgColor: 'bg-red-50' }
+      case 'skipped':
+        return { icon: HelpCircle, label: 'Review', color: 'text-orange-600', bgColor: 'bg-orange-50' }
+      case 'manual':
+        return { icon: LinkIcon, label: 'Manual', color: 'text-gray-600', bgColor: 'bg-gray-50' }
+      default:
+        return { icon: Clock, label: 'Unknown', color: 'text-gray-600', bgColor: 'bg-gray-50' }
+    }
+  }
+
   if (isLoading) {
     return (
       <Card>
@@ -150,6 +243,9 @@ export function ZohoSection({
   }
 
   // Zoho connected - show link status
+  const statusInfo = getSyncStatusInfo(syncStatus)
+  const StatusIcon = statusInfo.icon
+
   return (
     <>
       <Card>
@@ -166,6 +262,59 @@ export function ZohoSection({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* EPIC-14: Sync Status Section */}
+          {syncStatus && (
+            <div className={`rounded-lg p-3 ${statusInfo.bgColor}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <StatusIcon className={`h-4 w-4 ${statusInfo.color} ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                  <span className={`text-sm font-medium ${statusInfo.color}`}>
+                    Sync Status: {statusInfo.label}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isReturningCustomer !== undefined && (
+                    <Badge variant="outline" className="text-xs">
+                      {isReturningCustomer ? (
+                        <><RotateCcw className="mr-1 h-3 w-3" /> Returning</>
+                      ) : (
+                        <><UserPlus className="mr-1 h-3 w-3" /> New</>
+                      )}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              {syncError && (
+                <p className="mt-2 text-sm text-red-600">{syncError}</p>
+              )}
+              {(syncStatus === 'failed' || syncStatus === 'skipped') && (
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRetrySync}
+                    disabled={isSyncing}
+                  >
+                    {isSyncing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    Retry Sync
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setLinkDialogOpen(true)}
+                  >
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    Link Manually
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           {zohoContactId ? (
             <>
               <div>
@@ -174,7 +323,21 @@ export function ZohoSection({
                 </label>
                 <p className="font-mono text-sm">{zohoContactId}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSyncProfileToZoho}
+                  disabled={isUpdatingProfile}
+                  title="Update Zoho contact with profile data from this app"
+                >
+                  {isUpdatingProfile ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  Sync Profile to Zoho
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"

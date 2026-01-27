@@ -22,6 +22,7 @@ import {
 import { Stepper, type Step } from '@/components/ui/stepper'
 import {
   PersonalInfoStep,
+  CustomerHistoryStep,
   DeliveryMethodStep,
   AddressStep,
   ReviewStep,
@@ -39,6 +40,7 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
     phone: '',
     contact_preference: 'email',
     delivery_method: 'delivered',
+    is_returning_customer: false,
   },
   addresses: [
     {
@@ -59,6 +61,7 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
 // Define steps
 const STEPS: Step[] = [
   { id: 'personal', title: 'Personal Info' },
+  { id: 'history', title: 'Customer Type' },
   { id: 'delivery', title: 'Delivery' },
   { id: 'address', title: 'Address' },
   { id: 'review', title: 'Review' },
@@ -67,6 +70,7 @@ const STEPS: Step[] = [
 // Steps for pickup orders (no address step)
 const PICKUP_STEPS: Step[] = [
   { id: 'personal', title: 'Personal Info' },
+  { id: 'history', title: 'Customer Type' },
   { id: 'delivery', title: 'Delivery' },
   { id: 'review', title: 'Review' },
 ]
@@ -236,6 +240,10 @@ export function CustomerForm() {
           'customer.contact_preference',
         ]
         break
+      case 'history':
+        // No required validation - is_returning_customer has a default
+        // Just proceed to next step
+        return true
       case 'delivery':
         fieldsToValidate = ['customer.delivery_method']
         // Manually validate courier for non-pickup orders
@@ -706,6 +714,7 @@ export function CustomerForm() {
           {currentStepId === 'personal' && (
             <PersonalInfoStep isEmailReadOnly={!!authUser} />
           )}
+          {currentStepId === 'history' && <CustomerHistoryStep />}
           {currentStepId === 'delivery' && <DeliveryMethodStep />}
           {currentStepId === 'address' && <AddressStep />}
           {currentStepId === 'review' && <ReviewStep />}
