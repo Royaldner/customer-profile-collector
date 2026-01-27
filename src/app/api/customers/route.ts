@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { customerWithAddressesSchema } from '@/lib/validations/customer'
+import { queueCustomerSync } from '@/lib/services/zoho-sync'
+import { isZohoConnected } from '@/lib/services/zoho-books'
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,6 +45,9 @@ export async function POST(request: NextRequest) {
         profile_province: customer.profile_province || null,
         profile_region: customer.profile_region || null,
         profile_postal_code: customer.profile_postal_code || null,
+        // Zoho sync fields (EPIC-14)
+        is_returning_customer: customer.is_returning_customer || false,
+        zoho_sync_status: 'pending',
       })
       .select()
       .single()
@@ -96,6 +101,21 @@ export async function POST(request: NextRequest) {
       }
 
       addressesData = data || []
+    }
+
+    // Queue customer for Zoho sync (EPIC-14)
+    // Only queue if Zoho is connected
+    try {
+      const zohoConnected = await isZohoConnected()
+      if (zohoConnected) {
+        await queueCustomerSync(
+          customerData.id,
+          customer.is_returning_customer || false
+        )
+      }
+    } catch (syncError) {
+      // Log but don't fail the request if sync queueing fails
+      console.error('Failed to queue Zoho sync:', syncError)
     }
 
     return NextResponse.json(

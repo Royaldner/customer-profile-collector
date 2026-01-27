@@ -321,6 +321,9 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
             customerName={`${customer.first_name} ${customer.last_name}`}
             customerEmail={customer.email}
             zohoContactId={customer.zoho_contact_id || null}
+            zohoSyncStatus={customer.zoho_sync_status}
+            isReturningCustomer={customer.is_returning_customer}
+            zohoSyncError={customer.zoho_sync_error}
           />
 
           {/* Delivery Logs Card */}

@@ -58,6 +58,8 @@ export const customerSchema = z.object({
   }),
   delivery_method: deliveryMethodSchema,
   courier: z.string().optional(),
+  // Zoho sync (EPIC-14)
+  is_returning_customer: z.boolean().optional(),
   // Profile address fields (optional)
   ...profileAddressSchema.shape,
 })
