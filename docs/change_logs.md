@@ -1,5 +1,66 @@
 # Change Logs
 
+## [2026-01-26 20:00] - EPIC 13 Planning: App Structure & Landing Page
+
+### Summary
+Planned EPIC 13 for restructuring the app with Next.js route groups and creating a conversion-optimized landing page for the Cangoods business.
+
+### Changes
+
+#### Feature Specification Created
+- Created comprehensive EPIC-13 spec document
+- Defined route group structure: `(marketing)`, `(customer)`, `(admin)`, `(shop)` stub
+- Planned 12-section landing page with priority-based ordering
+- Defined new color theme: Cinnabar (red) + Hot Pink (secondary)
+
+#### Landing Page Section Order (Finalized)
+1. Hero
+2. Brands (12 logos)
+3. Free Shipping & Delivery
+4. How It Works (4 steps)
+5. Flexible Payment (50/50 plan)
+6. Authenticity Guarantee
+7. Payment Methods (BPI, GCash, CC)
+8. About
+9. FAQ
+10. Order Tracking (coming soon)
+11. Price Watch (coming soon)
+12. Footer/Contact
+
+#### Assets Added
+- `public/logo.png` - Main landing page logo
+- `public/brands/` - 10 brand logos (Coach, Michael Kors, Crocs, Fossil, Nike, Guess, On, Bath & Body Works, New Balance, Puma)
+- Kirkland and Sephora logos to be added later
+
+#### Color Theme Defined
+```
+Cinnabar (Primary):
+  50: #fee7e7, 100: #fdcece, 200: #fb9d9d, 300: #f96c6c,
+  400: #f73b3b, 500: #f50a0a, 600: #c40808, 700: #930606,
+  800: #620404, 900: #310202, 950: #220101
+
+Secondary: Hot Pink #ff66b3
+```
+
+### Files Created
+- `docs/post-mvp-features/EPIC-13-app-structure-and-landing-page.md`
+- `public/brands/` directory with 10 brand logos
+- `public/logo.png`
+
+### Key Decisions
+- Cinnabar theme applies to marketing section only (for now)
+- Customer/Admin sections keep existing theme until landing page is reviewed
+- 10 brands ready, 2 (Kirkland, Sephora) to be added later
+- Payment icons use Lucide fallbacks (no custom SVGs yet)
+- Task IDs: CP-93 through CP-112 (20 tasks)
+
+### Notes
+- PRD and Tech Spec from separate Cangoods landing project were used as reference
+- Adapted from Vite+React spec to Next.js App Router with route groups
+- Ready for `/phase-workflow` to begin implementation
+
+---
+
 ## [2026-01-26 16:00] - EPIC 12 UI Redesign: Menu + Full-Screen Views
 
 ### Summary

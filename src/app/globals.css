@@ -116,11 +116,56 @@
   --sidebar-ring: oklch(0.637 0.237 25.331);     /* Red-500 */
 }
 
+/* Marketing Section - Cinnabar Theme */
+:root {
+  /* Cinnabar (Primary Red) */
+  --cinnabar-50: #fee7e7;
+  --cinnabar-100: #fdcece;
+  --cinnabar-200: #fb9d9d;
+  --cinnabar-300: #f96c6c;
+  --cinnabar-400: #f73b3b;
+  --cinnabar-500: #f50a0a;
+  --cinnabar-600: #c40808;
+  --cinnabar-700: #930606;
+  --cinnabar-800: #620404;
+  --cinnabar-900: #310202;
+  --cinnabar-950: #220101;
+
+  /* Secondary */
+  --hot-pink: #ff66b3;
+
+  /* Marketing Neutrals */
+  --bright-snow: #f7f7f9;
+  --graphite: #2a2b2a;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Marketing-specific utility classes */
+@layer utilities {
+  .marketing-gradient {
+    background: linear-gradient(135deg, var(--cinnabar-600) 0%, var(--cinnabar-500) 50%, var(--hot-pink) 100%);
+  }
+
+  .marketing-text-gradient {
+    background: linear-gradient(135deg, var(--cinnabar-600) 0%, var(--hot-pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .marketing-section {
+    @apply py-16 md:py-24;
+  }
+
+  .marketing-section-alt {
+    @apply py-16 md:py-24 bg-[var(--bright-snow)];
   }
 }
