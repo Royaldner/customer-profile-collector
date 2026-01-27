@@ -1,16 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/health",
-      "schedule": "0 0 * * 0"
-    },
-    {
-      "path": "/api/cron/send-scheduled-emails",
-      "schedule": "0 8 * * *"
-    },
-    {
       "path": "/api/cron/zoho-sync",
-      "schedule": "0 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
