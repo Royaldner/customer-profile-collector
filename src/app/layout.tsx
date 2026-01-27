@@ -14,8 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Customer Profile Collector",
-  description: "Customer profile collection system for small businesses",
+  title: {
+    default: "Cangoods - Premium Canadian Brands for the Philippines",
+    template: "%s | Cangoods",
+  },
+  description:
+    "Shop premium Canadian brands with free shipping to the Philippines. Authentic products, flexible payment options, and trusted delivery.",
+  keywords: [
+    "Canadian brands",
+    "Philippines shopping",
+    "free shipping",
+    "authentic products",
+    "premium brands",
+  ],
 };
 
 export default function RootLayout({
@@ -24,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

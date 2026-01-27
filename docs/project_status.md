@@ -1,53 +1,52 @@
 # Project Status
 
-**Last Updated:** 2026-01-26 16:00
+**Last Updated:** 2026-01-27 00:15
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-12 implemented, deployed, and live.
+Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-13 implemented. Beautiful landing page with route groups deployed.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `main`
-**Status:** All features deployed and working
+**Branch:** `feature/app-structure-landing-page`
+**Status:** EPIC 13 implementation complete, ready for PR and merge
 
-### Recent Work - EPIC 12 UI Redesign
+### Recent Work - EPIC 13 Implementation
 
-Based on user feedback, the settings UI was redesigned from a collapsible drawer to a menu + full-screen views pattern:
+Implemented comprehensive restructuring with Next.js route groups and a conversion-optimized landing page:
 
-**New UX Flow:**
-1. **Dashboard** - Main view with orders, delivery preference, default address
-2. **Hamburger menu (☰)** → Slide-in drawer with menu items
-3. **Click menu item** → Full-screen view opens (like navigating to a new page)
-4. **Back arrow (←)** → Returns to dashboard
-
-**New Layout:**
+**Route Group Structure:**
 ```
-Dashboard                    Settings Menu (slides in)
-┌─────────────────────┐     ┌─────────────────────────────┐
-│ Greeting        ☰   │     │ Settings                  ✕ │
-├─────────────────────┤     ├─────────────────────────────┤
-│ My Orders           │     │ 👤 Personal Information   → │
-│ [Recent] [Completed]│     │ 📍 Delivery Addresses     → │
-├─────────────────────┤     │ ℹ️  Account               → │
-│ Delivery Preference │     │ ⚠️ Danger Zone           → │
-│ [Delivery] • LBC    │     ├─────────────────────────────┤
-├─────────────────────┤     │ [Sign Out]                  │
-│ Default Address     │     └─────────────────────────────┘
-│ Home - Juan Dela... │
-│ [Manage Addresses→] │     Full-Screen View (when item clicked)
-└─────────────────────┘     ┌─────────────────────────────┐
-                            │ ← Personal Information      │
-                            ├─────────────────────────────┤
-                            │ First Name: Juan            │
-                            │ Last Name: Dela Cruz        │
-                            │ Email: juan@example.com     │
-                            │ ... (full content)          │
-                            │ [Edit] [Save]               │
-                            └─────────────────────────────┘
+src/app/
+├── (marketing)/     # Landing page with navbar + footer
+│   ├── layout.tsx
+│   └── page.tsx     # 12-section landing page
+├── (customer)/      # Registration, dashboard, auth
+├── (admin)/         # Admin dashboard
+├── (shop)/          # Future: e-commerce (stub)
+└── api/             # Unchanged
 ```
+
+**Landing Page Sections (All Complete):**
+1. ✅ Hero - Gradient background, animated CTAs
+2. ✅ Brands - 10 logos with hover effects
+3. ✅ Free Shipping - Delivery options cards
+4. ✅ How It Works - 4-step process
+5. ✅ Flexible Payment - 50/50 visualization
+6. ✅ Authenticity - Trust badge
+7. ✅ Payment Methods - BPI, GCash, CC coming soon
+8. ✅ About - Company values
+9. ✅ FAQ - Accordion
+10. ✅ Coming Soon - Order tracking, price watch teasers
+11. ✅ Footer - Contact, social, legal
+
+**Color Theme (Entire App):**
+- Primary: Cinnabar-600 (#c40808)
+- Accent: Cinnabar-500 (#f50a0a)
+- Secondary: Hot Pink (#ff66b3)
+- Unified branding across all sections
 
 ## Completed Features
 
@@ -97,56 +96,57 @@ Dashboard                    Settings Menu (slides in)
 - Menu items open full-screen views
 - Main view shows Orders, Delivery Preference, Default Address
 - Full settings editing in full-screen views
-- Dashboard page reduced from 1,286 to ~425 lines
+
+### EPIC 13: App Structure & Landing Page (100% Complete)
+- Route groups: (marketing), (customer), (admin), (shop) stub
+- Beautiful landing page with 12 sections
+- Sticky navbar with mobile hamburger menu
+- Dark footer with contact and social links
+- Cinnabar color theme applied to entire app (unified branding)
+- Smooth scroll navigation
+- Accessibility: skip-to-main-content link
+- SEO-optimized metadata
+
+## Next Steps
+
+1. **Push and Create PR** for EPIC 13
+2. **Merge to main** and tag `epic-13-complete`
+3. **Deploy to Vercel** (automatic on merge)
+4. **Add missing brand logos** (Kirkland, Sephora)
+5. **Review landing page** with client for feedback
 
 ## Database State
 
 **Migrations (001-010):**
-- 001_create_tables.sql - Base schema ✅
-- 002_enable_rls.sql - RLS policies ✅
-- 003_add_customer_fields.sql - `user_id` and `delivery_method` ✅
-- 004_customer_auth_rls.sql - Customer self-access policies ✅
-- 005_add_courier.sql - Couriers table ✅
-- 006_split_name_and_profile_address.sql - Split name, profile address ✅
-- 007_address_names_and_cop.sql - Address names, COP delivery method ✅
-- 008_email_notifications.sql - Email templates, logs, tokens ✅
-- 009_delivery_status_logs.sql - `delivered_at`, `delivery_logs` table ✅
-- 010_zoho_integration.sql - `zoho_contact_id`, `zoho_tokens`, `zoho_cache` ✅
-
-**All migrations applied.** Database is up to date.
+All migrations applied. No new migrations needed for EPIC 13.
 
 ## Git State
 
-- **Current Branch:** `main`
-- **Latest Commits:**
-  - `4384e16` - chore: remove unused settings-drawer component
-  - `4649563` - fix: redesign settings as slide-in menu + full-screen views
-  - `fbbe00d` - fix: add missing @radix-ui/react-collapsible dependency
-  - `fb39db9` - EPIC 12: Customer Dashboard UI Restructuring (#9)
+- **Current Branch:** `feature/app-structure-landing-page`
+- **Commits:** 3 commits ready for PR
 - **Tags:** `epic-1-complete` through `epic-12-complete` ✅
 
 ## Test Status
 
-- **Unit Tests:** 94/104 passing
-  - customer-validation.test.ts: 54 tests
-  - admin-components.test.tsx: 39 tests
-  - db-schema.test.ts: 1/11 passing (10 require live database)
+- **Unit Tests:** 94/104 passing (10 db-schema tests require live database)
 - **Build:** Passing
-- **Lint:** Passing (pre-existing warnings)
+- **Lint:** Passing (pre-existing warnings only)
+
+## Future Enhancements
+
+- **EPIC 14:** Payment processing (PayMongo integration)
+- **EPIC 15:** Product catalog and order creation
+- **Future:** Blog/SEO, Multi-language, Referral program
 
 ## Key Files
 
 | Feature | File |
 |---------|------|
-| Dashboard Header | `src/components/customer/dashboard-header.tsx` |
-| Settings Menu | `src/components/customer/settings-menu.tsx` |
-| Settings Full-Screen Views | `src/components/customer/settings-view.tsx` |
-| Delivery Preference Card | `src/components/customer/delivery-preference-card.tsx` |
-| Default Address Card | `src/components/customer/default-address-card.tsx` |
-| Address Dialog | `src/components/customer/address-dialog.tsx` |
-| Customer Dashboard | `src/app/customer/dashboard/page.tsx` |
-
-## Future Enhancements
-
-- **EPIC 13:** Payment processing (PayMongo integration)
-- **EPIC 14:** Product catalog and order creation
+| Landing Page | `src/app/(marketing)/page.tsx` |
+| Marketing Layout | `src/app/(marketing)/layout.tsx` |
+| Navbar | `src/components/marketing/navbar.tsx` |
+| Footer | `src/components/marketing/footer.tsx` |
+| All Sections | `src/components/marketing/*.tsx` |
+| Static Data | `src/data/*.ts` |
+| Customer Dashboard | `src/app/(customer)/customer/dashboard/page.tsx` |
+| Admin Dashboard | `src/app/(admin)/admin/page.tsx` |

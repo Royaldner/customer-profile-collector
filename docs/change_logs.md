@@ -1,5 +1,182 @@
 # Change Logs
 
+## [2026-01-27 00:15] - Apply Cinnabar Theme to Entire App
+
+### Summary
+Extended the cinnabar color theme from marketing section to customer and admin sections for consistent branding across the entire application.
+
+### Changes
+- Updated `:root` CSS variables to use cinnabar palette
+- Updated `.dark` mode to use cinnabar colors
+- Consolidated color definitions (removed duplicate declarations)
+- All sections now share the same visual identity
+
+### Theme Applied
+- **Primary**: Cinnabar-600 (#c40808)
+- **Accent**: Cinnabar-500 (#f50a0a)
+- **Borders**: Cinnabar-100 (subtle red tint)
+- **Text**: Cinnabar-950 (dark red-black)
+- **Backgrounds**: White with bright-snow accents
+
+### Files Modified
+- `src/app/globals.css` - Unified cinnabar theme for entire app
+
+### Notes
+- Customer login, signup, dashboard now match landing page aesthetic
+- Admin pages also updated with consistent branding
+- Dark mode updated with cinnabar accents
+
+---
+
+## [2026-01-26 23:45] - EPIC 13 Implementation: App Structure & Landing Page
+
+### Summary
+Implemented EPIC 13 - complete restructuring of the app with Next.js route groups and a beautiful, conversion-optimized landing page for Cangoods.
+
+### Changes
+
+#### Route Group Structure (CP-93-94)
+- Created route groups: `(marketing)`, `(customer)`, `(admin)`, `(shop)` stub
+- Migrated all existing routes to appropriate groups while preserving URLs
+- Added cinnabar color palette to globals.css for marketing section
+- Created marketing-specific CSS utilities (gradients, section styling)
+
+#### Marketing Layout (CP-95-96)
+- **Navbar**: Sticky with scroll detection, glassmorphism effect, mobile hamburger menu
+- **Footer**: Dark theme with contact info, social links, legal, trademark disclaimer
+- Skip-to-main-content link for accessibility
+
+#### Static Data Files (CP-97)
+- `src/data/brands.ts` - 10 brand logos with metadata
+- `src/data/how-it-works.ts` - 4-step process with icons
+- `src/data/delivery-options.ts` - Shipping info and delivery methods
+- `src/data/faq.ts` - 6 FAQ items
+- `src/data/payment-methods.ts` - BPI, GCash, Credit Card (coming soon)
+
+#### Landing Page Sections (CP-98-108)
+All 12 sections implemented with beautiful, premium UI:
+1. **HeroSection** - Gradient background, animated CTAs, trust indicators
+2. **BrandsSection** - Logo grid with grayscale-to-color hover effects
+3. **ShippingSection** - Delivery options cards with icons
+4. **HowItWorksSection** - 4-step process with connection line
+5. **PaymentSection** - 50/50 payment visualization on cinnabar gradient
+6. **AuthenticitySection** - Trust badge with floating elements
+7. **PaymentMethodsSection** - Available payment options with "coming soon" badges
+8. **AboutSection** - Company values grid
+9. **FAQSection** - Accordion with sticky header
+10. **ComingSoonSection** - Order tracking & price watch teasers
+
+#### Polish & Accessibility (CP-109-112)
+- Smooth scroll behavior (`scroll-smooth` on html)
+- SEO-friendly metadata (title template, description, keywords)
+- Skip-to-main-content accessibility link
+- Fixed lint errors (unescaped entities)
+
+### Files Created
+- `src/app/(marketing)/layout.tsx` - Marketing layout
+- `src/app/(marketing)/page.tsx` - Landing page
+- `src/app/(customer)/layout.tsx` - Customer layout
+- `src/app/(admin)/layout.tsx` - Admin layout
+- `src/app/(shop)/.gitkeep` - Shop stub
+- `src/components/marketing/navbar.tsx`
+- `src/components/marketing/footer.tsx`
+- `src/components/marketing/hero-section.tsx`
+- `src/components/marketing/brands-section.tsx`
+- `src/components/marketing/shipping-section.tsx`
+- `src/components/marketing/how-it-works-section.tsx`
+- `src/components/marketing/payment-section.tsx`
+- `src/components/marketing/authenticity-section.tsx`
+- `src/components/marketing/payment-methods-section.tsx`
+- `src/components/marketing/about-section.tsx`
+- `src/components/marketing/faq-section.tsx`
+- `src/components/marketing/coming-soon-section.tsx`
+- `src/components/marketing/index.ts`
+- `src/data/*.ts` - All static data files
+- `src/components/ui/accordion.tsx` - shadcn accordion
+
+### Files Modified
+- `src/app/globals.css` - Added cinnabar color palette and marketing utilities
+- `src/app/layout.tsx` - Updated metadata, added scroll-smooth
+
+### Commits
+- `79d3306` - CP-93-96: Route groups, marketing layout, navbar & footer
+- `6bd81c8` - CP-97-109: Static data and landing page sections
+- `dd2851c` - CP-110-112: Polish, accessibility, and metadata
+
+### Test Results
+- 94/104 tests passing (10 db-schema tests require live database)
+- Build passing
+- Lint passing (pre-existing warnings only)
+
+### Notes
+- Beautiful, premium UI with cinnabar theme and hot-pink accents
+- Smooth animations and hover effects throughout
+- Mobile-responsive with hamburger menu
+- All existing routes preserved and working
+
+---
+
+## [2026-01-26 20:00] - EPIC 13 Planning: App Structure & Landing Page
+
+### Summary
+Planned EPIC 13 for restructuring the app with Next.js route groups and creating a conversion-optimized landing page for the Cangoods business.
+
+### Changes
+
+#### Feature Specification Created
+- Created comprehensive EPIC-13 spec document
+- Defined route group structure: `(marketing)`, `(customer)`, `(admin)`, `(shop)` stub
+- Planned 12-section landing page with priority-based ordering
+- Defined new color theme: Cinnabar (red) + Hot Pink (secondary)
+
+#### Landing Page Section Order (Finalized)
+1. Hero
+2. Brands (12 logos)
+3. Free Shipping & Delivery
+4. How It Works (4 steps)
+5. Flexible Payment (50/50 plan)
+6. Authenticity Guarantee
+7. Payment Methods (BPI, GCash, CC)
+8. About
+9. FAQ
+10. Order Tracking (coming soon)
+11. Price Watch (coming soon)
+12. Footer/Contact
+
+#### Assets Added
+- `public/logo.png` - Main landing page logo
+- `public/brands/` - 10 brand logos (Coach, Michael Kors, Crocs, Fossil, Nike, Guess, On, Bath & Body Works, New Balance, Puma)
+- Kirkland and Sephora logos to be added later
+
+#### Color Theme Defined
+```
+Cinnabar (Primary):
+  50: #fee7e7, 100: #fdcece, 200: #fb9d9d, 300: #f96c6c,
+  400: #f73b3b, 500: #f50a0a, 600: #c40808, 700: #930606,
+  800: #620404, 900: #310202, 950: #220101
+
+Secondary: Hot Pink #ff66b3
+```
+
+### Files Created
+- `docs/post-mvp-features/EPIC-13-app-structure-and-landing-page.md`
+- `public/brands/` directory with 10 brand logos
+- `public/logo.png`
+
+### Key Decisions
+- Cinnabar theme applies to marketing section only (for now)
+- Customer/Admin sections keep existing theme until landing page is reviewed
+- 10 brands ready, 2 (Kirkland, Sephora) to be added later
+- Payment icons use Lucide fallbacks (no custom SVGs yet)
+- Task IDs: CP-93 through CP-112 (20 tasks)
+
+### Notes
+- PRD and Tech Spec from separate Cangoods landing project were used as reference
+- Adapted from Vite+React spec to Next.js App Router with route groups
+- Ready for `/phase-workflow` to begin implementation
+
+---
+
 ## [2026-01-26 16:00] - EPIC 12 UI Redesign: Menu + Full-Screen Views
 
 ### Summary
