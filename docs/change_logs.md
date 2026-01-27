@@ -1,5 +1,83 @@
 # Change Logs
 
+## [2026-01-27 21:00] - EPIC 14: Automatic Zoho Books Customer Sync
+
+### Summary
+Implemented automatic customer sync to Zoho Books. New customers get Zoho contacts created automatically, returning customers get matched and linked to existing Zoho contacts.
+
+### Changes
+
+#### Registration Flow
+- Added "Customer History" step asking if customer is new or returning
+- `is_returning_customer` field stored on customer record
+- Step appears between Personal Info and Delivery Method
+
+#### Background Sync Processing
+- Created `zoho_sync_queue` table for background job processing
+- Cron job processes queue (configured for daily, attempting hourly)
+- Retry logic with exponential backoff (5min, 15min, 1hr, max 3 attempts)
+- Sync status tracking: pending → syncing → synced/failed/skipped
+
+#### Zoho API Enhancements
+- Added CREATE scope to OAuth (ZohoBooks.contacts.CREATE)
+- `createContact()` - Creates new Zoho contact with profile address
+- `updateContact()` - Updates existing Zoho contact with app data
+- `searchContactByEmail()` - Exact email match search
+- `findMatchingContact()` - Email-first, then name matching
+
+#### Admin UI
+- Sync status column in customer list with filter dropdown
+- Sync status display in customer detail (icon + label)
+- "Retry Sync" button for failed/skipped syncs
+- "Link Manually" button for manual linking
+- "Sync Profile to Zoho" button for pushing profile data to linked contacts
+
+### Files Created
+- `docs/post-mvp-features/EPIC-14-zoho-auto-sync.md` - Feature specification
+- `supabase/migrations/011_zoho_sync.sql` - Database migration
+- `src/lib/services/zoho-sync.ts` - Background sync processing service
+- `src/app/api/cron/zoho-sync/route.ts` - Cron endpoint
+- `src/app/api/admin/customers/[id]/zoho-sync/route.ts` - Manual sync trigger
+- `src/components/forms/steps/customer-history-step.tsx` - New registration step
+
+### Files Modified
+- `src/lib/services/zoho-books.ts` - Added CREATE scope, createContact, updateContact, searchContactByEmail, findMatchingContact
+- `src/lib/types/index.ts` - Added ZohoSyncStatus, sync fields to Customer
+- `src/lib/types/zoho.ts` - Added ZohoSyncQueue interface
+- `src/lib/validations/customer.ts` - Added is_returning_customer
+- `src/components/forms/customer-form.tsx` - Added customer history step
+- `src/components/forms/steps/index.ts` - Export new step
+- `src/app/api/customers/route.ts` - Queue sync after customer creation
+- `src/components/admin/zoho-section.tsx` - Sync status display, retry/sync buttons
+- `src/components/admin/customer-list.tsx` - Sync status column and filter
+- `src/app/(admin)/admin/customers/[id]/page.tsx` - Pass sync props to ZohoSection
+- `vercel.json` - Added zoho-sync cron job
+
+### Cron Job Issue
+- Vercel Hobby tier cron limits are unclear from docs
+- Hourly schedule failed deployment initially
+- Currently set to daily (`0 0 * * *`) to test if it deploys
+- May need to use external cron service (cron-job.org) for hourly syncs
+
+### Deployment Steps
+1. Run migration `011_zoho_sync.sql` in Supabase SQL Editor
+2. Re-authorize Zoho Books to get CREATE scope (delete `zoho_tokens` row, reconnect)
+3. Deploy to Vercel
+
+### Git
+- **Branch:** `feature/zoho-auto-sync`
+- **PR:** #11 (merged to main)
+- **Commits:** Multiple commits for cron configuration adjustments
+
+### Notes
+- New customers: Zoho contact created with name, email, phone, profile address
+- Returning customers: Searched by email first, then name
+- Ambiguous matches (multiple contacts found): Marked as 'skipped' for admin review
+- Admin can manually trigger sync or link customers to Zoho contacts
+- "Sync Profile to Zoho" allows admin to push profile data to existing Zoho contacts
+
+---
+
 ## [2026-01-27 00:15] - Apply Cinnabar Theme to Entire App
 
 ### Summary

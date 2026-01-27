@@ -1,52 +1,50 @@
 # Project Status
 
-**Last Updated:** 2026-01-27 00:15
+**Last Updated:** 2026-01-27 21:00
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-13 implemented. Beautiful landing page with route groups deployed.
+Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-14 implemented. Automatic Zoho Books customer sync now available.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
-**Branch:** `feature/app-structure-landing-page`
-**Status:** EPIC 13 implementation complete, ready for PR and merge
+**Branch:** `main`
+**Status:** EPIC 14 merged, testing Vercel cron deployment
 
-### Recent Work - EPIC 13 Implementation
+### Recent Work - EPIC 14: Automatic Zoho Books Customer Sync
 
-Implemented comprehensive restructuring with Next.js route groups and a conversion-optimized landing page:
+Implemented automatic customer sync to Zoho Books:
 
-**Route Group Structure:**
-```
-src/app/
-├── (marketing)/     # Landing page with navbar + footer
-│   ├── layout.tsx
-│   └── page.tsx     # 12-section landing page
-├── (customer)/      # Registration, dashboard, auth
-├── (admin)/         # Admin dashboard
-├── (shop)/          # Future: e-commerce (stub)
-└── api/             # Unchanged
-```
+**Registration Flow:**
+- New "Customer History" step asking if new or returning customer
+- Selection stored in `is_returning_customer` field
 
-**Landing Page Sections (All Complete):**
-1. ✅ Hero - Gradient background, animated CTAs
-2. ✅ Brands - 10 logos with hover effects
-3. ✅ Free Shipping - Delivery options cards
-4. ✅ How It Works - 4-step process
-5. ✅ Flexible Payment - 50/50 visualization
-6. ✅ Authenticity - Trust badge
-7. ✅ Payment Methods - BPI, GCash, CC coming soon
-8. ✅ About - Company values
-9. ✅ FAQ - Accordion
-10. ✅ Coming Soon - Order tracking, price watch teasers
-11. ✅ Footer - Contact, social, legal
+**Background Processing:**
+- `zoho_sync_queue` table for job processing
+- Cron job processes pending syncs (daily schedule due to Vercel limits)
+- Retry logic with exponential backoff (max 3 attempts)
 
-**Color Theme (Entire App):**
-- Primary: Cinnabar-600 (#c40808)
-- Accent: Cinnabar-500 (#f50a0a)
-- Secondary: Hot Pink (#ff66b3)
-- Unified branding across all sections
+**Sync Logic:**
+- New customers → Create Zoho contact with profile address
+- Returning customers → Search by email, then name
+- Single match → Auto-link
+- Multiple matches → Mark as 'skipped' for admin review
+- No match → Mark as 'failed'
+
+**Admin UI:**
+- Sync status column in customer list
+- Sync status filter dropdown
+- Retry Sync / Link Manually buttons
+- "Sync Profile to Zoho" button for linked customers
+
+### Cron Job Issue (In Progress)
+
+Vercel Hobby tier cron limits are causing deployment failures:
+- Hourly cron (`0 * * * *`) failed
+- Currently testing daily cron (`0 0 * * *`)
+- May need external cron service (cron-job.org) for more frequent syncs
 
 ## Completed Features
 
@@ -102,29 +100,34 @@ src/app/
 - Beautiful landing page with 12 sections
 - Sticky navbar with mobile hamburger menu
 - Dark footer with contact and social links
-- Cinnabar color theme applied to entire app (unified branding)
-- Smooth scroll navigation
-- Accessibility: skip-to-main-content link
-- SEO-optimized metadata
+- Cinnabar color theme applied to entire app
 
-## Next Steps
+### EPIC 14: Automatic Zoho Books Customer Sync (100% Complete)
+- Customer history step in registration (new/returning)
+- Background sync queue with cron processing
+- Auto-create Zoho contacts for new customers
+- Auto-link returning customers to existing Zoho contacts
+- Admin sync status visibility and retry controls
+- "Sync Profile to Zoho" for admin-controlled data sync
 
-1. **Push and Create PR** for EPIC 13
-2. **Merge to main** and tag `epic-13-complete`
-3. **Deploy to Vercel** (automatic on merge)
-4. **Add missing brand logos** (Kirkland, Sephora)
-5. **Review landing page** with client for feedback
+## Deployment Pending
+
+**EPIC 14 requires:**
+1. Run migration `011_zoho_sync.sql` in Supabase
+2. Re-authorize Zoho Books for CREATE scope (delete `zoho_tokens`, reconnect)
+3. Resolve Vercel cron deployment issue
 
 ## Database State
 
-**Migrations (001-010):**
-All migrations applied. No new migrations needed for EPIC 13.
+**Migrations (001-011):**
+- 001-010: All applied
+- 011: `011_zoho_sync.sql` - **PENDING** (needs to be run in Supabase)
 
 ## Git State
 
-- **Current Branch:** `feature/app-structure-landing-page`
-- **Commits:** 3 commits ready for PR
-- **Tags:** `epic-1-complete` through `epic-12-complete` ✅
+- **Current Branch:** `main`
+- **Latest Commit:** EPIC 14 merged
+- **Tags:** `epic-1-complete` through `epic-13-complete` ✅
 
 ## Test Status
 
@@ -132,21 +135,29 @@ All migrations applied. No new migrations needed for EPIC 13.
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings only)
 
+## Next Steps
+
+1. **Resolve Vercel cron issue** - Test if daily schedule deploys
+2. **Run migration 011** in Supabase
+3. **Re-authorize Zoho** for CREATE scope
+4. **Consider external cron** (cron-job.org) for hourly sync if needed
+5. **Tag release** `epic-14-complete` after deployment verified
+
 ## Future Enhancements
 
-- **EPIC 14:** Payment processing (PayMongo integration)
-- **EPIC 15:** Product catalog and order creation
+- **EPIC 15:** Payment processing (PayMongo integration)
+- **EPIC 16:** Product catalog and order creation
 - **Future:** Blog/SEO, Multi-language, Referral program
 
 ## Key Files
 
 | Feature | File |
 |---------|------|
-| Landing Page | `src/app/(marketing)/page.tsx` |
-| Marketing Layout | `src/app/(marketing)/layout.tsx` |
-| Navbar | `src/components/marketing/navbar.tsx` |
-| Footer | `src/components/marketing/footer.tsx` |
-| All Sections | `src/components/marketing/*.tsx` |
-| Static Data | `src/data/*.ts` |
-| Customer Dashboard | `src/app/(customer)/customer/dashboard/page.tsx` |
-| Admin Dashboard | `src/app/(admin)/admin/page.tsx` |
+| Customer History Step | `src/components/forms/steps/customer-history-step.tsx` |
+| Zoho Sync Service | `src/lib/services/zoho-sync.ts` |
+| Zoho Books Service | `src/lib/services/zoho-books.ts` |
+| Cron Endpoint | `src/app/api/cron/zoho-sync/route.ts` |
+| Admin Sync Trigger | `src/app/api/admin/customers/[id]/zoho-sync/route.ts` |
+| Zoho Section (Admin) | `src/components/admin/zoho-section.tsx` |
+| Customer List | `src/components/admin/customer-list.tsx` |
+| Migration | `supabase/migrations/011_zoho_sync.sql` |
