@@ -15,8 +15,8 @@ export function AuthHeader() {
             <Image
               src="/logo.svg"
               alt="Cangoods"
-              width={36}
-              height={36}
+              width={48}
+              height={48}
               className="rounded-lg transition-transform duration-300 group-hover:scale-105"
               priority
             />

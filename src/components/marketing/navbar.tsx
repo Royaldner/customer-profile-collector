@@ -164,8 +164,8 @@ export default function Navbar() {
                 <Image
                   src="/logo.svg"
                   alt="Cangoods"
-                  width={44}
-                  height={44}
+                  width={48}
+                  height={48}
                   className="rounded-lg"
                 />
                 <span className="text-lg font-semibold text-[var(--cinnabar-950)]">
