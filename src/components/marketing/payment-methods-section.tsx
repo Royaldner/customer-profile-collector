@@ -1,5 +1,8 @@
 import { paymentMethods } from '@/data/payment-methods'
 import { cn } from '@/lib/utils'
+import { ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export default function PaymentMethodsSection() {
   return (
@@ -97,6 +100,41 @@ export default function PaymentMethodsSection() {
             </div>
           ))}
         </div>
+        <div className="w-full flex flex-col py-8 items-center gap-4">
+            <span className="text-lg text-[var(--graphite)]/60">Login to your account to see your payment methods</span>
+          </div>
+        <div className="mt-2 flex justify-center flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-300">
+            <Button
+              asChild
+              size="lg"
+              className={cn(
+                'h-14 px-8 text-base font-semibold',
+                'bg-[var(--cinnabar-600)] hover:bg-[var(--cinnabar-700)]',
+                'shadow-[0_4px_14px_-2px_rgba(196,8,8,0.4)]',
+                'hover:shadow-[0_6px_20px_-2px_rgba(196,8,8,0.5)]',
+                'transition-all duration-300'
+              )}
+            >
+              <Link href="/customer/signup" className="flex items-center gap-2">
+                Get Started
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className={cn(
+                'h-14 px-8 text-base font-semibold',
+                'border-[var(--cinnabar-200)] text-[var(--cinnabar-700)]',
+                'hover:bg-[var(--cinnabar-50)] hover:border-[var(--cinnabar-300)]',
+                'transition-all duration-300'
+              )}
+            >
+              <a href="#how-it-works">Learn More</a>
+            </Button>
+          </div>
       </div>
     </section>
   )
