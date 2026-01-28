@@ -9,7 +9,7 @@ export default function ShippingSection() {
       className="relative py-20 lg:py-28 bg-[var(--bright-snow)] overflow-hidden"
     >
       {/* Decorative gradient */}
-      <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-[var(--cinnabar-100)]/30 to-transparent" />
+      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[var(--cinnabar-100)]/40 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -21,7 +21,7 @@ export default function ShippingSection() {
             Delivered Your Way
           </h2>
           <p className="mt-4 text-lg text-[var(--graphite)]/60">
-            Free shipping to the Philippines with flexible delivery options
+            Free international shipping to the Philippines with flexible delivery options
           </p>
         </div>
 
@@ -83,9 +83,10 @@ export default function ShippingSection() {
 
         {/* Free Shipping Note */}
         <div className="mt-12 flex justify-center">
-          <div className="inline-flex items-center gap-2 text-[var(--cinnabar-600)]">
+          <div className="flex flex-col items-center gap-2 text-[var(--cinnabar-950)]">
             <CheckCircle2 className="w-5 h-5" />
             <span className="font-medium">{shippingInfo.freeShippingNote}</span>
+            <span className="font-sm text-tiny">Check out our partners: <a href={shippingInfo.lbcLink} target="_blank" className="text-[var(--hot-pink)]">LBC</a> and <a href={shippingInfo.jrsLink} target="_blank" className="text-[var(--hot-pink)]">JRS</a> for the rates</span>
           </div>
         </div>
       </div>
