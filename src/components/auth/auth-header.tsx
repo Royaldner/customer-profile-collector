@@ -13,7 +13,7 @@ export function AuthHeader() {
             className="flex items-center gap-2 group"
           >
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="Cangoods"
               width={36}
               height={36}

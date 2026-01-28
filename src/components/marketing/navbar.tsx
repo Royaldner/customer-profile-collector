@@ -77,7 +77,7 @@ export default function Navbar() {
           >
             <div className="relative overflow-hidden rounded-lg">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Cangoods"
                 width={44}
                 height={44}
@@ -162,7 +162,7 @@ export default function Navbar() {
             <SheetHeader className="p-0">
               <SheetTitle className="flex items-center gap-3">
                 <Image
-                  src="/logo.png"
+                  src="/logo.svg"
                   alt="Cangoods"
                   width={36}
                   height={36}

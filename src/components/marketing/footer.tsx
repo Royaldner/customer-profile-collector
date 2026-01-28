@@ -46,7 +46,7 @@ export default function Footer() {
               <Link href="/" className="inline-flex items-center gap-3 group">
                 <div className="relative">
                   <Image
-                    src="/logo.png"
+                    src="/logo.svg"
                     alt="Cangoods"
                     width={48}
                     height={48}

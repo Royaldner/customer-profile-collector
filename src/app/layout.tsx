@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     "authentic products",
     "premium brands",
   ],
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
