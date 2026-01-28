@@ -229,9 +229,10 @@ export async function processSyncQueue(): Promise<{
     const result = await processSyncItem(item, customer as Customer)
 
     // Update customer with result
+    // Use null (not undefined) to clear the error field when successful
     const customerUpdate: Partial<Customer> = {
       zoho_sync_status: result.status,
-      zoho_sync_error: result.error,
+      zoho_sync_error: result.error ?? null,
       zoho_sync_attempts: (customer.zoho_sync_attempts || 0) + 1,
       zoho_last_sync_at: new Date().toISOString(),
     }

@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AuthHeader } from '@/components/auth/auth-header'
 import { Loader2 } from 'lucide-react'
 
 function LoginForm() {
@@ -243,7 +244,8 @@ function LoginSkeleton() {
 
 export default function CustomerLoginPage() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+      <AuthHeader />
       <Suspense fallback={<LoginSkeleton />}>
         <LoginForm />
       </Suspense>

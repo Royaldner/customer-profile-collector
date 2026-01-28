@@ -18,7 +18,7 @@ interface ZohoSectionProps {
   // EPIC-14: Sync status props
   zohoSyncStatus?: ZohoSyncStatus
   isReturningCustomer?: boolean
-  zohoSyncError?: string
+  zohoSyncError?: string | null
 }
 
 interface ZohoStatus {

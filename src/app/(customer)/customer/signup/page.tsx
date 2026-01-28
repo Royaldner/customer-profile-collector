@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AuthHeader } from '@/components/auth/auth-header'
 import { Loader2 } from 'lucide-react'
 
 export default function CustomerSignupPage() {
@@ -97,7 +98,8 @@ export default function CustomerSignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+      <AuthHeader />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-primary">Create Account</CardTitle>

@@ -45,7 +45,7 @@ export interface Customer {
   // Zoho sync (EPIC-14)
   is_returning_customer?: boolean
   zoho_sync_status?: ZohoSyncStatus
-  zoho_sync_error?: string
+  zoho_sync_error?: string | null
   zoho_sync_attempts?: number
   zoho_last_sync_at?: string
   created_at: string

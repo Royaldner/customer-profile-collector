@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
 import {
@@ -16,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AuthHeader } from '@/components/auth/auth-header'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -75,7 +75,8 @@ export default function ResetPasswordPage() {
 
   if (isCheckingSession) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+        <AuthHeader />
         <Card className="w-full max-w-md">
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">Verifying your session...</p>
@@ -87,7 +88,8 @@ export default function ResetPasswordPage() {
 
   if (!isValidSession) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+        <AuthHeader />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-destructive">Invalid or Expired Link</CardTitle>
@@ -110,7 +112,8 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+        <AuthHeader />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-primary">Password Reset Successful</CardTitle>
@@ -132,7 +135,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+      <AuthHeader />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-primary">Reset Password</CardTitle>

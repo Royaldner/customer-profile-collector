@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AuthHeader } from '@/components/auth/auth-header'
 
 export default function ForgotPasswordPage() {
   const supabase = createClient()
@@ -46,7 +47,8 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+        <AuthHeader />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-primary">Check Your Email</CardTitle>
@@ -69,7 +71,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center py-8 px-4 relative">
+      <AuthHeader />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-primary">Forgot Password</CardTitle>
