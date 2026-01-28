@@ -79,8 +79,8 @@ export default function Navbar() {
               <Image
                 src="/logo.svg"
                 alt="Cangoods"
-                width={44}
-                height={44}
+                width={56}
+                height={56}
                 className="transition-transform duration-300 group-hover:scale-105"
                 priority
               />
@@ -164,8 +164,8 @@ export default function Navbar() {
                 <Image
                   src="/logo.svg"
                   alt="Cangoods"
-                  width={36}
-                  height={36}
+                  width={44}
+                  height={44}
                   className="rounded-lg"
                 />
                 <span className="text-lg font-semibold text-[var(--cinnabar-950)]">
