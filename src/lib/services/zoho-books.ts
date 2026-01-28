@@ -654,8 +654,57 @@ export interface MatchResult {
 }
 
 /**
+ * Generate name variations to search for
+ * Handles different naming conventions and case variations
+ */
+function generateNameVariations(firstName: string, lastName: string): string[] {
+  const variations: string[] = []
+
+  const first = firstName.trim()
+  const last = lastName.trim()
+
+  if (!first && !last) return []
+
+  if (!first || !last) {
+    // Single name part - add original and lowercase
+    const single = first || last
+    variations.push(single)
+    variations.push(single.toLowerCase())
+    return [...new Set(variations)]
+  }
+
+  // Format variations (original case)
+  variations.push(`${first} ${last}`)           // "Juan Dela Cruz"
+  variations.push(`${last}, ${first}`)          // "Dela Cruz, Juan"
+  variations.push(`${last} ${first}`)           // "Dela Cruz Juan"
+
+  // Lowercase variations (for case-insensitive matching)
+  const firstLower = first.toLowerCase()
+  const lastLower = last.toLowerCase()
+  variations.push(`${firstLower} ${lastLower}`)
+  variations.push(`${lastLower}, ${firstLower}`)
+  variations.push(`${lastLower} ${firstLower}`)
+
+  // Individual name parts (helps with partial matches)
+  variations.push(first)
+  variations.push(last)
+  variations.push(firstLower)
+  variations.push(lastLower)
+
+  return [...new Set(variations)]
+}
+
+/**
+ * Check if two names match (case-insensitive, ignores extra whitespace)
+ */
+function namesMatch(name1: string, name2: string): boolean {
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim()
+  return normalize(name1) === normalize(name2)
+}
+
+/**
  * Find matching contact for a returning customer
- * Searches by email first (exact), then by name (fuzzy)
+ * Searches by email first (exact), then by name with multiple format/case variations
  */
 export async function findMatchingContact(
   email: string,
@@ -679,20 +728,77 @@ export async function findMatchingContact(
       }
     }
 
-    // Step 2: Search by name (fuzzy match - less reliable)
-    const nameMatches = await searchContacts(name)
-    if (nameMatches.length === 1 && nameMatches[0]) {
-      return {
-        contact: nameMatches[0],
-        matchType: 'name',
-        allMatches: nameMatches,
+    // Step 2: Search by name with multiple format/case variations
+    const nameParts = name.trim().split(/\s+/)
+    const firstName = nameParts[0] || ''
+    const lastName = nameParts.slice(1).join(' ') || ''
+
+    const nameVariations = generateNameVariations(firstName, lastName)
+
+    // Collect all matches from all variations (deduplicated by contact_id)
+    const allMatchesMap = new Map<string, ZohoContact>()
+
+    for (const variation of nameVariations) {
+      const matches = await searchContacts(variation)
+      for (const contact of matches) {
+        if (!allMatchesMap.has(contact.contact_id)) {
+          allMatchesMap.set(contact.contact_id, contact)
+        }
+      }
+
+      // Early exit if we found exactly one match with strong confidence
+      if (allMatchesMap.size === 1) {
+        const contact = Array.from(allMatchesMap.values())[0]
+        // Verify it's a good match (case-insensitive name comparison)
+        if (contact && namesMatch(contact.contact_name, name)) {
+          return {
+            contact,
+            matchType: 'name',
+            allMatches: [contact],
+          }
+        }
       }
     }
-    if (nameMatches.length > 1) {
+
+    const uniqueMatches = Array.from(allMatchesMap.values())
+
+    // Filter to only contacts that actually match the name (case-insensitive)
+    const strongMatches = uniqueMatches.filter((c) => {
+      const zohoName = c.contact_name.toLowerCase()
+      const searchFirst = firstName.toLowerCase()
+      const searchLast = lastName.toLowerCase()
+      // Match if Zoho name contains both first and last name parts
+      return zohoName.includes(searchFirst) && zohoName.includes(searchLast)
+    })
+
+    if (strongMatches.length === 1 && strongMatches[0]) {
+      return {
+        contact: strongMatches[0],
+        matchType: 'name',
+        allMatches: strongMatches,
+      }
+    }
+    if (strongMatches.length > 1) {
       return {
         contact: null,
         matchType: 'ambiguous',
-        allMatches: nameMatches,
+        allMatches: strongMatches,
+      }
+    }
+
+    // Fall back to all unique matches if no strong matches
+    if (uniqueMatches.length === 1 && uniqueMatches[0]) {
+      return {
+        contact: uniqueMatches[0],
+        matchType: 'name',
+        allMatches: uniqueMatches,
+      }
+    }
+    if (uniqueMatches.length > 1) {
+      return {
+        contact: null,
+        matchType: 'ambiguous',
+        allMatches: uniqueMatches,
       }
     }
 
