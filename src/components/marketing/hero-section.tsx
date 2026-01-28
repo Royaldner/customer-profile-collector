@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -30,8 +30,8 @@ export default function HeroSection() {
         <div className="max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-[var(--cinnabar-100)] shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Sparkles className="w-4 h-4 text-[var(--hot-pink)]" />
-            <span className="text-sm font-medium text-[var(--cinnabar-700)]">
+            <ShoppingBag className="w-4 h-4 text-[var(--hot-pink)]" />
+            <span className="text-sm font-medium text-[var(--hot-pink)]">
               Best Deals Guaranteed
             </span>
           </div>
