@@ -1,10 +1,50 @@
 # Project Status
 
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-27 21:00
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business. EPIC 1-8 complete. All major features implemented.
+Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-14 implemented. Automatic Zoho Books customer sync now available.
+
+**Production URL:** https://customer-profile-registration.vercel.app
+
+## Current State
+
+**Branch:** `main`
+**Status:** EPIC 14 merged, testing Vercel cron deployment
+
+### Recent Work - EPIC 14: Automatic Zoho Books Customer Sync
+
+Implemented automatic customer sync to Zoho Books:
+
+**Registration Flow:**
+- New "Customer History" step asking if new or returning customer
+- Selection stored in `is_returning_customer` field
+
+**Background Processing:**
+- `zoho_sync_queue` table for job processing
+- Cron job processes pending syncs (daily schedule due to Vercel limits)
+- Retry logic with exponential backoff (max 3 attempts)
+
+**Sync Logic:**
+- New customers → Create Zoho contact with profile address
+- Returning customers → Search by email, then name
+- Single match → Auto-link
+- Multiple matches → Mark as 'skipped' for admin review
+- No match → Mark as 'failed'
+
+**Admin UI:**
+- Sync status column in customer list
+- Sync status filter dropdown
+- Retry Sync / Link Manually buttons
+- "Sync Profile to Zoho" button for linked customers
+
+### Cron Job Issue (In Progress)
+
+Vercel Hobby tier cron limits are causing deployment failures:
+- Hourly cron (`0 * * * *`) failed
+- Currently testing daily cron (`0 0 * * *`)
+- May need external cron service (cron-job.org) for more frequent syncs
 
 ## Completed Features
 
@@ -18,171 +58,106 @@ Customer Profile Collector - A customer profile collection system for a small bu
 - Deployed to Vercel
 
 ### EPIC 7: Customer UX Enhancement (100% Complete)
-
-#### 7.1 Customer Authentication
-- Google OAuth configured and working
-- Email/password signup (no email verification)
-- Customer login, signup, forgot/reset password pages
-- OAuth callback handler
-- Customer dashboard with profile editing
-
-#### 7.2 Multi-Step Registration Form
-- Stepper UI component with visual progress
-- Step 1: Personal Info (first name, last name, email, phone, contact preference)
-- Step 2: Delivery Method (pickup, delivered, cod, cop) with visual cards
-- Step 3: Address (skipped for pickup orders)
-- Step 4: Review & Submit
-- Step-by-step validation before proceeding
-
-#### 7.3 Philippine Address Autocomplete
-- LocationCombobox component for city/barangay search
-- **PSGC GitLab API integration** (1,820 cities/municipalities from official source)
-- Runtime API calls with memory + localStorage caching (7-day duration)
-- Barangays API route (dynamic loading per city)
-- Auto-fill province and region on city selection
-
-#### 7.4 Supabase Keep-Alive
-- Health check API endpoint (`/api/health`)
-- Vercel Cron job (weekly ping on Sundays)
+- Google OAuth + Email/Password authentication
+- Multi-step registration form with stepper UI
+- Philippine address autocomplete (PSGC API)
+- Supabase keep-alive cron job
 
 ### EPIC 8: Customer Profile Enhancements (100% Complete)
+- Split `name` into `first_name` + `last_name`
+- Profile address columns on customers table
+- Address names (recipient first/last name)
+- COP (Cash on Pickup) delivery method
+- Courier filtering based on delivery method
 
-#### 8.1 Split Customer Name
-- Replaced `name` with `first_name` + `last_name` columns
-- Migration automatically splits existing names on first space
-- All forms, displays, and search updated
+### EPIC 9: Admin Email Notifications (100% Complete)
+- Email template management
+- Bulk/single email sending via Resend
+- One-click delivery confirmation
+- Ready to Ship status tracking
+- Email history and logs
 
-#### 8.2 Profile Address
-- Optional profile address columns on customers table
-- `profile_street_address`, `profile_barangay`, `profile_city`, etc.
-- Future use: "Copy from profile" functionality
+### EPIC 10: Timezone & Status Reset (100% Complete)
+- Montreal timezone (`America/Toronto`) for all timestamps
+- Three-state delivery status (Pending → Ready → Delivered)
+- Single and bulk status actions
+- Delivery logs audit trail
 
-#### 8.3 Address Names
-- Added `first_name` + `last_name` to delivery addresses (required)
-- Allows different recipient names per address
-- Defaults to customer name on migration
+### EPIC 11: Zoho Books Integration (100% Complete)
+- Customer orders display from Zoho Books
+- Admin customer linking to Zoho contacts
+- OAuth token management with caching
+- Invoice display with line item details
 
-#### 8.4 COP Delivery Method
-- Added "Cash on Pickup" option
-- Customer provides courier pickup location address
-- Informational banner explains COP workflow
+### EPIC 12: Dashboard UI Restructuring (100% Complete)
+- Hamburger menu with slide-in drawer
+- Menu items open full-screen views
+- Main view shows Orders, Delivery Preference, Default Address
+- Full settings editing in full-screen views
 
-#### 8.5 Courier Filtering
-- **pickup**: No courier required
-- **delivered**: LBC or JRS available
-- **cod/cop**: LBC only
-- Visual card selection (not dropdown)
+### EPIC 13: App Structure & Landing Page (100% Complete)
+- Route groups: (marketing), (customer), (admin), (shop) stub
+- Beautiful landing page with 12 sections
+- Sticky navbar with mobile hamburger menu
+- Dark footer with contact and social links
+- Cinnabar color theme applied to entire app
 
-#### 8.6 Registration Form UX (CP-46 to CP-49)
-- **Profile Address Input**: Optional home address during registration with autocomplete
-- **"Copy from Profile" Button**: One-click copy of name + address to delivery address
-- **"Use my profile name" Checkbox**: Auto-fill recipient name from profile (per address)
-- **Visual Courier Selection**: Radio cards instead of dropdown for better UX
+### EPIC 14: Automatic Zoho Books Customer Sync (100% Complete)
+- Customer history step in registration (new/returning)
+- Background sync queue with cron processing
+- Auto-create Zoho contacts for new customers
+- Auto-link returning customers to existing Zoho contacts
+- Admin sync status visibility and retry controls
+- "Sync Profile to Zoho" for admin-controlled data sync
 
-#### 8.7 Customer Dashboard UX (CP-51 to CP-54)
-- **Profile Address Display**: Shows in Personal Information section when exists
-- **Visual Courier Cards**: Replaced dropdown with styled radio cards (matches delivery preference)
-- **Conditional Courier Logic**: Filters based on delivery method (pickup: none, delivered: LBC/JRS, cod/cop: LBC only)
-- **"Use my address" Button**: One-click copy in address dialog
+## Deployment Pending
 
-### Courier Management (From CP-38)
-- Admin courier management at `/admin/couriers`
-- Add, edit, deactivate couriers
-- Default couriers: LBC, JRS
-- Soft-delete preserves existing customer data
+**EPIC 14 requires:**
+1. Run migration `011_zoho_sync.sql` in Supabase
+2. Re-authorize Zoho Books for CREATE scope (delete `zoho_tokens`, reconnect)
+3. Resolve Vercel cron deployment issue
 
 ## Database State
 
-**All Migrations Applied:**
-- 001_create_tables.sql - Base schema
-- 002_enable_rls.sql - RLS policies
-- 003_add_customer_fields.sql - Added `user_id` and `delivery_method`
-- 004_customer_auth_rls.sql - Customer self-access policies
-- 005_add_courier.sql - Couriers table and `customer.courier` column
-- 006_split_name_and_profile_address.sql - Split name, profile address columns
-- 007_address_names_and_cop.sql - Address names, COP delivery method
+**Migrations (001-011):**
+- 001-010: All applied
+- 011: `011_zoho_sync.sql` - **PENDING** (needs to be run in Supabase)
 
-## Current Schema
+## Git State
 
-**customers table:**
-- `id`, `first_name`, `last_name`, `email`, `phone`
-- `contact_preference` (email/phone/sms)
-- `delivery_method` (pickup/delivered/cod/cop)
-- `courier` (lbc/jrs/null)
-- `user_id` (FK to auth.users, optional)
-- `profile_street_address`, `profile_barangay`, `profile_city`, `profile_province`, `profile_region`, `profile_postal_code` (all optional)
-- `created_at`, `updated_at`
+- **Current Branch:** `main`
+- **Latest Commit:** EPIC 14 merged
+- **Tags:** `epic-1-complete` through `epic-13-complete` ✅
 
-**addresses table:**
-- `id`, `customer_id` (FK)
-- `first_name`, `last_name` (recipient name)
-- `label`, `street_address`, `barangay`, `city`, `province`, `region`, `postal_code`
-- `is_default`
-- `created_at`, `updated_at`
+## Test Status
 
-**couriers table:**
-- `id`, `name`, `code`, `is_active`
-- `created_at`, `updated_at`
+- **Unit Tests:** 94/104 passing (10 db-schema tests require live database)
+- **Build:** Passing
+- **Lint:** Passing (pre-existing warnings only)
+
+## Next Steps
+
+1. **Resolve Vercel cron issue** - Test if daily schedule deploys
+2. **Run migration 011** in Supabase
+3. **Re-authorize Zoho** for CREATE scope
+4. **Consider external cron** (cron-job.org) for hourly sync if needed
+5. **Tag release** `epic-14-complete` after deployment verified
+
+## Future Enhancements
+
+- **EPIC 15:** Payment processing (PayMongo integration)
+- **EPIC 16:** Product catalog and order creation
+- **Future:** Blog/SEO, Multi-language, Referral program
 
 ## Key Files
 
 | Feature | File |
 |---------|------|
-| Types & Interfaces | `src/lib/types/index.ts` |
-| Validation Schemas | `src/lib/validations/customer.ts` |
-| PSGC API Client | `src/lib/services/psgc.ts` |
-| PSGC React Hooks | `src/hooks/use-psgc-locations.ts` |
-| Multi-Step Form | `src/components/forms/customer-form.tsx` |
-| Personal Info Step | `src/components/forms/steps/personal-info-step.tsx` |
-| Delivery Method Step | `src/components/forms/steps/delivery-method-step.tsx` |
-| Address Form | `src/components/forms/address-form.tsx` |
-| Customer Dashboard | `src/app/customer/dashboard/page.tsx` |
-| Admin Customer List | `src/components/admin/customer-list.tsx` |
-| Admin Edit Form | `src/components/admin/edit-customer-form.tsx` |
-
-### CP-56: Customer Dashboard UI Fixes
-- **Dynamic Greeting**: Time-based greeting (Good Morning/Afternoon/Evening)
-- **Button Overlap Fix**: "Use my address" moved below dialog title
-- **City/Barangay Autocomplete**: Added to address modal
-- **Profile Address Editing**: Added to Personal Information edit mode
-
-### CP-57: Admin Edit Form Autocomplete
-- **City/Barangay Autocomplete**: Added LocationCombobox to admin edit customer form
-- Consistent UX across all forms (registration, customer dashboard, admin)
-
-### CP-58: PSGC API Integration
-- **Official PSGC GitLab API**: Replaced static 126 cities with 1,820 locations from official source
-- **Runtime API calls**: Always up-to-date data from `https://psgc.gitlab.io/api/`
-- **Caching**: Memory + localStorage with 7-day duration
-- **React Hooks**: `usePSGCLocations()` and `useBarangays()` for easy consumption
-
-### CP-59: Address Validation Error Display
-- **Specific field errors**: Shows exactly which field failed (e.g., "barangay: Barangay is required")
-- **Console logging**: Logs form data for debugging address save issues
-
-## Git State
-
-- **Current Branch:** `main`
-- **Latest Commit:** CP-59: Improve address validation error display
-- **Status:** Up to date with origin/main, all changes deployed
-
-## Git Workflow Rules
-
-**CRITICAL:** Never merge/push to `main` or `develop` without explicit user permission.
-1. Create feature branch for all changes
-2. Commit on feature branch
-3. Ask user before merging
-4. Only merge after user confirms
-
-## Test Status
-
-- **Unit Tests:** 90/90 passing
-  - customer-validation.test.ts: 54 tests
-  - admin-components.test.tsx: 36 tests
-- **Integration Tests:** 10 tests (require live database)
-- **Build:** Passing
-- **Lint:** Passing (pre-existing warnings)
-
-## Future Enhancements (Ideas)
-
-- Order management system (Phase 2)
+| Customer History Step | `src/components/forms/steps/customer-history-step.tsx` |
+| Zoho Sync Service | `src/lib/services/zoho-sync.ts` |
+| Zoho Books Service | `src/lib/services/zoho-books.ts` |
+| Cron Endpoint | `src/app/api/cron/zoho-sync/route.ts` |
+| Admin Sync Trigger | `src/app/api/admin/customers/[id]/zoho-sync/route.ts` |
+| Zoho Section (Admin) | `src/components/admin/zoho-section.tsx` |
+| Customer List | `src/components/admin/customer-list.tsx` |
+| Migration | `supabase/migrations/011_zoho_sync.sql` |

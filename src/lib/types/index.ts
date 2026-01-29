@@ -7,6 +7,8 @@ export type ContactPreference = 'email' | 'phone' | 'sms'
 
 export type DeliveryMethod = 'pickup' | 'delivered' | 'cod' | 'cop'
 
+export type DeliveryAction = 'confirmed' | 'delivered' | 'reset'
+
 export interface Courier {
   id: string
   code: string
@@ -15,6 +17,8 @@ export interface Courier {
   created_at: string
   updated_at: string
 }
+
+export type ZohoSyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'skipped' | 'manual'
 
 export interface Customer {
   id: string
@@ -33,9 +37,21 @@ export interface Customer {
   profile_province?: string
   profile_region?: string
   profile_postal_code?: string
+  // Delivery confirmation
+  delivery_confirmed_at?: string
+  delivered_at?: string
+  // Zoho Books integration
+  zoho_contact_id?: string
+  // Zoho sync (EPIC-14)
+  is_returning_customer?: boolean
+  zoho_sync_status?: ZohoSyncStatus
+  zoho_sync_error?: string | null
+  zoho_sync_attempts?: number
+  zoho_last_sync_at?: string
   created_at: string
   updated_at: string
   addresses?: Address[]
+  delivery_logs?: DeliveryLog[]
 }
 
 export interface Address {
@@ -71,6 +87,8 @@ export interface CustomerInput {
   profile_province?: string
   profile_region?: string
   profile_postal_code?: string
+  // Zoho sync (EPIC-14)
+  is_returning_customer?: boolean
 }
 
 // Input type for courier management
@@ -98,4 +116,82 @@ export interface AddressInput {
 export interface CustomerWithAddressesInput {
   customer: CustomerInput
   addresses: AddressInput[]
+}
+
+// ============================================
+// EMAIL NOTIFICATION TYPES
+// ============================================
+
+export type EmailStatus = 'pending' | 'scheduled' | 'sent' | 'failed'
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  display_name: string
+  subject: string
+  body: string
+  variables: string[]
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface EmailTemplateInput {
+  name: string
+  display_name: string
+  subject: string
+  body: string
+  variables?: string[]
+  is_active?: boolean
+}
+
+export interface EmailLog {
+  id: string
+  template_id?: string
+  customer_id?: string
+  recipient_email: string
+  recipient_name?: string
+  subject: string
+  body: string
+  status: EmailStatus
+  scheduled_for?: string
+  sent_at?: string
+  error_message?: string
+  created_at: string
+  // Joined fields
+  template?: EmailTemplate
+  customer?: Customer
+}
+
+export interface ConfirmationToken {
+  id: string
+  customer_id: string
+  token: string
+  expires_at: string
+  used_at?: string
+  created_at: string
+}
+
+export interface SendEmailInput {
+  customer_ids: string[]
+  template_id: string
+  scheduled_for?: string
+}
+
+// ============================================
+// DELIVERY LOG TYPES
+// ============================================
+
+export interface DeliveryLog {
+  id: string
+  customer_id: string
+  action: DeliveryAction
+  notes?: string
+  created_at: string
+}
+
+export interface DeliveryLogInput {
+  customer_id: string
+  action: DeliveryAction
+  notes?: string
 }

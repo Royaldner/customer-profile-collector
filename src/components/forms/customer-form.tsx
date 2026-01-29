@@ -22,6 +22,7 @@ import {
 import { Stepper, type Step } from '@/components/ui/stepper'
 import {
   PersonalInfoStep,
+  CustomerHistoryStep,
   DeliveryMethodStep,
   AddressStep,
   ReviewStep,
@@ -39,6 +40,7 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
     phone: '',
     contact_preference: 'email',
     delivery_method: 'delivered',
+    is_returning_customer: false,
   },
   addresses: [
     {
@@ -59,6 +61,7 @@ const DEFAULT_VALUES: CustomerWithAddressesFormData = {
 // Define steps
 const STEPS: Step[] = [
   { id: 'personal', title: 'Personal Info' },
+  { id: 'history', title: 'Customer Type' },
   { id: 'delivery', title: 'Delivery' },
   { id: 'address', title: 'Address' },
   { id: 'review', title: 'Review' },
@@ -67,6 +70,7 @@ const STEPS: Step[] = [
 // Steps for pickup orders (no address step)
 const PICKUP_STEPS: Step[] = [
   { id: 'personal', title: 'Personal Info' },
+  { id: 'history', title: 'Customer Type' },
   { id: 'delivery', title: 'Delivery' },
   { id: 'review', title: 'Review' },
 ]
@@ -88,6 +92,9 @@ export function CustomerForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [emailConfirmationPending, setEmailConfirmationPending] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
 
   const form = useForm<CustomerWithAddressesFormData>({
     resolver: zodResolver(customerWithAddressesSchema),
@@ -129,7 +136,7 @@ export function CustomerForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/register?auth=google`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
@@ -142,6 +149,13 @@ export function CustomerForm() {
 
   async function handleEmailSignup() {
     setAuthError('')
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(signupEmail)) {
+      setAuthError('Please enter a valid email address')
+      return
+    }
 
     if (signupPassword !== confirmPassword) {
       setAuthError('Passwords do not match')
@@ -160,13 +174,18 @@ export function CustomerForm() {
         email: signupEmail,
         password: signupPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/register`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
         },
       })
 
       if (error) throw error
 
-      if (data.user) {
+      // Check if email confirmation is required (no session means confirmation needed)
+      if (data.user && !data.session) {
+        // Email confirmation is enabled - show confirmation pending UI
+        setEmailConfirmationPending(true)
+      } else if (data.user && data.session) {
+        // Email confirmation is disabled - user is immediately confirmed
         setAuthUser({ id: data.user.id, email: signupEmail })
         setShowAuthOptions(false)
         form.setValue('customer.email', signupEmail)
@@ -176,6 +195,30 @@ export function CustomerForm() {
       setAuthError(err instanceof Error ? err.message : 'Signup failed')
     } finally {
       setIsAuthLoading(false)
+    }
+  }
+
+  async function handleResendConfirmation() {
+    setIsResending(true)
+    setResendSuccess(false)
+    setAuthError('')
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: signupEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/register`,
+        },
+      })
+
+      if (error) throw error
+
+      setResendSuccess(true)
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Failed to resend confirmation email')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -197,6 +240,10 @@ export function CustomerForm() {
           'customer.contact_preference',
         ]
         break
+      case 'history':
+        // No required validation - is_returning_customer has a default
+        // Just proceed to next step
+        return true
       case 'delivery':
         fieldsToValidate = ['customer.delivery_method']
         // Manually validate courier for non-pickup orders
@@ -249,13 +296,91 @@ export function CustomerForm() {
     setCurrentStep((prev) => Math.max(prev - 1, 0))
   }
 
-  // Handle delivery method change - reset step if changing from pickup to delivery
+  // Handle delivery method change
   useEffect(() => {
     // If on address step and switch to pickup, go back to delivery step
     if (isPickup && currentStepId === 'address') {
       setCurrentStep(steps.findIndex((s) => s.id === 'delivery'))
     }
-  }, [isPickup, currentStepId, steps])
+
+    // Clear addresses when pickup is selected (to pass validation)
+    if (isPickup) {
+      form.setValue('addresses', [])
+    } else if (form.getValues('addresses').length === 0) {
+      // Restore default address when switching back to delivery
+      form.setValue('addresses', [
+        {
+          first_name: '',
+          last_name: '',
+          label: '',
+          street_address: '',
+          barangay: '',
+          city: '',
+          province: '',
+          region: '',
+          postal_code: '',
+          is_default: true,
+        },
+      ])
+    }
+  }, [isPickup, currentStepId, steps, form])
+
+  // Handle form validation errors and show them to user
+  function handleSubmitWithValidation(e: React.FormEvent) {
+    e.preventDefault()
+
+    // Clear any previous error
+    setSubmitError(null)
+
+    // Use handleSubmit which validates before calling onSubmit
+    form.handleSubmit(onSubmit, (errors) => {
+      // This callback runs when validation fails
+      console.error('Form validation errors:', errors)
+
+      // Build a user-friendly error message from validation errors
+      const errorMessages: string[] = []
+
+      // Check for root-level errors (from refine validations)
+      if (errors.addresses?.root?.message) {
+        errorMessages.push(errors.addresses.root.message)
+      }
+      if (errors.addresses?.message) {
+        errorMessages.push(errors.addresses.message)
+      }
+      if (errors.customer?.courier?.message) {
+        errorMessages.push(errors.customer.courier.message)
+      }
+
+      // Check for field-level errors
+      if (errors.customer) {
+        Object.entries(errors.customer).forEach(([field, error]) => {
+          if (error && typeof error === 'object' && 'message' in error && field !== 'courier') {
+            errorMessages.push(`${field}: ${error.message}`)
+          }
+        })
+      }
+
+      // Check for address field errors
+      if (errors.addresses && Array.isArray(errors.addresses)) {
+        errors.addresses.forEach((addressError, index) => {
+          if (addressError) {
+            Object.entries(addressError).forEach(([field, error]) => {
+              if (error && typeof error === 'object' && 'message' in error) {
+                errorMessages.push(`Address ${index + 1} ${field}: ${error.message}`)
+              }
+            })
+          }
+        })
+      }
+
+      const errorMessage = errorMessages.length > 0
+        ? errorMessages.join('. ')
+        : 'Please fix the form errors before submitting'
+
+      setSubmitError(errorMessage)
+      toast.error('Please fix the form errors before submitting')
+    })(e)
+  }
 
   async function onSubmit(data: CustomerWithAddressesFormData) {
     setIsSubmitting(true)
@@ -297,6 +422,112 @@ export function CustomerForm() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Email confirmation pending UI
+  if (emailConfirmationPending) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <CardTitle className="text-2xl text-primary">Confirmation Email Sent!</CardTitle>
+            <CardDescription>
+              We&apos;ve sent a confirmation link to:
+            </CardDescription>
+            <p className="mt-2 font-medium text-foreground">{signupEmail}</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted p-4 text-sm">
+              <p className="font-medium mb-2">Next steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Check your email inbox</li>
+                <li>Click the confirmation link</li>
+                <li>Return here to complete your registration</li>
+              </ol>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-amber-800 dark:text-amber-200">
+                <strong>Don&apos;t see the email?</strong> Check your spam or junk folder. The email is sent from Supabase.
+              </p>
+            </div>
+
+            {resendSuccess && (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm dark:border-green-900 dark:bg-green-950">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-green-800 dark:text-green-200">
+                  Confirmation email resent successfully!
+                </p>
+              </div>
+            )}
+
+            {authError && (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {authError}
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleResendConfirmation}
+              disabled={isResending}
+            >
+              {isResending ? 'Resending...' : 'Resend Confirmation Email'}
+            </Button>
+
+            <Button
+              variant="default"
+              className="w-full"
+              onClick={async () => {
+                // Try to sign in with the credentials they entered
+                const { data, error } = await supabase.auth.signInWithPassword({
+                  email: signupEmail,
+                  password: signupPassword,
+                })
+                if (data?.user && !error) {
+                  setAuthUser({ id: data.user.id, email: signupEmail })
+                  setEmailConfirmationPending(false)
+                  setShowAuthOptions(false)
+                  form.setValue('customer.email', signupEmail)
+                  toast.success('Email confirmed! Continue with your registration.')
+                } else if (error?.message?.includes('Email not confirmed')) {
+                  toast.error('Email not yet confirmed. Please check your inbox and click the confirmation link.')
+                } else {
+                  toast.error(error?.message || 'Unable to verify. Please try again.')
+                }
+              }}
+            >
+              I&apos;ve confirmed my email
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setEmailConfirmationPending(false)
+                setSignupEmail('')
+                setSignupPassword('')
+                setConfirmPassword('')
+                setIsEmailSignup(false)
+              }}
+            >
+              Use a different email
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Auth options UI (shown first before form)
@@ -444,7 +675,7 @@ export function CustomerForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* Show authenticated user info */}
         {authUser && (
           <Card className="border-primary/20 bg-primary/5">
@@ -483,6 +714,7 @@ export function CustomerForm() {
           {currentStepId === 'personal' && (
             <PersonalInfoStep isEmailReadOnly={!!authUser} />
           )}
+          {currentStepId === 'history' && <CustomerHistoryStep />}
           {currentStepId === 'delivery' && <DeliveryMethodStep />}
           {currentStepId === 'address' && <AddressStep />}
           {currentStepId === 'review' && <ReviewStep />}
@@ -506,15 +738,28 @@ export function CustomerForm() {
             Back
           </Button>
 
-          {isLastStep ? (
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Registration'}
-            </Button>
-          ) : (
-            <Button type="button" onClick={handleNext}>
-              Next
-            </Button>
-          )}
+          <Button
+            type="button"
+            disabled={isSubmitting}
+            onClick={async (e) => {
+              e.preventDefault()
+              if (isLastStep) {
+                // Trigger form submission manually
+                const isValid = await form.trigger()
+                if (isValid) {
+                  onSubmit(form.getValues())
+                }
+              } else {
+                handleNext()
+              }
+            }}
+          >
+            {isLastStep
+              ? isSubmitting
+                ? 'Submitting...'
+                : 'Submit Registration'
+              : 'Next'}
+          </Button>
         </div>
 
         {/* Already registered link */}
