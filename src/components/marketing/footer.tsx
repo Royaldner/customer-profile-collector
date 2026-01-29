@@ -22,8 +22,8 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { icon: Facebook, href: 'https://facebook.com/cangoods', label: 'Facebook' },
-  { icon: Instagram, href: 'https://instagram.com/cangoods', label: 'Instagram' },
+  { icon: Facebook, href: 'https://www.facebook.com/goodiescanada', label: 'Facebook' },
+  { icon: Instagram, href: 'https://www.instagram.com/goodiescanada/', label: 'Instagram' },
 ]
 
 export default function Footer() {
@@ -48,19 +48,16 @@ export default function Footer() {
                   <Image
                     src="/logo.svg"
                     alt="Cangoods"
-                    width={48}
-                    height={48}
-                    className="rounded-xl transition-transform duration-300 group-hover:scale-105"
+                    width={100}
+                    height={36}
+                    className="transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
-                <span className="text-2xl font-semibold tracking-tight">
-                  Cangoods
-                </span>
               </Link>
 
               <p className="mt-5 text-[15px] leading-relaxed text-white/70 max-w-sm">
                 Premium Canadian brands delivered to your doorstep in the Philippines.
-                Authentic products, flexible payments, free shipping.
+                Authentic products, flexible payments.
               </p>
 
               {/* Social Links */}
@@ -138,16 +135,16 @@ export default function Footer() {
                     </li>
                     <li>
                       <a
-                        href="tel:+639XXXXXXXXX"
+                        href="tel:+1 5146921589"
                         className="inline-flex items-center gap-2.5 text-[15px] text-white/70 transition-colors duration-200 hover:text-[var(--hot-pink)]"
                       >
                         <Phone className="h-4 w-4 flex-shrink-0" />
-                        +63 9XX XXX XXXX
+                        +1 5146921589
                       </a>
                     </li>
                     <li>
                       <a
-                        href="https://wa.me/639XXXXXXXXX"
+                        href="https://wa.me/15146900134"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2.5 text-[15px] text-white/70 transition-colors duration-200 hover:text-[var(--hot-pink)]"
