@@ -35,8 +35,10 @@ export const deliveryOptions: DeliveryOption[] = [
 ]
 
 export const shippingInfo = {
-  timeline: '4-8 weeks',
+  timeline: '10-12 weeks',
   timelineDetail: 'from order confirmation to delivery',
   freeShipping: true,
-  freeShippingNote: 'Free shipping on all orders to the Philippines',
+  freeShippingNote: 'Delivery fees may vary in different provinces',
+  lbcLink: 'https://www.lbcexpress.com/',
+  jrsLink: 'https://www.jrs-express.com/',
 }

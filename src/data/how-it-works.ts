@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, Plane, Package } from 'lucide-react'
+import { Search, ShoppingCart, Plane, UserRound, Package } from 'lucide-react'
 
 export interface Step {
   icon: typeof Search
@@ -11,13 +11,13 @@ export const steps: Step[] = [
   {
     icon: Search,
     title: 'Browse',
-    description: 'Explore our curated deals on premium Canadian brands',
+    description: 'Explore our curated deals on premium Canadian brands from our Facebook page',
     step: 1,
   },
   {
     icon: ShoppingCart,
     title: 'Order',
-    description: 'Create your profile and place your order with flexible payment',
+    description: 'Place your order with flexible payment',
     step: 2,
   },
   {
@@ -27,9 +27,15 @@ export const steps: Step[] = [
     step: 3,
   },
   {
+    icon: UserRound,
+    title: 'Track',
+    description: 'Track your payment and order status and shipping progress on your account',
+    step: 4,
+  },
+  {
     icon: Package,
     title: 'Receive',
     description: 'Get your items delivered or pick up at your convenience',
-    step: 4,
+    step: 5,
   },
 ]

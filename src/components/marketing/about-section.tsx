@@ -1,7 +1,13 @@
-import { Heart, Globe, Users, Sparkles } from 'lucide-react'
+import { Heart, Globe, Users, ShoppingBag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const values = [
+  {
+    icon: ShoppingBag,
+    title: 'Best Deals',
+    description:
+      'We find the lowest possible price for a quality product',
+  },
   {
     icon: Heart,
     title: 'Passion for Quality',
@@ -20,12 +26,7 @@ const values = [
     description:
       'Your satisfaction drives everything we do.',
   },
-  {
-    icon: Sparkles,
-    title: 'Premium Experience',
-    description:
-      'Luxury shopping made accessible and enjoyable.',
-  },
+ 
 ]
 
 export default function AboutSection() {
@@ -49,8 +50,7 @@ export default function AboutSection() {
           <p className="mt-6 text-lg text-[var(--graphite)]/70 leading-relaxed">
             Cangoods was born from a simple idea: everyone deserves access to premium
             brands at fair prices. We source authentic products from Canada and deliver
-            them straight to your door in the Philippines — with free shipping and
-            flexible payment options.
+            them straight to your door with flexible payment options.
           </p>
         </div>
 

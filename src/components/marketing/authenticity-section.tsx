@@ -31,7 +31,7 @@ export default function AuthenticitySection() {
       className="relative py-20 lg:py-28 bg-[var(--bright-snow)] overflow-hidden"
     >
       {/* Decorative elements */}
-      <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-tr from-[var(--cinnabar-100)]/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-tr from-[var(--cinnabar-200)]/40 to-transparent" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-16 items-center">

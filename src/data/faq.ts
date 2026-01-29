@@ -7,7 +7,12 @@ export const faqItems: FAQItem[] = [
   {
     question: 'How long does delivery take?',
     answer:
-      'Delivery typically takes 4-8 weeks from order confirmation. This includes sourcing, quality inspection, and international shipping from Canada to the Philippines. We\'ll keep you updated every step of the way.',
+      'Delivery typically takes 10-12 weeks from order confirmation. This includes sourcing, quality inspection, and international shipping from Canada to the Philippines. We\'ll keep you updated every step of the way.',
+  },
+  {
+    question: 'How does the 50/50 payment work?',
+    answer:
+      'Our 50/50 payment plan lets you pay 50% when you place your order, and the remaining 50% when your order is ready for delivery. This makes premium brands more accessible without the full upfront cost.',
   },
   {
     question: 'What payment methods do you accept?',
@@ -28,10 +33,5 @@ export const faqItems: FAQItem[] = [
     question: 'Are the products authentic?',
     answer:
       'Yes, 100%. We source all products directly from authorized Canadian retailers. Every item is inspected for authenticity and quality before it ships to you.',
-  },
-  {
-    question: 'How does the 50/50 payment work?',
-    answer:
-      'Our 50/50 payment plan lets you pay 50% when you place your order, and the remaining 50% when your order is ready for delivery. This makes premium brands more accessible without the full upfront cost.',
   },
 ]

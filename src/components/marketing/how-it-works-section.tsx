@@ -26,7 +26,7 @@ export default function HowItWorksSection() {
           {/* Connection Line (Desktop) */}
           <div className="hidden lg:block absolute top-1/2 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-[var(--cinnabar-200)] via-[var(--cinnabar-300)] to-[var(--cinnabar-200)] -translate-y-1/2" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6">
             {steps.map((step, index) => (
               <div
                 key={step.title}

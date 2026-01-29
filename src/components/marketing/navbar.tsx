@@ -79,15 +79,12 @@ export default function Navbar() {
               <Image
                 src="/logo.svg"
                 alt="Cangoods"
-                width={56}
-                height={56}
-                className="transition-transform duration-300 group-hover:scale-105"
+                width={100}
+                height={36}
+                className="transition-transform duration-300 group-hover:scale-101"
                 priority
               />
             </div>
-            <span className="text-xl font-semibold tracking-tight text-[var(--cinnabar-950)] hidden sm:block">
-              Cangoods
-            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -164,13 +161,10 @@ export default function Navbar() {
                 <Image
                   src="/logo.svg"
                   alt="Cangoods"
-                  width={48}
-                  height={48}
+                  width={64}
+                  height={36}
                   className="rounded-lg"
                 />
-                <span className="text-lg font-semibold text-[var(--cinnabar-950)]">
-                  Cangoods
-                </span>
               </SheetTitle>
             </SheetHeader>
             <SheetClose asChild>

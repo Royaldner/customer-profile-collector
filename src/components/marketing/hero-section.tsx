@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, ShoppingBag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -30,9 +30,9 @@ export default function HeroSection() {
         <div className="max-w-4xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm border border-[var(--cinnabar-100)] shadow-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Sparkles className="w-4 h-4 text-[var(--hot-pink)]" />
-            <span className="text-sm font-medium text-[var(--cinnabar-700)]">
-              Premium Canadian Brands
+            <ShoppingBag className="w-4 h-4 text-[var(--hot-pink)]" />
+            <span className="text-sm font-medium text-[var(--hot-pink)]">
+              Best Deals Guaranteed
             </span>
           </div>
 
@@ -48,9 +48,9 @@ export default function HeroSection() {
 
           {/* Subheadline */}
           <p className="mt-8 text-xl sm:text-2xl text-[var(--graphite)]/70 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-            Shop top Canadian brands with{' '}
+          Your Gateway to Global Deals. Shop top Canadian brands with{' '}
             <span className="text-[var(--cinnabar-600)] font-semibold">free shipping</span>{' '}
-            to the Philippines. Authentic products, flexible payments.
+            to the Philippines.
           </p>
 
           {/* CTAs */}
@@ -90,16 +90,16 @@ export default function HeroSection() {
           {/* Trust indicators */}
           <div className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-[400ms]">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--hot-pink)]" />
               <span className="text-sm text-[var(--graphite)]/60">100% Authentic</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-[var(--graphite)]/60">Free Shipping</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--hot-pink)]" />
+              <span className="text-sm text-[var(--graphite)]/60">Free Shipping to the Philippines</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-sm text-[var(--graphite)]/60">Flexible Payment</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-[var(--hot-pink)]" />
+              <span className="text-sm text-[var(--graphite)]/60">Flexible Payment Options</span>
             </div>
           </div>
         </div>
