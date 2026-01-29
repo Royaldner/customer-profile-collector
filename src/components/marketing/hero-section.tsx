@@ -88,7 +88,7 @@ export default function HeroSection() {
           </div>
 
           {/* Trust indicators */}
-          <div className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-[400ms]">
+          <div className="mt-16 flex flex-col items-center sm:flex-row sm:flex-wrap sm:items-center gap-x-8 gap-y-4 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-[400ms]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-[var(--hot-pink)]" />
               <span className="text-sm text-[var(--graphite)]/60">100% Authentic</span>
