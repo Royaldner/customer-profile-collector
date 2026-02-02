@@ -1,50 +1,30 @@
 # Project Status
 
-**Last Updated:** 2026-01-27 21:00
+**Last Updated:** 2026-02-02 13:00
 
 ## Overview
 
-Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-14 implemented. Automatic Zoho Books customer sync now available.
+Customer Profile Collector - A customer profile collection system for a small business (Cangoods). EPIC 1-14 implemented. Zoho Books customer sync runs inline during registration.
 
 **Production URL:** https://customer-profile-registration.vercel.app
 
 ## Current State
 
 **Branch:** `main`
-**Status:** EPIC 14 merged, testing Vercel cron deployment
+**Status:** Inline Zoho sync merged, queue infrastructure removed
 
-### Recent Work - EPIC 14: Automatic Zoho Books Customer Sync
+### Recent Work - Inline Zoho Sync (Remove Cron Queue)
 
-Implemented automatic customer sync to Zoho Books:
+Replaced cron-based background sync with inline execution during registration:
 
-**Registration Flow:**
-- New "Customer History" step asking if new or returning customer
-- Selection stored in `is_returning_customer` field
+**Before:** Customer registers → queued in `zoho_sync_queue` → cron job processes later
+**After:** Customer registers → Zoho sync runs immediately (non-blocking)
 
-**Background Processing:**
-- `zoho_sync_queue` table for job processing
-- Cron job processes pending syncs (daily schedule due to Vercel limits)
-- Retry logic with exponential backoff (max 3 attempts)
-
-**Sync Logic:**
-- New customers → Create Zoho contact with profile address
-- Returning customers → Search by email, then name
-- Single match → Auto-link
-- Multiple matches → Mark as 'skipped' for admin review
-- No match → Mark as 'failed'
-
-**Admin UI:**
-- Sync status column in customer list
-- Sync status filter dropdown
-- Retry Sync / Link Manually buttons
-- "Sync Profile to Zoho" button for linked customers
-
-### Cron Job Issue (In Progress)
-
-Vercel Hobby tier cron limits are causing deployment failures:
-- Hourly cron (`0 * * * *`) failed
-- Currently testing daily cron (`0 0 * * *`)
-- May need external cron service (cron-job.org) for more frequent syncs
+**Changes:**
+- `syncCustomerToZoho()` replaces queue-based processing
+- Cron endpoint deleted, queue table can be dropped
+- Admin retry/manual sync still functional
+- `vercel.json` now only has health keep-alive cron
 
 ## Completed Features
 
@@ -104,7 +84,7 @@ Vercel Hobby tier cron limits are causing deployment failures:
 
 ### EPIC 14: Automatic Zoho Books Customer Sync (100% Complete)
 - Customer history step in registration (new/returning)
-- Background sync queue with cron processing
+- **Inline sync during registration** (no longer cron-based)
 - Auto-create Zoho contacts for new customers
 - Auto-link returning customers to existing Zoho contacts
 - Admin sync status visibility and retry controls
@@ -112,36 +92,32 @@ Vercel Hobby tier cron limits are causing deployment failures:
 
 ## Deployment Pending
 
-**EPIC 14 requires:**
-1. Run migration `011_zoho_sync.sql` in Supabase
-2. Re-authorize Zoho Books for CREATE scope (delete `zoho_tokens`, reconnect)
-3. Resolve Vercel cron deployment issue
+**Migration 012:**
+- Run `012_drop_sync_queue.sql` in Supabase to drop the unused `zoho_sync_queue` table
 
 ## Database State
 
-**Migrations (001-011):**
-- 001-010: All applied
-- 011: `011_zoho_sync.sql` - **PENDING** (needs to be run in Supabase)
+**Migrations (001-012):**
+- 001-011: All applied
+- 012: `012_drop_sync_queue.sql` — **PENDING** (drops `zoho_sync_queue` table)
 
 ## Git State
 
 - **Current Branch:** `main`
-- **Latest Commit:** EPIC 14 merged
-- **Tags:** `epic-1-complete` through `epic-13-complete` ✅
+- **Latest Commit:** Inline Zoho sync merged
+- **Tags:** `epic-1-complete` through `epic-13-complete`
 
 ## Test Status
 
-- **Unit Tests:** 94/104 passing (10 db-schema tests require live database)
+- **Unit Tests:** 91/104 passing (13 db-schema tests require live database)
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings only)
 
 ## Next Steps
 
-1. **Resolve Vercel cron issue** - Test if daily schedule deploys
-2. **Run migration 011** in Supabase
-3. **Re-authorize Zoho** for CREATE scope
-4. **Consider external cron** (cron-job.org) for hourly sync if needed
-5. **Tag release** `epic-14-complete` after deployment verified
+1. **Run migration 012** in Supabase (drop queue table)
+2. **Deploy to Vercel** — verify no cron-related issues
+3. **Tag release** `epic-14-complete` after deployment verified
 
 ## Future Enhancements
 
@@ -156,8 +132,8 @@ Vercel Hobby tier cron limits are causing deployment failures:
 | Customer History Step | `src/components/forms/steps/customer-history-step.tsx` |
 | Zoho Sync Service | `src/lib/services/zoho-sync.ts` |
 | Zoho Books Service | `src/lib/services/zoho-books.ts` |
-| Cron Endpoint | `src/app/api/cron/zoho-sync/route.ts` |
 | Admin Sync Trigger | `src/app/api/admin/customers/[id]/zoho-sync/route.ts` |
 | Zoho Section (Admin) | `src/components/admin/zoho-section.tsx` |
 | Customer List | `src/components/admin/customer-list.tsx` |
-| Migration | `supabase/migrations/011_zoho_sync.sql` |
+| Health Keep-Alive | `src/app/api/health/route.ts` |
+| Migration (drop queue) | `supabase/migrations/012_drop_sync_queue.sql` |

@@ -1,5 +1,63 @@
 # Change Logs
 
+## [2026-02-02 13:00] - Inline Zoho Sync (Remove Cron Queue)
+
+### Summary
+Replaced cron-based Zoho sync queue with inline sync during customer registration. Zoho contacts are now created/matched immediately when a customer registers, eliminating the queue table and cron dependency.
+
+### Changes
+
+#### Registration Flow
+- Zoho sync now executes inline during `POST /api/customers`
+- New customers: `createContact()` called immediately after insert
+- Returning customers: `findMatchingContact()` called immediately after insert
+- Sync failures are non-blocking — registration succeeds regardless
+
+#### Removed Queue Infrastructure
+- Deleted `queueCustomerSync()`, `queueRetrySync()`, `processSyncQueue()` functions
+- Deleted `processSyncItem()` internal function
+- Deleted `src/app/api/cron/zoho-sync/route.ts` cron endpoint
+- Removed `ZohoSyncQueue` and `ZohoSyncQueueInput` types
+
+#### New Function
+- `syncCustomerToZoho(customerId, isReturning)` — single inline sync function used by both registration and admin manual sync
+
+#### Simplified Existing Functions
+- `triggerManualSync()` — now delegates to `syncCustomerToZoho()`
+- `resetSyncStatus()` — only resets fields, no queue insertion
+
+#### Vercel Cron
+- Removed `/api/cron/zoho-sync` cron entry
+- Restored `/api/health` weekly keep-alive cron (`0 0 * * 0`)
+
+### Files Modified
+- `src/app/api/customers/route.ts` — replaced `queueCustomerSync` with `syncCustomerToZoho`
+- `src/lib/services/zoho-sync.ts` — removed queue functions, added `syncCustomerToZoho`
+- `src/lib/types/zoho.ts` — removed `ZohoSyncQueue`, `ZohoSyncQueueInput`
+- `vercel.json` — replaced zoho-sync cron with health cron
+
+### Files Deleted
+- `src/app/api/cron/zoho-sync/route.ts`
+
+### Files Created
+- `supabase/migrations/012_drop_sync_queue.sql` — drops `zoho_sync_queue` table
+
+### Git
+- **Branch:** `fix/profile-sync` (merged to main, deleted)
+- **Commit:** `4e8dcf1`
+
+### Test Results
+- Build passes
+- 91/104 tests passing (13 pre-existing DB connection failures)
+- Manually tested: new customer sync ✅, returning customer sync ✅
+
+### Notes
+- `zoho_sync_status` column retained — still useful for tracking sync outcomes (synced/failed/skipped)
+- Admin "Retry Sync" and "Sync Profile to Zoho" buttons still functional
+- Migration 012 needs to be run in Supabase to drop the queue table
+
+---
+
 ## [2026-01-27 21:00] - EPIC 14: Automatic Zoho Books Customer Sync
 
 ### Summary
