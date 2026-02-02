@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { customerWithAddressesSchema } from '@/lib/validations/customer'
-import { queueCustomerSync } from '@/lib/services/zoho-sync'
+import { syncCustomerToZoho } from '@/lib/services/zoho-sync'
 import { isZohoConnected } from '@/lib/services/zoho-books'
 
 export async function POST(request: NextRequest) {
@@ -103,19 +103,18 @@ export async function POST(request: NextRequest) {
       addressesData = data || []
     }
 
-    // Queue customer for Zoho sync (EPIC-14)
-    // Only queue if Zoho is connected
+    // Sync customer to Zoho inline (EPIC-14)
+    // Failures don't block registration
     try {
       const zohoConnected = await isZohoConnected()
       if (zohoConnected) {
-        await queueCustomerSync(
+        await syncCustomerToZoho(
           customerData.id,
           customer.is_returning_customer || false
         )
       }
     } catch (syncError) {
-      // Log but don't fail the request if sync queueing fails
-      console.error('Failed to queue Zoho sync:', syncError)
+      console.error('Zoho sync failed (non-blocking):', syncError)
     }
 
     return NextResponse.json(

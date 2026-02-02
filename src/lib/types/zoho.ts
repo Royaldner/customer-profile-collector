@@ -131,26 +131,6 @@ export interface ZohoInvoicesResponse {
 
 export type ZohoSyncStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'skipped' | 'manual'
 
-export interface ZohoSyncQueue {
-  id: string
-  customer_id: string
-  action: 'create' | 'match' | 'retry'
-  priority: number
-  attempts: number
-  max_attempts: number
-  last_error?: string
-  scheduled_for: string
-  created_at: string
-  processed_at?: string
-}
-
-export interface ZohoSyncQueueInput {
-  customer_id: string
-  action: 'create' | 'match' | 'retry'
-  priority?: number
-  scheduled_for?: string
-}
-
 // ============================================
 // APP-SPECIFIC TYPES
 // ============================================
