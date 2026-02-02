@@ -1,5 +1,84 @@
 # Change Logs
 
+## [2026-02-02 16:15] - EPIC 15: How to Pay — Implementation Complete
+
+### Summary
+Implemented the full "How to Pay" feature (EPIC 15) with GCash and BPI payment modals, clipboard utility, settings menu integration, and Pay Now button on order cards.
+
+### Changes
+
+#### New Files Created
+- `src/lib/constants/payment-methods.ts` — Payment method config with typed interfaces
+- `src/lib/utils/clipboard.ts` — Copy-to-clipboard with execCommand fallback
+- `src/components/customer/payment-modal.tsx` — Reusable dialog with QR, instructions, copiable fields
+- `src/components/customer/how-to-pay-view.tsx` — Full-screen view with GCash/BPI cards
+- `test/how-to-pay.test.tsx` — 16 tests covering all new components
+- `public/images/` — Directory created for QR code images (user to provide)
+
+#### Files Modified
+- `src/components/customer/settings-menu.tsx` — Added `'how-to-pay'` to SettingsView type, Wallet icon menu item
+- `src/components/customer/settings-view.tsx` — Added how-to-pay case rendering HowToPayView
+- `src/components/orders/order-card.tsx` — Added optional `onPayNow` prop and Pay Now button
+- `src/components/orders/customer-orders-section.tsx` — Added payingOrder state, handlePayNow, HowToPayView overlay
+
+### Test Results
+- 16 new tests: all passing
+- 107/120 total tests passing (13 pre-existing db-schema failures requiring live database)
+- Build: passing
+
+### Notes
+- QR images still needed: `public/images/gcash-qr.png` and `public/images/bpi-qr.png`
+- Modal gracefully hides QR area when images are missing
+- Branch: `feature/how-to-pay`
+
+---
+
+## [2026-02-02 15:00] - EPIC 15: How to Pay — Spec Creation & Review
+
+### Summary
+Created and refined the feature specification for EPIC 15: "How to Pay" — a static UI feature that gives customers clear payment instructions with QR codes and copiable account details for GCash and BPI bank transfers.
+
+### Changes
+
+#### Spec Created
+- Drafted EPIC-15 spec with full requirements, technical design, and implementation plan
+- Defined two entry points: Settings menu ("How to Pay") and Order card ("Pay Now")
+
+#### Review Pass — Added
+- **Payment config extraction**: `src/lib/constants/payment-methods.ts` with typed `PaymentMethod` and `CopyableField` interfaces
+- **Clipboard fallback**: `src/lib/utils/clipboard.ts` with `execCommand('copy')` fallback for mobile browsers
+- **QR image graceful degradation**: Conditional rendering with `onError` — modal works without images
+- **Testing plan**: 14 unit tests covering clipboard, modal, view, and Pay Now integration
+
+#### Pay Now Feature — Added
+- "Pay Now" button on order cards with balance > 0 in Recent Orders tab
+- Opens same payment view with order-specific context (Invoice Number + Amount as copiable fields)
+- Amount field shows "50% required upon order" note
+- `OrderPaymentContext` interface for passing invoice data
+- State management via `payingOrder` state in `CustomerOrdersSection`
+- Dynamic title: "How to Pay" (settings) vs "Pay for INV-XXXXX" (Pay Now)
+
+### Files Created
+- `docs/post-mvp-features/EPIC-15-how-to-pay.md` — Full feature specification
+
+### Implementation Plan (6 tasks)
+| ID | Task |
+|----|------|
+| CP-113 | Payment config + clipboard utility |
+| CP-114 | Payment modal component |
+| CP-115 | How to Pay view |
+| CP-116 | Settings menu integration |
+| CP-117 | Pay Now button + orders wiring |
+| CP-118 | Tests |
+
+### Notes
+- No database or API changes — entirely static UI
+- QR images (`public/images/gcash-qr.png`, `public/images/bpi-qr.png`) to be provided by user
+- Payment details hardcoded in config: GCash (09301697375), BPI (9319317497, Perpee Berse)
+- Spec is ready for implementation
+
+---
+
 ## [2026-02-02 13:00] - Inline Zoho Sync (Remove Cron Queue)
 
 ### Summary
