@@ -13,12 +13,13 @@ import {
   MapPin,
   Info,
   AlertTriangle,
+  Wallet,
   ChevronRight,
   LogOut,
 } from 'lucide-react'
 import type { Customer } from '@/lib/types'
 
-export type SettingsView = 'personal' | 'addresses' | 'account' | 'danger' | null
+export type SettingsView = 'personal' | 'addresses' | 'account' | 'how-to-pay' | 'danger' | null
 
 interface SettingsMenuProps {
   open: boolean
@@ -64,6 +65,13 @@ export function SettingsMenu({
       label: 'Account',
       description: 'Account information and history',
       icon: <Info className="h-5 w-5" />,
+      show: true,
+    },
+    {
+      id: 'how-to-pay',
+      label: 'How to Pay',
+      description: 'GCash and bank transfer details',
+      icon: <Wallet className="h-5 w-5" />,
       show: true,
     },
     {
