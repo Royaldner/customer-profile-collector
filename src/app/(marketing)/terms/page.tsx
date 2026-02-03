@@ -70,7 +70,7 @@ export default function TermsOfServicePage() {
               <li>
                 <strong>50% when your order is ready</strong> — The remaining balance is
                 due when your order is ready for courier delivery (LBC or JRS) or
-                in-store pickup.
+                in-location pickup.
               </li>
             </ol>
 
@@ -94,6 +94,19 @@ export default function TermsOfServicePage() {
 
           <div>
             <h2>5. Cancellation &amp; Refund Policy</h2>
+
+            <h3 className="mt-4">No Down Payment</h3>
+            <p className="mt-2">
+              No downpayment made within <strong>3 days</strong> of placing it
+              will <strong>Cancel</strong> this order.
+            </p>
+
+            <h3 className="mt-4">Unpaid Balance</h3>
+            <p className="mt-2">
+              Unpaid balances more than <strong>30 days</strong> from when the orrder is ready for delivery
+              or pick up at location will be<strong>cancelled</strong> Contact
+              us immediately for unforeseen circumstances.
+            </p>
 
             <h3 className="mt-4">Within 24 Hours</h3>
             <p className="mt-2">
@@ -122,7 +135,8 @@ export default function TermsOfServicePage() {
             <p className="mt-2">
               If you receive a damaged or incorrect product, contact us within 7 days of
               delivery. We will arrange a replacement or full refund at our discretion,
-              provided you supply photos of the issue.
+              provided you supply photos of the issue. Refunds will be sent after 3 days 
+              from the receipt of the damaged or incorrect item.
             </p>
           </div>
 
