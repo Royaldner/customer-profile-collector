@@ -27,11 +27,13 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon: 'Smartphone',
     qrImagePath: '/images/gcash-qr.png',
     instructions: [
+      'Click Pay Now button on your recent order to open the QR code and account information',
       'Open GCash App',
       'Scan QR code or Click Send and copy the account number provided',
       'Add account details or Amount (for QR Code)',
       'Add in Notes the Invoice Number (Optional)',
       'Review and Confirm Transaction',
+      'Screenshoot the transaction and send it to us via Facebook Messenger',
     ],
     fields: [
       { label: 'Account Number', value: '09301697375' },
@@ -44,12 +46,14 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon: 'Landmark',
     qrImagePath: '/images/bpi-qr.png',
     instructions: [
+      'Click Pay Now button on your recent order to open the QR code and account information',
       'Open Your Bank App or WebApp',
       'Select "Transfer Money" or "Move Money"',
       'Scan the QR Code or copy the account information provided',
       'Enter the amount to transfer',
       'Add in Notes the Invoice Number (Optional)',
       'Review and Confirm Transaction',
+      'Screenshoot the transaction and send it to us via Facebook Messenger',
     ],
     fields: [
       { label: 'Account Name', value: 'Perpee Berse' },

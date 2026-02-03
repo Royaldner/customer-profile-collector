@@ -96,14 +96,16 @@ export function PaymentModal({ method, open, onOpenChange, orderContext }: Payme
             </div>
           )}
 
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Instructions:</p>
-            <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-              {method.instructions.map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ol>
-          </div>
+          {!orderContext && (
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Instructions:</p>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                {method.instructions.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          )}
 
           <div className="space-y-3">
             {allFields.map((field) => (
