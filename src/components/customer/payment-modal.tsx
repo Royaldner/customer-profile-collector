@@ -83,20 +83,28 @@ export function PaymentModal({ method, open, onOpenChange, orderContext }: Payme
         </DialogHeader>
 
         <div className="space-y-4">
-          {!qrError && (
-            <div className="flex justify-center">
-              <Image
-                src={method.qrImagePath}
-                alt={`${method.name} QR Code`}
-                width={200}
-                height={200}
-                className="rounded-lg"
-                onError={() => setQrError(true)}
-              />
-            </div>
-          )}
+          {orderContext ? (
+            <>
+              {!qrError && (
+                <div className="flex justify-center">
+                  <Image
+                    src={method.qrImagePath}
+                    alt={`${method.name} QR Code`}
+                    width={200}
+                    height={200}
+                    className="rounded-lg"
+                    onError={() => setQrError(true)}
+                  />
+                </div>
+              )}
 
-          {!orderContext && (
+              <div className="space-y-3">
+                {allFields.map((field) => (
+                  <CopyField key={field.label} field={field} />
+                ))}
+              </div>
+            </>
+          ) : (
             <div className="space-y-1">
               <p className="text-sm font-medium">Instructions:</p>
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
@@ -106,12 +114,6 @@ export function PaymentModal({ method, open, onOpenChange, orderContext }: Payme
               </ol>
             </div>
           )}
-
-          <div className="space-y-3">
-            {allFields.map((field) => (
-              <CopyField key={field.label} field={field} />
-            ))}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
