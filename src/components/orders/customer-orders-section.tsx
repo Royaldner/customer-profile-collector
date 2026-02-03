@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { OrderCard } from './order-card'
 import { Loader2, RefreshCw, Package, CheckCircle, Info } from 'lucide-react'
+import { HowToPayView } from '@/components/customer/how-to-pay-view'
+import type { OrderPaymentContext } from '@/lib/constants/payment-methods'
 import type { OrderDisplay, InvoiceFilter } from '@/lib/types/zoho'
 
 interface OrdersState {
@@ -39,6 +41,7 @@ export function CustomerOrdersSection() {
     linked: true,
   })
   const [initialLoading, setInitialLoading] = useState(true)
+  const [payingOrder, setPayingOrder] = useState<OrderPaymentContext | null>(null)
 
   const fetchOrders = useCallback(async (filter: InvoiceFilter) => {
     const setState = filter === 'recent' ? setRecentOrders : setCompletedOrders
@@ -83,6 +86,18 @@ export function CustomerOrdersSection() {
 
   const currentOrders = activeFilter === 'recent' ? recentOrders : completedOrders
 
+  const handlePayNow = (order: OrderDisplay) => {
+    const formatCurrency = (amount: number) =>
+      `${order.currencySymbol || '₱'}${amount.toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`
+    setPayingOrder({
+      invoiceNumber: order.invoiceNumber,
+      amount: formatCurrency(order.balance ?? 0),
+    })
+  }
+
   const formatCachedTime = (cachedAt: string | null) => {
     if (!cachedAt) return null
     const date = new Date(cachedAt)
@@ -112,6 +127,16 @@ export function CustomerOrdersSection() {
           </div>
         </CardContent>
       </Card>
+    )
+  }
+
+  // Pay Now view overlay
+  if (payingOrder) {
+    return (
+      <HowToPayView
+        onBack={() => setPayingOrder(null)}
+        orderContext={payingOrder}
+      />
     )
   }
 
@@ -209,7 +234,11 @@ export function CustomerOrdersSection() {
         ) : (
           <div className="space-y-4">
             {currentOrders.orders.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <OrderCard
+                key={order.id}
+                order={order}
+                onPayNow={activeFilter === 'recent' ? handlePayNow : undefined}
+              />
             ))}
             {currentOrders.hasMore && (
               <div className="text-center">

@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated:** 2026-02-02 13:00
+**Last Updated:** 2026-02-02 16:15
 
 ## Overview
 
@@ -10,21 +10,19 @@ Customer Profile Collector - A customer profile collection system for a small bu
 
 ## Current State
 
-**Branch:** `main`
-**Status:** Inline Zoho sync merged, queue infrastructure removed
+**Branch:** `feature/how-to-pay` (ready for merge)
+**Status:** EPIC 15 implemented, pending QR images and merge
 
-### Recent Work - Inline Zoho Sync (Remove Cron Queue)
+### Recent Work - EPIC 15: How to Pay (Implementation Complete)
 
-Replaced cron-based background sync with inline execution during registration:
+Implemented payment instructions UI with two entry points:
 
-**Before:** Customer registers → queued in `zoho_sync_queue` → cron job processes later
-**After:** Customer registers → Zoho sync runs immediately (non-blocking)
-
-**Changes:**
-- `syncCustomerToZoho()` replaces queue-based processing
-- Cron endpoint deleted, queue table can be dropped
-- Admin retry/manual sync still functional
-- `vercel.json` now only has health keep-alive cron
+- **Settings entry**: "How to Pay" menu item with Wallet icon (between Account and Danger Zone)
+- **Pay Now entry**: Button on order cards with balance > 0 in Recent tab
+- **Payment modals**: GCash + BPI dialogs with QR codes, instructions, copiable fields
+- **Order context**: Pay Now adds copiable Invoice Number + Amount with "50% required upon order" note
+- **Clipboard**: Copy-to-clipboard with execCommand fallback + sonner toast feedback
+- **Tests**: 16 unit tests covering clipboard, modal, view, and Pay Now button
 
 ## Completed Features
 
@@ -90,6 +88,16 @@ Replaced cron-based background sync with inline execution during registration:
 - Admin sync status visibility and retry controls
 - "Sync Profile to Zoho" for admin-controlled data sync
 
+## Planned Features
+
+### EPIC 15: How to Pay (Implementation Complete, Pending Merge)
+- Payment instructions UI with GCash + BPI modals
+- QR codes + copiable account details
+- "Pay Now" button on order cards with invoice/amount context
+- Clipboard utility with fallback for mobile browsers
+- 16 tests passing
+- **Pending:** QR code images (`public/images/gcash-qr.png`, `public/images/bpi-qr.png`) — modals work without them
+
 ## Deployment Pending
 
 **Migration 012:**
@@ -103,37 +111,38 @@ Replaced cron-based background sync with inline execution during registration:
 
 ## Git State
 
-- **Current Branch:** `main`
-- **Latest Commit:** Inline Zoho sync merged
+- **Current Branch:** `feature/how-to-pay`
+- **Latest Commit:** feat(payments): add How to Pay view with GCash/BPI payment modals
 - **Tags:** `epic-1-complete` through `epic-13-complete`
 
 ## Test Status
 
-- **Unit Tests:** 91/104 passing (13 db-schema tests require live database)
+- **Unit Tests:** 107/120 passing (13 db-schema tests require live database)
 - **Build:** Passing
 - **Lint:** Passing (pre-existing warnings only)
 
 ## Next Steps
 
 1. **Run migration 012** in Supabase (drop queue table)
-2. **Deploy to Vercel** — verify no cron-related issues
-3. **Tag release** `epic-14-complete` after deployment verified
-
-## Future Enhancements
-
-- **EPIC 15:** Payment processing (PayMongo integration)
-- **EPIC 16:** Product catalog and order creation
-- **Future:** Blog/SEO, Multi-language, Referral program
+2. **Provide QR images** for EPIC 15 (`public/images/gcash-qr.png`, `public/images/bpi-qr.png`)
+3. **Merge EPIC 15** — PR from `feature/how-to-pay` to `main`
+4. **Tag releases** `epic-14-complete` and `epic-15-complete` after deployment verified
 
 ## Key Files
 
 | Feature | File |
 |---------|------|
+| EPIC 15 Spec | `docs/post-mvp-features/EPIC-15-how-to-pay.md` |
+| Payment Config | `src/lib/constants/payment-methods.ts` |
+| Payment Modal | `src/components/customer/payment-modal.tsx` |
+| How to Pay View | `src/components/customer/how-to-pay-view.tsx` |
+| Clipboard Utility | `src/lib/utils/clipboard.ts` |
 | Customer History Step | `src/components/forms/steps/customer-history-step.tsx` |
 | Zoho Sync Service | `src/lib/services/zoho-sync.ts` |
 | Zoho Books Service | `src/lib/services/zoho-books.ts` |
-| Admin Sync Trigger | `src/app/api/admin/customers/[id]/zoho-sync/route.ts` |
-| Zoho Section (Admin) | `src/components/admin/zoho-section.tsx` |
-| Customer List | `src/components/admin/customer-list.tsx` |
+| Order Card | `src/components/orders/order-card.tsx` |
+| Customer Orders Section | `src/components/orders/customer-orders-section.tsx` |
+| Settings Menu | `src/components/customer/settings-menu.tsx` |
+| Settings View | `src/components/customer/settings-view.tsx` |
 | Health Keep-Alive | `src/app/api/health/route.ts` |
 | Migration (drop queue) | `supabase/migrations/012_drop_sync_queue.sql` |

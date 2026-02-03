@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import type { Customer, Address } from '@/lib/types'
+import { HowToPayView } from './how-to-pay-view'
 import type { SettingsView } from './settings-menu'
 
 interface SettingsViewProps {
@@ -117,7 +118,12 @@ export function SettingsViewComponent({
     personal: 'Personal Information',
     addresses: 'Delivery Addresses',
     account: 'Account',
+    'how-to-pay': 'How to Pay',
     danger: 'Danger Zone',
+  }
+
+  if (view === 'how-to-pay') {
+    return <HowToPayView onBack={onBack} />
   }
 
   return (

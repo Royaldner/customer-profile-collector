@@ -2,14 +2,16 @@
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { getStatusColor } from '@/lib/types/zoho'
 import type { OrderDisplay } from '@/lib/types/zoho'
 
 interface OrderCardProps {
   order: OrderDisplay
+  onPayNow?: (order: OrderDisplay) => void
 }
 
-export function OrderCard({ order }: OrderCardProps) {
+export function OrderCard({ order, onPayNow }: OrderCardProps) {
   const formatCurrency = (amount: number | undefined | null) => {
     const value = amount ?? 0
     return `${order.currencySymbol || '₱'}${value.toLocaleString('en-PH', {
@@ -79,6 +81,17 @@ export function OrderCard({ order }: OrderCardProps) {
           <div className="text-xs text-muted-foreground">
             Due: {formatDate(order.dueDate)}
           </div>
+        )}
+
+        {/* Pay Now button */}
+        {onPayNow && (order.balance ?? 0) > 0 && (
+          <Button
+            size="sm"
+            className="w-full mt-2"
+            onClick={() => onPayNow(order)}
+          >
+            Pay Now
+          </Button>
         )}
       </CardContent>
     </Card>
