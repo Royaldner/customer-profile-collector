@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { emailTemplateSchema } from '@/lib/validations/email'
 
 // Helper to check admin session
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const activeOnly = searchParams.get('active') === 'true'
 
@@ -44,7 +44,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ templates })
+    // Normalize variables field
+    const normalized = (templates || []).map((t: Record<string, unknown>) => ({
+      ...t,
+      variables: typeof t.variables === 'string' ? JSON.parse(t.variables as string) : (t.variables || []),
+    }))
+
+    return NextResponse.json({ templates: normalized })
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
@@ -80,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { name, display_name, subject, body: templateBody, variables, is_active } = validationResult.data
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Insert new template
     const { data: template, error } = await supabase
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest) {
         display_name,
         subject,
         body: templateBody,
-        variables: JSON.stringify(variables),
+        variables,
         is_active: is_active ?? true,
       })
       .select()

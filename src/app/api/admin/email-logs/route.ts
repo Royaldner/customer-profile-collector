@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { emailLogFilterSchema } from '@/lib/validations/email'
 
 // Helper to check admin session
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { status, customer_id, template_id, from_date, to_date, page, per_page } = validationResult.data
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Build query
     let query = supabase
