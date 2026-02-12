@@ -28,7 +28,7 @@ const DAILY_EMAIL_LIMIT = 100
 const TOKEN_EXPIRY_DAYS = 30
 
 // Default sender email
-const DEFAULT_FROM = 'Canada Goodies <onboarding@resend.dev>'
+const DEFAULT_FROM = 'Canada Goodies <hello@cangoodies.com>'
 
 /**
  * Generate a cryptographically secure confirmation token
@@ -201,6 +201,7 @@ export async function sendEmail(params: {
   try {
     const { data, error } = await client.emails.send({
       from,
+      replyTo: 'cangoodsph@gmail.com',
       to,
       subject,
       html: bodyToHtml(body),
