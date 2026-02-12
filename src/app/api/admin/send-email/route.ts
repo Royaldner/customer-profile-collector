@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmailSchema } from '@/lib/validations/email'
 import { checkRateLimit, sendTemplateEmail } from '@/lib/services/resend'
 import type { Customer, EmailTemplate } from '@/lib/types'
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { customer_ids, template_id, scheduled_for } = validationResult.data
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     // Check rate limit
     const rateLimit = await checkRateLimit(customer_ids.length)

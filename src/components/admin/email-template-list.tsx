@@ -131,12 +131,12 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
         throw new Error(error.message || 'Failed to deactivate template')
       }
 
-      const { template } = await response.json()
-      setTemplates((prev) => prev.map((t) => (t.id === template.id ? template : t)))
+      await response.json()
+      setTemplates((prev) => prev.filter((t) => t.id !== deletingTemplate.id))
       setDeletingTemplate(null)
-      toast.success('Email template deactivated successfully')
+      toast.success('Email template deleted successfully')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to deactivate template')
+      toast.error(error instanceof Error ? error.message : 'Failed to delete template')
     } finally {
       setIsSubmitting(false)
     }
@@ -207,16 +207,14 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </Button>
-                      {template.is_active && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setDeletingTemplate(template)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeletingTemplate(template)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -268,15 +266,13 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            {template.is_active && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setDeletingTemplate(template)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDeletingTemplate(template)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -345,11 +341,10 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Template</AlertDialogTitle>
+            <AlertDialogTitle>Delete Template</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate &quot;{deletingTemplate?.display_name}&quot;? This
-              template will no longer be available for sending emails, but email history will be
-              preserved.
+              Are you sure you want to delete &quot;{deletingTemplate?.display_name}&quot;? This
+              action cannot be undone. Email history will be preserved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -359,7 +354,7 @@ export function EmailTemplateList({ initialTemplates }: EmailTemplateListProps) 
               disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSubmitting ? 'Deactivating...' : 'Deactivate'}
+              {isSubmitting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

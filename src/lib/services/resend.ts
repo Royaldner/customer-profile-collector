@@ -5,7 +5,7 @@
 
 import { Resend } from 'resend'
 import { randomBytes } from 'crypto'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Customer, EmailTemplate } from '@/lib/types'
 
 // Lazy initialization of Resend client
@@ -89,7 +89,7 @@ export function buildTemplateVariables(
  * Get today's sent email count for rate limiting
  */
 export async function getDailyEmailCount(): Promise<number> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Get start of today in UTC
   const today = new Date()
@@ -131,7 +131,7 @@ export async function checkRateLimit(emailCount: number): Promise<{
  * Create a confirmation token for a customer
  */
 export async function createConfirmationToken(customerId: string): Promise<string> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const token = generateConfirmationToken()
 
   const expiresAt = new Date()
@@ -232,7 +232,7 @@ export async function sendTemplateEmail(params: {
   error?: string
 }> {
   const { customer, template, scheduledFor } = params
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Generate confirmation token
   const confirmToken = await createConfirmationToken(customer.id)
@@ -303,7 +303,7 @@ export async function validateConfirmationToken(token: string): Promise<{
   customerId?: string
   error?: string
 }> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Find the token
   const { data: tokenData, error: tokenError } = await supabase
@@ -354,7 +354,7 @@ export async function processScheduledEmails(): Promise<{
   sent: number
   failed: number
 }> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const now = new Date().toISOString()
 
   // Get all scheduled emails that are due

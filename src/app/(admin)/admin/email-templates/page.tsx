@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { EmailTemplate } from '@/lib/types'
 import { EmailTemplateList } from '@/components/admin/email-template-list'
 import { LogoutButton } from '@/components/admin/logout-button'
@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 async function getEmailTemplates(): Promise<EmailTemplate[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: templates, error } = await supabase
     .from('email_templates')
@@ -21,7 +21,11 @@ async function getEmailTemplates(): Promise<EmailTemplate[]> {
     return []
   }
 
-  return templates || []
+  // Normalize variables: JSONB may return string if double-stringified
+  return (templates || []).map((t) => ({
+    ...t,
+    variables: typeof t.variables === 'string' ? JSON.parse(t.variables) : (t.variables || []),
+  }))
 }
 
 export default async function AdminEmailTemplatesPage() {

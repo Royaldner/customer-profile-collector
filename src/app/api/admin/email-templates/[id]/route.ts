@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { emailTemplateUpdateSchema } from '@/lib/validations/email'
 
 // Helper to check admin session
@@ -25,7 +25,7 @@ export async function GET(
     }
 
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const { data: template, error } = await supabase
       .from('email_templates')
@@ -86,7 +86,7 @@ export async function PUT(
       )
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     const updateData: Record<string, unknown> = {}
 
     // Only include fields that were provided
@@ -94,7 +94,7 @@ export async function PUT(
     if (validationResult.data.display_name !== undefined) updateData.display_name = validationResult.data.display_name
     if (validationResult.data.subject !== undefined) updateData.subject = validationResult.data.subject
     if (validationResult.data.body !== undefined) updateData.body = validationResult.data.body
-    if (validationResult.data.variables !== undefined) updateData.variables = JSON.stringify(validationResult.data.variables)
+    if (validationResult.data.variables !== undefined) updateData.variables = validationResult.data.variables
     if (validationResult.data.is_active !== undefined) updateData.is_active = validationResult.data.is_active
 
     const { data: template, error } = await supabase
@@ -149,23 +149,15 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
-    // Soft-delete by setting is_active to false
-    const { data: template, error } = await supabase
+    // Hard delete the template
+    const { error } = await supabase
       .from('email_templates')
-      .update({ is_active: false })
+      .delete()
       .eq('id', id)
-      .select()
-      .single()
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { message: 'Email template not found' },
-          { status: 404 }
-        )
-      }
       console.error('Email template delete error:', error)
       return NextResponse.json(
         { message: 'Failed to delete email template' },
@@ -173,7 +165,7 @@ export async function DELETE(
       )
     }
 
-    return NextResponse.json({ message: 'Email template deactivated successfully', template })
+    return NextResponse.json({ message: 'Email template deleted successfully' })
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json(
